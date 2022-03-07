@@ -3,10 +3,14 @@
   <div class="list-template-wrapper">
     <div class="header-bar">
       <!-- 头部左侧 -->
-      <slot name="title" />
+      <div>
+        <slot name="barLeft" />
+      </div>
 
       <!-- 头部右侧 -->
-      <slot name="barRight" />
+      <div>
+        <slot name="barRight" />
+      </div>
     </div>
 
     <div class="body-wrapper">
@@ -24,6 +28,10 @@
         <!-- 分页器 -->
         <slot name="pagination" />
       </div>
+    </div>
+
+    <div class="hidden-wrapper">
+      <slot name="hidden" />
     </div>
   </div>
 </template>
@@ -51,9 +59,18 @@
     border-radius: 6px;
     box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
 
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
     .table {
       width: 100%;
       margin-top: 20px;
+
+      ::v-deep .el-table-fixed-column--right {
+        z-index: 1;
+      }
     }
 
     .pagination {
@@ -61,6 +78,12 @@
       display: flex;
       justify-content: flex-end;
     }
+  }
+
+  .hidden-wrapper {
+    position: absolute;
+    top: 0;
+    left: 100%;
   }
 }
 </style>

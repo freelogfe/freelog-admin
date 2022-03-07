@@ -4,13 +4,12 @@
 
 <style>
 #app {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Microsoft Yahei,
-    Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans",
-    "Helvetica Neue", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Microsoft Yahei, Roboto, Oxygen, Ubuntu, Cantarell,
+    "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-size: 14px;
-  color: #222;
+  color: #333;
   text-align: left;
   width: 100vh;
   height: 100vh;
@@ -29,17 +28,6 @@ body,
 
 img {
   display: block;
-}
-
-input {
-  background: none;
-  outline: none;
-  border: none;
-  padding: 0;
-}
-input:focus {
-  border: none;
-  box-shadow: none;
 }
 
 /* slide-down-scale */

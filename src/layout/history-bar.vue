@@ -103,7 +103,7 @@ export default {
   height: 40px;
   background: #fff;
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 12%), 0 0 3px 0 rgb(0 0 0 / 4%);
-  padding: 0 16px;
+  padding: 2px 16px 0;
   box-sizing: border-box;
   display: flex;
   align-items: center;
