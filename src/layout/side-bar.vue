@@ -10,29 +10,31 @@
         background-color="#304156"
         text-color="#bfcbd9"
         unique-opened
-        :default-active="router.currentRoute.value.path"
+        :default-active="router.currentRoute.value.meta.sideBarItem"
       >
-        <el-sub-menu :index="group.title" v-for="group in sideBarMenus" :key="group.title">
-          <template #title>
-            <el-icon class="item-icon"><component :is="group.icon" /></el-icon>
-            <span>{{ group.title }}</span>
-          </template>
-          <el-menu-item
-            :index="item.path"
-            v-for="item in group.children"
-            :key="item.title"
-            @click="switchPage(item.path)"
-          >
-            {{ item.title }}
-          </el-menu-item>
-        </el-sub-menu>
+        <template v-for="group in router.options.routes" :key="group.name">
+          <el-sub-menu :index="group.name" v-if="!group.meta.hidden">
+            <template #title>
+              <el-icon class="item-icon"><component :is="group.meta.icon" /></el-icon>
+              <span>{{ group.meta.title }}</span>
+            </template>
+            <template v-for="item in group.children" :key="item.name">
+              <el-menu-item
+                :index="item.meta.sideBarItem"
+                @click="switchPage(group.path + '/' + item.path)"
+                v-if="!item.meta.hidden"
+              >
+                {{ item.meta.title }}
+              </el-menu-item>
+            </template>
+          </el-sub-menu>
+        </template>
       </el-menu>
     </el-scrollbar>
   </div>
 </template>
 
 <script lang="ts">
-import { sideBarMenus } from "../assets/data/data";
 import { useMyRouter } from "../utils/hooks";
 import * as icons from "@element-plus/icons-vue";
 
@@ -44,7 +46,7 @@ export default {
   setup() {
     const { router, switchPage } = useMyRouter();
 
-    return { sideBarMenus, router, switchPage };
+    return { router, switchPage };
   },
 };
 </script>

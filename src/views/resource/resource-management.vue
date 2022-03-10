@@ -1,4 +1,4 @@
-<!-- 用户管理 -->
+<!-- 资源管理 -->
 <template>
   <list-template>
     <template v-slot:hidden>
@@ -6,21 +6,21 @@
     </template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="switchPage('/user/tag-management')">管理标签</el-button>
+      <el-button type="primary" @click="switchPage('/resource/tag-management')">管理标签</el-button>
     </template>
 
     <template v-slot:filterBar>
       <form-item label="关键字搜索">
-        <el-input v-model="searchData.keywords" placeholder="请输入用户名、注册手机号/邮箱" clearable />
+        <el-input v-model="searchData.keywords" placeholder="请输入用户名或资源名称进行搜索" clearable />
       </form-item>
-      <form-item label="标签">
-        <el-select v-model="searchData.tags" multiple placeholder="请选择标签" clearable>
-          <el-option v-for="item in statusMapping" :key="item.value" :label="item.label" :value="item.value" />
+      <form-item label="类型">
+        <el-select v-model="searchData.leixing" clearable placeholder="请选择类型">
+          <el-option v-for="item in resourceTypeMapping" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </form-item>
-      <form-item label="注册时间">
+      <form-item label="创建时间">
         <el-date-picker
-          v-model="searchData.registerDate"
+          v-model="searchData.chuangjianshijian"
           type="daterange"
           unlink-panels
           range-separator="-"
@@ -38,42 +38,27 @@
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable">
         <el-table-column type="selection" />
-        <el-table-column type="expand">
-          <template #default="props">
+        <el-table-column property="yonghu" label="用户" min-width="100" show-overflow-tooltip />
+        <el-table-column min-width="200">
+          <template #default="scope">
             <div class="tags-box">
-              标签：
-              <el-tag class="tag" closable v-for="item in props.row.biaoqian" :key="item" @close="deleteTag(tag)">
-                {{ item }}
-              </el-tag>
-              <el-button style="margin-left: 10px" type="primary" @click="manageTags(props.row)">管理</el-button>
+              <div class="tag" v-for="item in scope.row.biaoqian" :key="item">{{ item }}</div>
             </div>
           </template>
         </el-table-column>
-        <el-table-column property="yonghu" label="用户" min-width="150" show-overflow-tooltip />
-        <el-table-column label="标签数">
-          <template #default="scope">
-            {{ scope.row.biaoqian.length }}
-          </template>
-        </el-table-column>
-        <el-table-column label="最近登录" width="160">
+        <el-table-column label="最近登录" width="110">
           <template #default="scope">{{ relativeTime(scope.row.zuijindenglu) }}</template>
         </el-table-column>
-        <el-table-column property="fabuziyuanshu" label="发布资源数" align="right" width="120" />
-        <el-table-column property="xiaofeiheyueshu" label="消费合约数" align="right" width="120" />
-        <el-table-column property="jiaoyicishu" label="交易次数" align="right" width="100" />
-        <el-table-column label="代币余额" align="right" width="100">
-          <template #default="scope">{{ scope.row.daibiyue.toFixed(2) }}</template>
-        </el-table-column>
-        <el-table-column label="注册手机号" min-width="170">
+        <el-table-column property="fabuziyuanshu" label="发布资源数" sortable width="120" />
+        <el-table-column property="xiaofeiheyueshu" label="消费合约数" sortable width="120" />
+        <el-table-column property="jiaoyicishu" label="交易次数" width="100" />
+        <el-table-column property="daibiyue" label="代币余额" width="100" />
+        <el-table-column label="注册手机号/邮箱" min-width="200">
           <template #default="scope">
             <div class="info-group">
               {{ scope.row.zhuceshoujihao }}
               <el-icon class="copy-btn" title="复制" @click="copy(scope.row.zhuceshoujihao)"><copy-document /></el-icon>
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column label="注册邮箱" min-width="170">
-          <template #default="scope">
             <div class="info-group">
               {{ scope.row.zhuceshouyouxiang }}
               <el-icon class="copy-btn" title="复制" @click="copy(scope.row.zhuceshouyouxiang)">
@@ -82,16 +67,8 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="注册时间" sortable width="160">
-          <template #default="scope">{{ formatDate(scope.row.zhuceshijian) }}</template>
-        </el-table-column>
-        <el-table-column label="账号状态">
-          <template #default="scope">
-            <el-tooltip effect="dark" :content="'恶意操作'" placement="top" v-if="scope.row.zhanghaozhuangtai === 3">
-              {{ statusMapping.find((item) => item.value === scope.row.zhanghaozhuangtai).label }}
-            </el-tooltip>
-            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.zhanghaozhuangtai).label }}</span>
-          </template>
+        <el-table-column label="注册时间" sortable width="110">
+          <template #default="scope">{{ formatDate(scope.row.zhuceshijian, "YYYY-MM-DD") }}</template>
         </el-table-column>
         <el-table-column label="操作" fixed="right" min-width="90">
           <template #default="scope">
@@ -145,11 +122,11 @@
 </template>
 
 <script lang="ts">
-import { defineAsyncComponent, nextTick, reactive, toRefs } from "vue-demi";
+import { defineAsyncComponent, reactive, toRefs } from "vue-demi";
 import { formatDate, relativeTime } from "../../utils/common";
 import { CopyDocument } from "@element-plus/icons-vue";
 import { useMyRouter } from "@/utils/hooks";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessageBox } from "element-plus";
 
 export default {
   components: {
@@ -161,10 +138,14 @@ export default {
   setup() {
     const { switchPage } = useMyRouter();
     const data = reactive({
-      statusMapping: [
-        { value: 1, label: "未审核" },
-        { value: 2, label: "已通过" },
-        { value: 3, label: "未通过" },
+      resourceTypeMapping: [
+        { value: 1, label: "image" },
+        { value: 2, label: "txt" },
+        { value: 3, label: "markdown" },
+        { value: 4, label: "audio" },
+        { value: 5, label: "video" },
+        { value: 6, label: "widget" },
+        { value: 7, label: "theme" },
       ],
       shortcuts: [
         {
@@ -198,52 +179,7 @@ export default {
       list: [
         {
           yonghu: "ZhuC",
-          biaoqian: [
-            "标签1",
-            "标签2",
-            "标签3",
-            "标签4",
-            "标签5",
-            "标签1",
-            "标签2",
-            "标签3",
-            "标签4",
-            "标签5",
-            "标签1",
-            "标签2",
-            "标签3",
-            "标签4",
-            "标签5",
-            "标签1",
-            "标签2",
-            "标签3",
-            "标签4",
-            "标签5",
-            "标签1",
-            "标签1",
-            "标签2",
-            "标签3",
-            "标签4",
-            "标签5",
-            "标签1",
-            "标签2",
-            "标签3",
-            "标签4",
-            "标签5",
-            "标签1",
-            "标签2",
-            "标签3",
-            "标签4",
-            "标签5",
-            "标签3",
-            "标签4",
-            "标签5",
-            "标签1",
-            "标签2",
-            "标签3",
-            "标签4",
-            "标签5",
-          ],
+          biaoqian: ["标签1", "标签2", "标签3", "标签4", "标签5"],
           zuijindenglu: 1625656179577,
           fabuziyuanshu: 2,
           xiaofeiheyueshu: 10,
@@ -595,21 +531,6 @@ export default {
         this.getData();
       },
 
-      // 复制
-      copy(value: string) {
-        data.copyValue = value;
-        nextTick(() => {
-          const input: any = document.getElementById("copyInput");
-          input.select();
-          document.execCommand("Copy");
-          ElMessage({
-            message: "复制成功",
-            grouping: true,
-            type: "success",
-          });
-        });
-      },
-
       // 冻结操作
       freeze(id: string) {
         data.operateData.id = id;
@@ -655,41 +576,19 @@ export default {
 
 <style lang="scss" scoped>
 .tags-box {
-  width: 100%;
-  padding: 0 16px;
-  box-sizing: border-box;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
 
   .tag {
     flex-shrink: 0;
-    margin: 5px;
-  }
-}
-
-.info-group {
-  word-break: keep-all;
-  display: flex;
-  align-items: center;
-
-  &:hover .copy-btn {
-    opacity: 1;
-  }
-
-  .copy-btn {
-    color: #169bd5;
-    margin-left: 5px;
+    padding: 0 3px;
     cursor: pointer;
-    transition: all 0.2s linear;
-    opacity: 0;
+    background-color: #304156;
+    color: #fff;
+    border-radius: 4px;
 
-    &:hover {
-      color: #005980;
-    }
-
-    &:active {
-      color: #00b3ff;
+    & + .tag {
+      margin-left: 5px;
     }
   }
 }

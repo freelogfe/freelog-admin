@@ -7,36 +7,32 @@
     </template>
 
     <template v-slot:filterBar>
-      <filter-item label="关键字搜索">
+      <form-item label="关键字搜索">
         <el-input v-model="searchData.keywords" placeholder="请输入用户名、注册手机号/邮箱" clearable />
-      </filter-item>
-      <filter-item label="状态">
+      </form-item>
+      <form-item label="状态">
         <el-select v-model="searchData.status" clearable placeholder="请选择状态">
           <el-option v-for="item in statusMapping" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
-      </filter-item>
-      <filter-item>
+      </form-item>
+      <form-item>
         <el-button type="primary" @click="getData()">搜索</el-button>
-      </filter-item>
+      </form-item>
     </template>
 
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable">
         <el-table-column type="selection" :selectable="(row) => row.shenhezhuangtai === 1" />
-        <el-table-column label="申请日期" width="110">
-          <template #default="scope">{{ formatDate(scope.row.shenqingriqi, "YYYY-MM-DD") }}</template>
+        <el-table-column label="申请日期" width="160">
+          <template #default="scope">{{ formatDate(scope.row.shenqingriqi) }}</template>
         </el-table-column>
-        <el-table-column label="申请信息" min-width="200">
-          <template #default="scope">
-            <div class="info-group">职业：{{ scope.row.zhiye }}</div>
-            <div class="info-group">区域：{{ scope.row.quyu }}</div>
-            <div class="info-group">其他：{{ scope.row.qita }}</div>
-          </template>
-        </el-table-column>
+        <el-table-column property="zhiye" label="职业" show-overflow-tooltip />
+        <el-table-column property="quyu" label="区域" show-overflow-tooltip />
+        <el-table-column property="qita" label="其他" show-overflow-tooltip />
         <el-table-column property="yonghuming" label="用户名" min-width="100" show-overflow-tooltip />
         <el-table-column property="shouji" label="手机" min-width="100" show-overflow-tooltip />
         <el-table-column property="youxiang" label="邮箱" min-width="100" show-overflow-tooltip />
-        <el-table-column label="最后登录" width="110">
+        <el-table-column label="最后登录" width="160">
           <template #default="scope">{{ relativeTime(scope.row.zuihoudenglu) }}</template>
         </el-table-column>
         <el-table-column label="审核状态">
@@ -99,10 +95,8 @@
       />
     </div>
     <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="auditPopupShow = false">取消</el-button>
-        <el-button type="primary" @click="auditConfirm()">确定</el-button>
-      </span>
+      <el-button @click="auditPopupShow = false">取消</el-button>
+      <el-button type="primary" @click="auditConfirm()">确定</el-button>
     </template>
   </el-dialog>
 </template>
@@ -116,7 +110,7 @@ import { ElMessage } from "element-plus";
 export default {
   components: {
     "list-template": defineAsyncComponent(() => import("@/components/list-template.vue")),
-    "filter-item": defineAsyncComponent(() => import("@/components/filter-item.vue")),
+    "form-item": defineAsyncComponent(() => import("@/components/form-item.vue")),
   },
 
   setup() {
@@ -605,8 +599,6 @@ export default {
       tableData: [] as any[],
       selectedData: [] as any[],
       searchData: {
-        keywords: "",
-        status: null as number | null,
         currentPage: 1,
       },
       operateData: {

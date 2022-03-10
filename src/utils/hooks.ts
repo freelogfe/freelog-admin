@@ -19,12 +19,17 @@ export const useMyRouter = () => {
     router.push({ path, query });
   };
 
+  // 路由跳转方法(replace)
+  const replacePage = (path: string, query: any = {}) => {
+    router.replace({ path, query });
+  };
+
   // 路由跳转方法
   const routerBack = () => {
     router.back();
   };
 
-  return { route, router, query, switchPage, routerBack };
+  return { route, router, query, switchPage, replacePage, routerBack };
 };
 
 /**

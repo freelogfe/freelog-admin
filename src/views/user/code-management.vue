@@ -6,19 +6,19 @@
     </template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="audit()">批量生成邀请码</el-button>
+      <el-button type="primary" @click="createInviteCode()">批量生成邀请码</el-button>
     </template>
 
     <template v-slot:filterBar>
-      <filter-item label="关键字搜索">
+      <form-item label="关键字搜索">
         <el-input v-model="searchData.keywords" placeholder="请输入邀请码或邀请者用户名" clearable />
-      </filter-item>
-      <filter-item label="状态">
+      </form-item>
+      <form-item label="状态">
         <el-select v-model="searchData.status" clearable placeholder="请选择状态">
           <el-option v-for="item in statusMapping" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
-      </filter-item>
-      <filter-item label="创建时间">
+      </form-item>
+      <form-item label="创建时间">
         <el-date-picker
           v-model="searchData.createDate"
           type="daterange"
@@ -29,10 +29,10 @@
           end-placeholder="截止日期"
           :shortcuts="shortcuts"
         />
-      </filter-item>
-      <filter-item>
+      </form-item>
+      <form-item>
         <el-button type="primary" @click="getData()">搜索</el-button>
-      </filter-item>
+      </form-item>
     </template>
 
     <template v-slot:table>
@@ -46,16 +46,21 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="创建时间" width="110">
-          <template #default="scope">{{ formatDate(scope.row.chuangjianshijian, "YYYY-MM-DD") }}</template>
+        <el-table-column label="创建时间" width="160">
+          <template #default="scope">{{ formatDate(scope.row.chuangjianshijian) }}</template>
         </el-table-column>
         <el-table-column property="yaoqingzhe" label="邀请者(用户名)" min-width="120" show-overflow-tooltip />
-        <el-table-column label="使用次数">
-          <template #default="scope">{{ scope.row.shengyucishu }}/{{ scope.row.zongcishu }}</template>
-        </el-table-column>
-        <el-table-column label="有效期" width="190" show-overflow-tooltip>
+        <el-table-column label="剩余次数">
           <template #default="scope">
-            {{ formatDate(scope.row.kaishiriqi, "YYYY-MM-DD") }}至{{ formatDate(scope.row.jieshuriqi, "YYYY-MM-DD") }}
+            <div class="info-group">
+              {{ scope.row.shengyucishu }}/{{ scope.row.zongcishu }}
+              <el-icon class="copy-btn" title="使用记录" @click="viewRecord(scope.row.yaoqingma)"><document /></el-icon>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="有效期" width="310" show-overflow-tooltip>
+          <template #default="scope">
+            {{ formatDate(scope.row.kaishiriqi) }} 至 {{ formatDate(scope.row.jieshuriqi) }}
           </template>
         </el-table-column>
         <el-table-column property="beizhu" label="备注" min-width="150" show-overflow-tooltip />
@@ -66,8 +71,12 @@
         </el-table-column>
         <el-table-column label="操作" fixed="right" min-width="90">
           <template #default="scope">
-            <el-button type="primary" @click="audit(scope.row)" v-if="scope.row.zhuangtai === 1">禁用</el-button>
-            <el-button type="primary" @click="audit(scope.row)" v-if="scope.row.zhuangtai === 2">解禁</el-button>
+            <el-button type="primary" @click="operate(scope.row.id, 1)" v-if="scope.row.zhuangtai === 1"
+              >禁用</el-button
+            >
+            <el-button type="primary" @click="operate(scope.row.id, 2)" v-if="scope.row.zhuangtai === 2"
+              >解禁</el-button
+            >
           </template>
         </el-table-column>
       </el-table>
@@ -79,43 +88,93 @@
         v-model:currentPage="searchData.currentPage"
         :total="list.length"
         @current-change="changePage($event)"
-      >
-      </el-pagination>
+      />
     </template>
   </list-template>
 
-  <el-dialog v-model="auditPopupShow" title="审核" width="50%">
-    <div class="audit-popup-body">
-      <div class="title">申请信息</div>
-      <div class="apply-info-box">
-        <div class="apply-info" v-for="(item, index) in operateData.items" :key="item.yonghuming + index">
-          <div>用户：{{ item.yonghuming }}</div>
-          <div>职业：{{ item.zhiye }}</div>
-          <div>区域：{{ item.quyu }}</div>
-          <div>其他：{{ item.qita }}</div>
-        </div>
+  <el-dialog v-model="createCodePopupShow" title="生成邀请码" width="50%">
+    <div class="popup-item">
+      <div class="item-label">生成数量</div>
+      <div class="item-value">
+        <el-input v-model="operateData.shengchengshuliang" placeholder="请输入生成数量" />
       </div>
-      <div class="title">审核结果</div>
-      <el-radio-group v-model="operateData.auditResult">
-        <el-radio :label="1">通过</el-radio>
-        <el-radio :label="2">拒绝：链接无法打开</el-radio>
-        <el-radio :label="3">拒绝：公众号ID不存在</el-radio>
-        <el-radio :label="4">拒绝：其他原因</el-radio>
-      </el-radio-group>
-      <el-input
-        style="margin-top: 10px"
-        v-model="operateData.remark"
-        :autosize="{ minRows: 2, maxRows: 4 }"
-        type="textarea"
-        placeholder="请输入备注（选填）"
-      />
+    </div>
+    <div class="popup-item">
+      <div class="item-label">使用次数</div>
+      <div class="item-value">
+        <el-radio-group v-model="operateData.shiyongcishu">
+          <el-radio :label="1">通过</el-radio>
+          <el-radio :label="2">
+            限制使用<el-input style="width: 50px; margin: 0 10px" v-model="operateData.shiyongcishuxianzhi" />次
+          </el-radio>
+        </el-radio-group>
+      </div>
+    </div>
+    <div class="popup-item">
+      <div class="item-label">有效期</div>
+      <div class="item-value">
+        <el-radio-group v-model="operateData.youxiaoqi">
+          <el-radio :label="1">永久</el-radio>
+          <el-radio :label="2">
+            期限
+            <el-date-picker
+              style="width: 300px; margin-left: 10px"
+              v-model="operateData.youxiaoqixianzhi"
+              type="daterange"
+              unlink-panels
+              range-separator="-"
+              format="YYYY/MM/DD"
+              start-placeholder="起始日期"
+              end-placeholder="截止日期"
+              :shortcuts="shortcuts"
+            />
+          </el-radio>
+        </el-radio-group>
+      </div>
+    </div>
+    <div class="popup-item">
+      <div class="item-label">备注（选填）</div>
+      <div class="item-value">
+        <el-input
+          v-model="operateData.remark"
+          :autosize="{ minRows: 2, maxRows: 4 }"
+          type="textarea"
+          placeholder="请输入备注"
+        />
+      </div>
     </div>
     <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="auditPopupShow = false">取消</el-button>
-        <el-button type="primary" @click="auditConfirm()">确定</el-button>
-      </span>
+      <el-button @click="createCodePopupShow = false">取消</el-button>
+      <el-button type="primary" @click="createCode()">生成</el-button>
     </template>
+  </el-dialog>
+
+  <el-dialog v-model="recordPopupShow" :title="'使用记录 > ' + recordData?.yaoqingma" width="50%">
+    <div class="filter-bar">
+      <form-item label="关键字搜索">
+        <el-input v-model="popupSearchData.keywords" placeholder="请输入使用者用户名" clearable />
+      </form-item>
+      <form-item>
+        <el-button type="primary" @click="getRecordData(recordData?.yaoqingma)">搜索</el-button>
+      </form-item>
+    </div>
+
+    <el-table :data="recordData?.recordList" stripe border>
+      <el-table-column label="序号" type="index" width="80" />
+      <el-table-column property="shiyongzhe" label="使用者(用户名)" show-overflow-tooltip />
+      <el-table-column property="IP" label="IP地址" show-overflow-tooltip />
+      <el-table-column label="使用时间">
+        <template #default="scope">{{ formatDate(scope.row.shiyongshijian) }}</template>
+      </el-table-column>
+    </el-table>
+    <div class="pagination-box">
+      <el-pagination
+        layout="total, prev, pager, next, jumper"
+        v-model:currentPage="popupSearchData.currentPage"
+        :total="recordData?.recordList.length"
+        @current-change="changePage($event)"
+      />
+    </div>
   </el-dialog>
 </template>
 
@@ -123,15 +182,16 @@
 import { defineAsyncComponent, reactive, toRefs } from "vue-demi";
 import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
-import { ElMessage } from "element-plus";
-import { CopyDocument } from "@element-plus/icons-vue";
-import { nextTick } from 'vue';
+import { ElMessage, ElMessageBox } from "element-plus";
+import { CopyDocument, Document } from "@element-plus/icons-vue";
+import { nextTick } from "vue";
 
 export default {
   components: {
     "list-template": defineAsyncComponent(() => import("@/components/list-template.vue")),
-    "filter-item": defineAsyncComponent(() => import("@/components/filter-item.vue")),
+    "form-item": defineAsyncComponent(() => import("@/components/form-item.vue")),
     CopyDocument,
+    Document,
   },
 
   setup() {
@@ -550,18 +610,24 @@ export default {
       tableData: [] as any[],
       selectedData: [] as any[],
       searchData: {
-        keywords: "",
-        status: null as number | null,
-        createDate: [null, null] as number[] | null[],
         currentPage: 1,
       },
       operateData: {
-        items: [] as any[],
-        auditResult: null as number | null,
+        shengchengshuliang: "",
+        shiyongcishu: null as number | null,
+        shiyongcishuxianzhi: "",
+        youxiaoqi: null as number | null,
+        youxiaoqiqixian: [null, null] as number[] | null[],
         remark: "",
       },
+      recordData: null as any,
+      popupSearchData: {
+        keywords: "",
+        currentPage: 1,
+      },
       copyValue: "",
-      auditPopupShow: false,
+      createCodePopupShow: false,
+      recordPopupShow: false,
     });
 
     const methods = {
@@ -593,31 +659,49 @@ export default {
         });
       },
 
-      // 审核操作
-      audit(item?: any) {
-        if (item) {
-          data.operateData.items = [item];
-        } else {
-          if (data.selectedData.length === 0) {
-            ElMessage({
-              message: "请选择需要审核的条目",
-              grouping: true,
-              type: "info",
-            });
-            return;
-          }
-
-          data.operateData.items = data.selectedData;
-        }
-        data.operateData.auditResult = null;
+      // 批量生成邀请码
+      createInviteCode() {
+        data.operateData.shengchengshuliang = "";
+        data.operateData.shiyongcishu = null;
+        data.operateData.shiyongcishuxianzhi = "";
+        data.operateData.youxiaoqi = null;
+        data.operateData.youxiaoqiqixian = [null, null];
         data.operateData.remark = "";
-        data.auditPopupShow = true;
+        data.createCodePopupShow = true;
       },
 
-      // 审核
-      auditConfirm() {
-        console.error(data.operateData.items);
+      // 生成邀请码
+      createCode() {
         console.error(data.operateData);
+      },
+
+      // 查看使用记录
+      viewRecord(id: string) {
+        data.recordPopupShow = true;
+        this.getRecordData(id);
+      },
+
+      // 获取使用记录
+      getRecordData(id: string) {
+        data.recordData = {
+          yaoqingma: id,
+          recordList: [
+            { shiyongzhe: "ZhuC1", IP: "116.64.162.225", shiyongshijian: 1625656179577 },
+            { shiyongzhe: "ZhuC2", IP: "116.64.162.225", shiyongshijian: 1625656179577 },
+            { shiyongzhe: "ZhuC3", IP: "116.64.162.225", shiyongshijian: 1625656179577 },
+            { shiyongzhe: "ZhuC4", IP: "116.64.162.225", shiyongshijian: 1625656179577 },
+          ],
+        };
+      },
+
+      // 操作（禁用/解禁）
+      operate(id: string, type: number) {
+        ElMessageBox.confirm(`确认${type === 1 ? "禁用" : "解禁"}当前条目？`, "", {
+          confirmButtonText: type === 1 ? "禁用" : "解禁",
+          cancelButtonText: "取消",
+        }).then(() => {
+          console.error(id);
+        });
       },
 
       // 选择表格项
@@ -640,22 +724,21 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.selected-tip {
-  font-size: 14px;
-  color: #999;
-  margin-right: 10px;
-}
-
 .info-group {
   word-break: keep-all;
   display: flex;
   align-items: center;
+
+  &:hover .copy-btn {
+    opacity: 1;
+  }
 
   .copy-btn {
     color: #169bd5;
     margin-left: 5px;
     cursor: pointer;
     transition: all 0.2s linear;
+    opacity: 0;
 
     &:hover {
       color: #005980;
@@ -665,5 +748,33 @@ export default {
       color: #00b3ff;
     }
   }
+}
+
+.popup-item {
+  display: flex;
+
+  & + .popup-item {
+    margin-top: 20px;
+  }
+
+  .item-label {
+    width: 100px;
+    line-height: 32px;
+  }
+
+  .item-value {
+    flex: 1;
+  }
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+}
+
+.pagination-box {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
 }
 </style>

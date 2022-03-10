@@ -43,7 +43,6 @@ export default {
     flex: 1;
     width: 0;
     height: 100%;
-    background-color: #f0f2f5;
     display: flex;
     flex-direction: column;
 
@@ -51,6 +50,8 @@ export default {
       width: 100%;
       flex: 1;
       height: 0;
+      background-image: url(../assets/images/texture.png);
+      background-color: #f0f2f5;
     }
   }
 }

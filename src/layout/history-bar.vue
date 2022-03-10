@@ -40,7 +40,10 @@ export default {
     // 添加历史
     const addHistory = (current: RouteLocationNormalizedLoaded) => {
       const { routerHistory } = store.state;
-      if (!routerHistory.some((item: RouteLocationNormalizedLoaded) => item.path === current.path)) {
+      if (
+        !routerHistory.some((item: RouteLocationNormalizedLoaded) => item.path === current.path) &&
+        !current.meta.noHistory
+      ) {
         // 历史中没有此页面，添加历史
         routerHistory.push(current);
         store.commit("setData", { key: "routerHistory", value: routerHistory });

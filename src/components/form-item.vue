@@ -1,6 +1,6 @@
-<!-- 筛选项 -->
+<!-- 表单项 -->
 <template>
-  <div class="filter-item-wrapper">
+  <div class="form-item-wrapper">
     <div class="filter-label" v-if="label">{{ label }}</div>
     <div class="filter-value"><slot /></div>
   </div>
@@ -17,7 +17,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.filter-item-wrapper {
+.form-item-wrapper {
   display: flex;
   align-items: center;
   margin-right: 20px;

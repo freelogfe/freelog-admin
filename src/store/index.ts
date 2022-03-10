@@ -3,6 +3,7 @@ import { createStore } from "vuex";
 
 export default createStore({
   state: {
+    userData: null as any,
     routerHistory: [] as RouteLocationNormalizedLoaded[],
   },
 

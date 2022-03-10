@@ -60,7 +60,7 @@ export const relativeTime = (time: string | undefined) => {
     const days = Math.ceil((today - timeStamp) / (24 * 60 * MINUTE));
     result = `${days}天前`;
   } else {
-    result = formatDate(time, "YYYY-MM-DD");
+    result = formatDate(time);
   }
 
   return result;

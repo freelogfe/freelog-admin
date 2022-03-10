@@ -6,26 +6,17 @@
     <div class="user-avatar" @mouseover="userBoxShow = true" @mouseleave="userBoxShow = false" v-if="isLogin">
       <!-- <img class="avatar" :src="userData.headImage" :alt="userData.username" /> -->
       <img class="avatar" src="https://image.freelog.com/headImage/50060" />
-      <div class="username">ZhuC</div>
 
       <transition name="slide-down-scale">
         <div class="user-box" v-if="userBoxShow">
           <div class="user-box-body">
-            <!-- <img class="avatar" :src="userData.headImage" :alt="userData.username" />
+            <img class="box-avatar" :src="userData.headImage" />
             <div class="box-username">{{ userData.username }}</div>
-            <div class="box-mobile">{{ userData.mobile }}</div> -->
-            <img class="box-avatar" src="https://image.freelog.com/headImage/50060" />
-            <div class="box-username">ZhuC</div>
-            <div class="mobile">17727491320</div>
+            <div class="mobile">{{ userData.mobile }}</div>
             <div class="btn" @click="callLoginOut()">登出</div>
           </div>
         </div>
       </transition>
-    </div>
-
-    <div class="user-btns" v-else>
-      <div class="btn" @click="callLogin()">登录</div>
-      <div class="btn" @click="register()">注册</div>
     </div>
   </div>
 </template>
@@ -34,11 +25,14 @@
 import { useMyRouter } from "@/utils/hooks";
 import { reactive, toRefs, watch } from "vue-demi";
 import { RouteRecordRaw } from "vue-router";
+import { useStore } from "vuex";
+import { UserService } from "@/api/request";
 
 export default {
   name: "my-header",
 
   setup() {
+    const store = useStore();
     const { router, switchPage } = useMyRouter();
 
     const data = reactive({
@@ -48,9 +42,11 @@ export default {
     });
 
     const methods = {
-      // 注册
-      register() {
-        window.open("http://user.testfreelog.com/logon");
+      // 登出
+      async callLoginOut() {
+        store.commit("setData", { key: "userData", value: null });
+        const result = await UserService.logout();
+        if (result.data.errcode === 0) switchPage("/login");
       },
     };
 
@@ -83,6 +79,12 @@ export default {
       }
     };
 
+    const getUserData = async () => {
+      const result = await UserService.getUserData();
+      const { data, errcode } = result.data;
+      if (errcode === 0) store.commit("setData", { key: "userData", value: data });
+    };
+
     watch(
       () => router,
       () => {
@@ -92,8 +94,10 @@ export default {
       { immediate: true, deep: true }
     );
 
+    getUserData();
+
     return {
-      switchPage,
+      ...toRefs(store.state),
       ...toRefs(data),
       ...methods,
     };
@@ -131,10 +135,6 @@ export default {
       height: 32px;
       border-radius: 50%;
       border: 1px solid #d1d1d1;
-    }
-
-    .username {
-      margin-left: 10px;
     }
 
     .user-box {
@@ -193,24 +193,6 @@ export default {
           }
         }
       }
-    }
-  }
-
-  .user-btns {
-    display: flex;
-    margin-left: 25px;
-
-    .btn {
-      height: 32px;
-      padding: 0 15px;
-      box-sizing: border-box;
-      border-radius: 4px;
-      font-size: 14px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
     }
   }
 }
