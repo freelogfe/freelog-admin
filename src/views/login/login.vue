@@ -45,8 +45,9 @@ import { reactive, toRefs } from "vue-demi";
 import { useMyRouter } from "@/utils/hooks";
 import { UserFilled, Lock } from "@element-plus/icons-vue";
 import { ref } from "vue";
-import { ElForm } from "element-plus";
-import { UserService } from "@/api/request";
+import { ElForm, ElMessage } from "element-plus";
+import { PassportService } from "@/api/request";
+import Cookie from "@/utils/cookie";
 
 type FormInstance = InstanceType<typeof ElForm>;
 
@@ -58,7 +59,7 @@ export default {
   },
 
   setup() {
-    const { replacePage } = useMyRouter();
+    const { query, replacePage } = useMyRouter();
     const ruleFormRef = ref<FormInstance>();
     const data = reactive({
       rules: {
@@ -78,8 +79,8 @@ export default {
         ],
       },
       loginData: {
-        loginName: "17727491320",
-        password: "ct0724",
+        loginName: "support@freelog.com",
+        password: "f233109!",
       },
     });
 
@@ -94,10 +95,26 @@ export default {
         if (!ruleFormRef.value) return;
 
         ruleFormRef.value.validate(async (valid) => {
+          if (data.loginData.loginName !== "support@freelog.com") {
+            ElMessage.error("用户名或密码错误");
+            return;
+          }
+
           if (valid) {
-            const result = await UserService.login(data.loginData);
-            const { errcode } = result.data;
-            if (errcode === 0) replacePage("/");
+            const result = await PassportService.login(data.loginData);
+            const { errcode, msg } = result.data;
+            if (errcode === 0) {
+              if (process.env.NODE_ENV === "development") {
+                Cookie.set("uid", 50031);
+                Cookie.set(
+                  "authInfo",
+                  "eyJhbGciOiJSU0EtU0hBMjU2IiwidHlwIjoiSldUIn0=.eyJ1c2VySWQiOjUwMDMxLCJ1c2VybmFtZSI6IkZyZWVsb2ciLCJ1c2VyVHlwZSI6MSwibW9iaWxlIjoiIiwiZW1haWwiOiJzdXBwb3J0QGZyZWVsb2cuY29tIiwiaXNzIjoiaHR0cHM6Ly9pZGVudGl0eS5mcmVlbG9nLmNvbSIsInN1YiI6IjUwMDMxIiwiYXVkIjoiZnJlZWxvZy13ZWJzaXRlIiwiZXhwIjoxNjQ4Mjc2ODcyLCJpYXQiOjE2NDY5ODA4NzIsImp0aSI6ImVlYmViMTM1YzJmOTRkZDA4MDNmZTQxNTVjMmViNzQ5In0=.1b4db7b00a710f3b84d877485c80fc1ae7d4453bbb37a07e578b7cfc1b63b72b30db623b2b58e3b1163ac730cd554bb45017a6653f03ecda36870b4b7d252023f3e8fe4c2246a4c32174bd4da869a8c7ee22e0bddab128e5515c4a2816a48942252670a7689fff74a3fa506d673681c669ea4109315e5cd95136e84ef7e7b80b"
+                );
+              }
+              replacePage(query.value.redirect || "/");
+            } else {
+              ElMessage.error(msg);
+            }
           } else {
             return false;
           }

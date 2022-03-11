@@ -3,9 +3,8 @@
   <div class="header-wrapper">
     <div class="page-title">{{ pageTitle }}</div>
 
-    <div class="user-avatar" @mouseover="userBoxShow = true" @mouseleave="userBoxShow = false" v-if="isLogin">
-      <!-- <img class="avatar" :src="userData.headImage" :alt="userData.username" /> -->
-      <img class="avatar" src="https://image.freelog.com/headImage/50060" />
+    <div class="user-avatar" @mouseover="userBoxShow = true" @mouseleave="userBoxShow = false" v-if="userData">
+      <img class="avatar" :src="userData.headImage" :alt="userData.username" />
 
       <transition name="slide-down-scale">
         <div class="user-box" v-if="userBoxShow">
@@ -26,7 +25,8 @@ import { useMyRouter } from "@/utils/hooks";
 import { reactive, toRefs, watch } from "vue-demi";
 import { RouteRecordRaw } from "vue-router";
 import { useStore } from "vuex";
-import { UserService } from "@/api/request";
+import { PassportService } from "@/api/request";
+import Cookie from "@/utils/cookie";
 
 export default {
   name: "my-header",
@@ -37,17 +37,21 @@ export default {
 
     const data = reactive({
       pageTitle: "",
-      isLogin: true,
       userBoxShow: false,
     });
 
     const methods = {
       // 登出
       async callLoginOut() {
-        store.commit("setData", { key: "userData", value: null });
-        const result = await UserService.logout();
-        if (result.data.errcode === 0) switchPage("/login");
+        const result = await PassportService.logout();
+        if (result.data.errcode === 0) toLogin();
       },
+    };
+
+    const toLogin = (redirect = "") => {
+      if (process.env.NODE_ENV === "development") Cookie.clear(["uid", "authInfo"]);
+      store.commit("setData", { key: "userData", value: null });
+      switchPage("/login", { redirect });
     };
 
     // 切换路由时，找到对应页面名称并显示
@@ -79,10 +83,17 @@ export default {
       }
     };
 
+    // 获取当前登录的用户信息
     const getUserData = async () => {
-      const result = await UserService.getUserData();
-      const { data, errcode } = result.data;
-      if (errcode === 0) store.commit("setData", { key: "userData", value: data });
+      const authInfo = Cookie.get("authInfo");
+      const uid = Cookie.get("uid");
+      if (authInfo && uid) {
+        const result = await PassportService.getUserData();
+        const { data, errcode } = result.data;
+        if (errcode === 0) store.commit("setData", { key: "userData", value: data });
+      } else {
+        toLogin(router.currentRoute.value.fullPath);
+      }
     };
 
     watch(
@@ -187,6 +198,17 @@ export default {
           padding-left: 20px;
           box-sizing: border-box;
           border-top: 1px solid rgba(0, 0, 0, 0.05);
+          cursor: pointer;
+          transition: all 0.2s linear;
+
+          &:hover {
+            color: #fff;
+            background: #409eff;
+          }
+
+          &:active {
+            opacity: 0.8;
+          }
 
           &:last-child {
             border-radius: 0 0 4px 4px;

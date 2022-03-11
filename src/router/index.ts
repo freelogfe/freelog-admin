@@ -4,14 +4,35 @@ import Layout from "../layout/index.vue";
 import { clearPending } from "@/api/http";
 
 const routes: Array<RouteRecordRaw> = [
-  // {
-  //   path: "/404",
-  //   component: () => import("../views/error-page/404.vue"),
-  // },
-  // {
-  //   path: "/401",
-  //   component: () => import("../views/error-page/401.vue"),
-  // },
+  {
+    path: "/error",
+    name: "error",
+    component: Layout,
+    meta: {
+      title: "error",
+      hidden: true,
+    },
+    children: [
+      {
+        path: "404",
+        name: "404",
+        component: () => import("../views/error-page/404.vue"),
+        meta: {
+          title: "404",
+          noHistory: true,
+        },
+      },
+    ],
+  },
+
+  {
+    path: "/:pathMatch(.*)",
+    redirect: "/error/404",
+    meta: {
+      hidden: true,
+    },
+  },
+
   {
     path: "/login",
     name: "login",
@@ -21,6 +42,7 @@ const routes: Array<RouteRecordRaw> = [
       noHistory: true,
     },
   },
+
   {
     path: "/",
     redirect: "/user",
@@ -28,6 +50,7 @@ const routes: Array<RouteRecordRaw> = [
       hidden: true,
     },
   },
+
   {
     path: "/user",
     name: "user",
