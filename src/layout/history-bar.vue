@@ -131,7 +131,7 @@ export default {
     width: fit-content;
     height: 22px;
     border: 1px solid #eee;
-    color: #555;
+    color: #666;
     background: #fff;
     padding: 0 8px;
     box-sizing: border-box;
@@ -147,9 +147,8 @@ export default {
     }
 
     &.active {
-      background-color: #42b983;
-      border-color: #42b983;
-      color: #fff;
+      background-color: #f0f2f5;
+      border-color: #f0f2f5;
     }
 
     .delete-btn {

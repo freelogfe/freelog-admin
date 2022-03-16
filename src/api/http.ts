@@ -152,7 +152,9 @@ service.interceptors.response.use(
         response.data.msg = msg;
       }
     }
-
+    if (response.data.errcode !== 0) {
+      ElMessage.error(response.data.msg);
+    }
     return response;
   },
   (error) => {

@@ -30,6 +30,16 @@ img {
   display: block;
 }
 
+.el-overlay {
+  z-index: 1000 !important;
+}
+
+.selected-tip {
+  font-size: 14px;
+  color: #999;
+  margin-right: 10px;
+}
+
 /* slide-down-scale */
 .slide-down-scale-enter-active,
 .slide-down-scale-leave-active {
