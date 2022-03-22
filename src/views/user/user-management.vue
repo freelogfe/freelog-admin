@@ -12,7 +12,7 @@
     </template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="setTag()">批量管理用户标签</el-button>
+      <el-button type="primary" @click="setTag()">批量添加用户标签</el-button>
       <el-button type="primary" @click="switchPage('/user/tag-management')"
         >管理标签</el-button
       >
@@ -21,6 +21,7 @@
     <template v-slot:filterBar>
       <form-item label="关键字搜索">
         <el-input
+          style="width: 250px"
           v-model="searchData.keywords"
           placeholder="请输入用户名、注册手机号/邮箱"
           clearable
@@ -49,6 +50,7 @@
           unlink-panels
           range-separator="-"
           format="YYYY/MM/DD"
+          value-format="YYYY-MM-DD"
           start-placeholder="起始日期"
           end-placeholder="截止日期"
           :shortcuts="dateRangeShortcuts"
@@ -56,6 +58,7 @@
       </form-item>
       <form-item>
         <el-button type="primary" @click="getData(true)">搜索</el-button>
+        <el-button @click="clearSearch()">重置</el-button>
       </form-item>
     </template>
 
@@ -68,7 +71,7 @@
           min-width="150"
           show-overflow-tooltip
         />
-        <el-table-column label="标签" width="400">
+        <el-table-column label="标签" width="200">
           <template #default="scope">
             <div class="tags-box">
               <el-tag
@@ -80,13 +83,13 @@
               >
                 {{ item.tag }}
               </el-tag>
-              <el-button
-                class="add-tag"
-                size="small"
+              <el-icon
+                class="icon-btn"
+                title="管理标签"
                 @click="setTag(scope.row)"
               >
-                管理标签
-              </el-button>
+                <edit />
+              </el-icon>
             </div>
           </template>
         </el-table-column>
@@ -105,6 +108,19 @@
           align="right"
           width="120"
         />
+        <el-table-column label="发布资源数" width="120" align="right">
+          <template #default="scope">
+            <el-button
+              type="text"
+              @click="
+                switchPage('/resource/resource-management', {
+                  username: scope.row.username,
+                })
+              "
+              >{{ scope.row.createdResourceCount }}
+            </el-button>
+          </template>
+        </el-table-column>
         <el-table-column
           property="createdNodeCount"
           label="运营节点数"
@@ -131,10 +147,10 @@
         />
         <el-table-column label="注册手机号" width="130">
           <template #default="scope">
-            <div class="info-group">
-              {{ scope.row.mobile || "-" }}
+            <div class="table-cell-item">
+              <span>{{ scope.row.mobile || "-" }}</span>
               <el-icon
-                class="copy-btn"
+                class="icon-btn"
                 title="复制"
                 @click="copy(scope.row.mobile)"
                 v-if="scope.row.mobile"
@@ -146,10 +162,10 @@
         </el-table-column>
         <el-table-column label="注册邮箱" min-width="250">
           <template #default="scope">
-            <div class="info-group">
-              {{ scope.row.email || "-" }}
+            <div class="table-cell-item">
+              <span>{{ scope.row.email || "-" }}</span>
               <el-icon
-                class="copy-btn"
+                class="icon-btn"
                 title="复制"
                 @click="copy(scope.row.email)"
                 v-if="scope.row.email"
@@ -168,7 +184,9 @@
           <template #default="scope">
             <el-tooltip
               effect="dark"
-              :content="scope.row.statusChangeRemark"
+              :content="`${scope.row.reason}${
+                scope.row.remark ? '（' + scope.row.remark + '）' : ''
+              }`"
               placement="top"
               v-if="scope.row.status === 1"
             >
@@ -183,30 +201,38 @@
             }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" fixed="right" min-width="90">
+        <el-table-column fixed="right" width="40">
+          <template #header>
+            <el-icon class="operation-icon" title="操作">
+              <operation />
+            </el-icon>
+          </template>
           <template #default="scope">
             <div class="operate-btns">
-              <el-button
-                type="danger"
+              <el-icon
+                class="icon-btn"
+                title="冻结"
                 @click="freeze(scope.row.userId)"
                 v-if="scope.row.status === 0"
               >
-                冻结
-              </el-button>
-              <el-button
-                type="success"
+                <close />
+              </el-icon>
+              <el-icon
+                class="icon-btn"
+                title="恢复"
                 @click="restore(scope.row.userId)"
                 v-if="scope.row.status === 1"
               >
-                恢复
-              </el-button>
-              <el-button
-                type="primary"
+                <check />
+              </el-icon>
+              <el-icon
+                class="icon-btn"
+                title="审核"
                 @click="audit(scope.row.username)"
                 v-if="scope.row.status === 2"
               >
-                审核
-              </el-button>
+                <checked />
+              </el-icon>
             </div>
           </template>
         </el-table-column>
@@ -229,6 +255,7 @@
       style="width: 100%"
       v-model="setTagData.tags"
       multiple
+      clearable
       placeholder="请选择标签"
     >
       <el-option
@@ -250,22 +277,25 @@
     </template>
   </el-dialog>
 
-  <el-dialog v-model="freezePopupShow" title="冻结账户">
-    <el-radio-group v-model="operateData.freezeReason">
-      <el-radio label="抄袭、侵权"></el-radio>
-      <el-radio label="欺诈"></el-radio>
-      <el-radio label="垃圾广告"></el-radio>
-      <el-radio label="色情、暴力"></el-radio>
-      <el-radio label="不实信息"></el-radio>
-      <el-radio label="恶意操作"></el-radio>
-    </el-radio-group>
-    <el-input
-      style="margin-top: 10px"
-      v-model="operateData.remark"
-      :autosize="{ minRows: 2, maxRows: 4 }"
-      type="textarea"
-      placeholder="请输入备注（选填）"
-    />
+  <el-dialog v-model="freezePopupShow" title="冻结账户" width="800px">
+    <form-item label="冻结原因">
+      <el-radio-group v-model="operateData.reason">
+        <el-radio label="抄袭、侵权"></el-radio>
+        <el-radio label="欺诈"></el-radio>
+        <el-radio label="垃圾广告"></el-radio>
+        <el-radio label="色情、暴力"></el-radio>
+        <el-radio label="不实信息"></el-radio>
+        <el-radio label="恶意操作"></el-radio>
+      </el-radio-group>
+    </form-item>
+    <form-item label="备注">
+      <el-input
+        v-model="operateData.remark"
+        :autosize="{ minRows: 2, maxRows: 4 }"
+        type="textarea"
+        placeholder="请输入备注（选填）"
+      />
+    </form-item>
     <template #footer>
       <el-button @click="freezePopupShow = false">取消</el-button>
       <el-button type="primary" @click="operateConfirm(1)">冻结</el-button>
@@ -274,9 +304,16 @@
 </template>
 
 <script lang="ts">
-import { nextTick, reactive, toRefs, watch } from "vue-demi";
-import { formatDate, relativeTime } from "../../utils/common";
-import { CopyDocument } from "@element-plus/icons-vue";
+import { nextTick, reactive, toRefs } from "vue-demi";
+import { formatDate, relativeTime, dateRange } from "../../utils/common";
+import {
+  Edit,
+  Operation,
+  CopyDocument,
+  Close,
+  Check,
+  Checked,
+} from "@element-plus/icons-vue";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
 import {
@@ -314,7 +351,12 @@ export interface UserTag {
 
 export default {
   components: {
+    Edit,
+    Operation,
     CopyDocument,
+    Close,
+    Check,
+    Checked,
   },
 
   setup() {
@@ -347,16 +389,13 @@ export default {
       /** 获取列表数据 */
       async getData(init = false) {
         if (init) data.searchData.currentPage = 1;
-        const {
-          currentPage,
-          limit,
-          tags = [],
-          registerDate = ["", ""],
-        } = data.searchData;
+        const { currentPage, limit, tags = [], registerDate } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
         data.searchData.tagIds = tags.join(",");
-        data.searchData.startRegisteredDate = registerDate[0];
-        data.searchData.endRegisteredDate = registerDate[1];
+        [
+          data.searchData.startRegisteredDate,
+          data.searchData.endRegisteredDate,
+        ] = dateRange(registerDate);
         const result = await UserService.getUserList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
@@ -410,6 +449,15 @@ export default {
         }
       },
 
+      /** 重置 */
+      clearSearch() {
+        data.searchData = {
+          currentPage: 1,
+          limit: 20,
+        };
+        this.getData(true);
+      },
+
       /** 切换表格页码 */
       changePage(value: number) {
         data.searchData.currentPage = value;
@@ -451,7 +499,7 @@ export default {
 
       /** 操作（冻结/恢复） */
       async operateConfirm(type: 0 | 1) {
-        if (type === 1 && !data.operateData.freezeReason) {
+        if (type === 1 && !data.operateData.reason) {
           ElMessage("请选择冻结原因");
           return;
         }
@@ -491,6 +539,20 @@ export default {
         const { newTag } = data.setTagData;
         if (!newTag) return;
 
+        const existTag = data.userTagsList.find((item) => item.tag === newTag);
+
+        if (existTag) {
+          if (data.setTagData.tags.includes(existTag.tagId)) {
+            // 输入的标签已选择
+            return;
+          }
+
+          // 输入的标签已存在且未选择，直接选择该标签
+          data.setTagData.tags.push(existTag.tagId);
+          data.setTagData.newTag = "";
+          return;
+        }
+
         const result = await UserService.createUserTag({
           tags: [data.setTagData.newTag],
         });
@@ -529,6 +591,10 @@ export default {
             });
             const { errcode } = result.data;
             if (errcode !== 0) return;
+            if (addTags.length === 0) {
+              data.setTagPopupShow = false;
+              this.getData();
+            }
           }
         } else {
           // 批量操作，无删除标签，所有所选标签为添加标签
@@ -536,10 +602,8 @@ export default {
         }
         if (addTags.length !== 0) {
           // 存在添加标签，执行添加
-          const userIds = users.map((item: User) => item.userId).join(",");
-          const result = await UserService.setTag(userIds, {
-            tagIds: addTags,
-          });
+          const userIds = users.map((item: User) => item.userId);
+          const result = await UserService.setTag({ userIds, tagIds: addTags });
           const { errcode } = result.data;
           if (errcode === 0) {
             data.setTagPopupShow = false;
@@ -567,13 +631,6 @@ export default {
       const result = await UserService.getUserTagsList();
       data.userTagsList = result.data.data;
     };
-
-    watch(
-      () => data.operateData.freezeReason,
-      (cur) => {
-        data.operateData.remark = cur || "";
-      }
-    );
 
     data.searchData.keywords = query.value.username;
     data.searchData.tags = query.value.tag ? [Number(query.value.tag)] : [];
@@ -603,48 +660,12 @@ export default {
 
   .tag {
     flex-shrink: 0;
-    margin: 3px;
+    margin: 0 8px 5px 0;
   }
 
-  .add-tag {
-    color: #409eff;
-    margin-left: 5px;
-    border-style: dashed;
-    margin: 3px;
-  }
-}
-
-.info-group {
-  word-break: keep-all;
-  display: flex;
-  align-items: center;
-
-  &:hover .copy-btn {
-    opacity: 1;
-  }
-
-  .copy-btn {
-    color: #169bd5;
-    margin-left: 5px;
-    cursor: pointer;
-    transition: all 0.2s linear;
-    opacity: 0;
-
-    &:hover {
-      color: #005980;
-    }
-
-    &:active {
-      color: #00b3ff;
-    }
-  }
-}
-
-.operate-btns {
-  display: flex;
-
-  button + button {
-    margin-left: 10px;
+  .icon-btn {
+    margin-left: 0;
+    margin-bottom: 5px;
   }
 }
 </style>

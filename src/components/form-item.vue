@@ -19,13 +19,13 @@ export default {
 <style lang="scss" scoped>
 .form-item-wrapper {
   display: flex;
-  align-items: center;
   margin-right: 20px;
   padding: 10px 0;
 
   .filter-label {
     font-size: 14px;
     color: #333;
+    line-height: 32px;
 
     &::after {
       content: "：";
@@ -34,11 +34,7 @@ export default {
 
   .filter-value {
     margin-left: 5px;
-
-    ::v-deep div,
-    input {
-      width: 250px;
-    }
+    flex: 1;
   }
 }
 </style>

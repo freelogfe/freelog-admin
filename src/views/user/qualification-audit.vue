@@ -14,6 +14,7 @@
     <template v-slot:filterBar>
       <form-item label="关键字搜索">
         <el-input
+          style="width: 250px"
           v-model="searchData.keywords"
           placeholder="请输入用户名、注册手机号/邮箱"
           clearable
@@ -36,6 +37,7 @@
       </form-item>
       <form-item>
         <el-button type="primary" @click="getData(true)">搜索</el-button>
+        <el-button @click="clearSearch()">重置</el-button>
       </form-item>
     </template>
 
@@ -69,12 +71,9 @@
           min-width="150"
           show-overflow-tooltip
         />
-        <el-table-column
-          property="mobile"
-          label="手机"
-          min-width="130"
-          show-overflow-tooltip
-        />
+        <el-table-column label="手机" min-width="130" show-overflow-tooltip>
+          <template #default="scope">{{ scope.row.mobile || "-" }}</template>
+        </el-table-column>
         <el-table-column
           property="email"
           label="邮箱"
@@ -90,7 +89,7 @@
           <template #default="scope">
             <el-tooltip
               effect="dark"
-              :content="'用户提供链接无法打开'"
+              :content="scope.row.auditMsg"
               placement="top"
               v-if="scope.row.status === 2"
             >
@@ -105,15 +104,21 @@
             }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" fixed="right" min-width="90">
+        <el-table-column fixed="right" width="40">
+          <template #header>
+            <el-icon class="operation-icon" title="操作">
+              <operation />
+            </el-icon>
+          </template>
           <template #default="scope">
-            <el-button
-              type="primary"
+            <el-icon
+              class="icon-btn"
+              title="审核"
               @click="audit(scope.row)"
               v-if="scope.row.status === 0"
             >
-              审核
-            </el-button>
+              <checked />
+            </el-icon>
           </template>
         </el-table-column>
       </el-table>
@@ -174,6 +179,7 @@ import { useMyRouter } from "@/utils/hooks";
 import { ElMessage } from "element-plus";
 import { AuditQualifications, ListParams, UserService } from "@/api/request";
 import { watch } from "vue";
+import { Operation, Checked } from "@element-plus/icons-vue";
 
 /** 内测资格审核数据 */
 export interface Qualifications {
@@ -186,10 +192,16 @@ export interface Qualifications {
   mobile: string;
   email: string;
   latestLoginData: string;
+  auditMsg: string;
   status: 0 | 1 | 2;
 }
 
 export default {
+  components: {
+    Operation,
+    Checked,
+  },
+
   setup() {
     const { query, switchPage } = useMyRouter();
     const assetsData = {
@@ -224,6 +236,15 @@ export default {
           data.tableData = dataList;
           data.total = totalItem;
         }
+      },
+
+      /** 重置 */
+      clearSearch() {
+        data.searchData = {
+          currentPage: 1,
+          limit: 20,
+        };
+        this.getData(true);
       },
 
       /** 切换表格页码 */
@@ -308,12 +329,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.info-group {
-  word-break: keep-all;
-  display: flex;
-  align-items: center;
-}
-
 .audit-popup-body {
   margin-top: -40px;
 

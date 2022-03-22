@@ -15,13 +15,7 @@ export const formatDate = (time: string | undefined, format = "YYYY-MM-DD hh:mm:
   const minutes = String(date.getMinutes()).padStart(2, "0");
   const seconds = String(date.getSeconds()).padStart(2, "0");
 
-  const result = format
-    .replace("YYYY", year)
-    .replace("MM", month)
-    .replace("DD", day)
-    .replace("hh", hour)
-    .replace("mm", minutes)
-    .replace("ss", seconds);
+  const result = format.replace("YYYY", year).replace("MM", month).replace("DD", day).replace("hh", hour).replace("mm", minutes).replace("ss", seconds);
   return result;
 };
 
@@ -66,28 +60,15 @@ export const relativeTime = (time: string | undefined) => {
   return result;
 };
 
-// 判断设备
-export const judgeDevice = () => {
-  const mobile =
-    /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i;
-  const inMobile = navigator.userAgent.match(mobile);
-  return !!inMobile;
-};
+/**
+ * 时间段处理（用于列表时间段筛选）
+ * @param dateRange
+ */
+export const dateRange = (dateRange: string[] | undefined | null) => {
+  if (!dateRange) return [null, null];
 
-// 弹出轻提示
-let timeout: any = null;
-export const showToast = (msg: string) => {
-  const toast = document.getElementById("toast-wrapper");
-  if (toast) document.body.removeChild(toast);
-  if (timeout) clearTimeout(timeout);
+  const startDate = formatDate(dateRange[0]);
+  const endDate = formatDate(dateRange[1], "YYYY-MM-DD") + " 23:59:59";
 
-  const div = document.createElement("div");
-  div.className = "toast-wrapper";
-  div.id = "toast-wrapper";
-  div.innerHTML = msg;
-  document.body.appendChild(div);
-
-  timeout = setTimeout(() => {
-    document.body.removeChild(div);
-  }, 2000);
+  return [startDate, endDate];
 };

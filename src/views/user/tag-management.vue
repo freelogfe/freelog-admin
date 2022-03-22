@@ -7,11 +7,7 @@
 
     <template v-slot:table>
       <el-table :data="tableData" stripe>
-        <el-table-column
-          label="标签"
-          min-width="100"
-          show-overflow-tooltip
-        >
+        <el-table-column label="标签" min-width="100" show-overflow-tooltip>
           <template #default="scope">
             <el-button
               type="text"
@@ -38,16 +34,27 @@
             }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" fixed="right" min-width="90">
+        <el-table-column fixed="right" width="70">
+          <template #header>
+            <el-icon class="operation-icon" title="操作">
+              <operation />
+            </el-icon>
+          </template>
           <template #default="scope">
-            <div class="operate-btns">
-              <el-button type="primary" @click="openTagPopup(scope.row)"
-                >编辑</el-button
-              >
-              <el-button type="danger" @click="deleteTag(scope.row.tagId)"
-                >删除</el-button
-              >
-            </div>
+            <el-icon
+              class="icon-btn"
+              title="编辑"
+              @click="openTagPopup(scope.row)"
+            >
+              <edit />
+            </el-icon>
+            <el-icon
+              class="icon-btn"
+              title="删除"
+              @click="deleteTag(scope.row.tagId)"
+            >
+              <delete />
+            </el-icon>
           </template>
         </el-table-column>
       </el-table>
@@ -55,7 +62,6 @@
   </list-template>
 
   <el-dialog
-    custom-class="aaa"
     v-model="tagPopupShow"
     :title="operateData.tagId ? '编辑标签' : '创建标签'"
   >
@@ -78,6 +84,7 @@ import { useMyRouter } from "@/utils/hooks";
 import { ElMessageBox } from "element-plus";
 import { UserService } from "@/api/request";
 import { ElMessage } from "element-plus/lib/components";
+import { Operation, Edit, Delete } from "@element-plus/icons-vue";
 
 /** 用户标签数据 */
 export interface UserTag {
@@ -88,6 +95,12 @@ export interface UserTag {
 }
 
 export default {
+  components: {
+    Operation,
+    Edit,
+    Delete,
+  },
+
   setup() {
     const { switchPage } = useMyRouter();
     const assetsData = {
@@ -98,7 +111,6 @@ export default {
     };
     const data = reactive({
       tableData: [] as UserTag[],
-      searchData: {},
       operateData: {} as UserTag,
       tagPopupShow: false,
     });
@@ -172,18 +184,3 @@ export default {
   },
 };
 </script>
-
-<style lang="scss" scoped>
-.operate-btns {
-  display: flex;
-
-  button + button {
-    margin-left: 10px;
-  }
-}
-
-::v-deep .el-overlay {
-  z-index: 1000 !important;
-  background-color: #fff;
-}
-</style>

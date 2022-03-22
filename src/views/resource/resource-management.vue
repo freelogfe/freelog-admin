@@ -8,7 +8,8 @@
     </template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="setTag()">批量管理资源标签</el-button>
+      <el-button type="primary" @click="banResources()">批量封禁资源</el-button>
+      <el-button type="primary" @click="setTag()">批量添加资源标签</el-button>
       <el-button type="primary" @click="switchPage('/resource/tag-management')"
         >管理标签</el-button
       >
@@ -25,22 +26,34 @@
       </form-item>
       <form-item label="标签">
         <el-select
-          v-model="searchData.tags"
+          v-model="searchData.selectedTags"
           multiple
           placeholder="请选择标签"
           clearable
         >
           <el-option
-            v-for="item in userTagsList"
-            :key="item.tagId"
-            :label="item.tag"
-            :value="item.tagId"
+            v-for="item in resourceTagsList"
+            :key="item"
+            :value="item"
           />
         </el-select>
       </form-item>
-      <form-item label="注册时间">
+      <form-item label="类型">
+        <el-select
+          v-model="searchData.resourceType"
+          placeholder="请选择类型"
+          clearable
+        >
+          <el-option
+            v-for="item in resourceTypeList"
+            :key="item"
+            :value="item"
+          />
+        </el-select>
+      </form-item>
+      <form-item label="创建时间">
         <el-date-picker
-          v-model="searchData.registerDate"
+          v-model="searchData.createDate"
           type="daterange"
           unlink-panels
           range-separator="-"
@@ -50,93 +63,135 @@
           :shortcuts="dateRangeShortcuts"
         />
       </form-item>
+      <form-item label="排序">
+        <el-select
+          v-model="searchData.sort"
+          placeholder="请选择排序方式"
+          clearable
+        >
+          <el-option
+            v-for="item in sortTypeList"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </form-item>
       <form-item>
         <el-button type="primary" @click="getData(true)">搜索</el-button>
+        <el-button @click="clearSearch()">重置</el-button>
       </form-item>
     </template>
 
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable">
         <el-table-column type="selection" />
-        <el-table-column
-          property="username"
-          label="用户"
-          min-width="150"
-          show-overflow-tooltip
-        />
-        <el-table-column label="标签" width="400">
+        <el-table-column label="资源" width="200" show-overflow-tooltip>
+          <template #default="scope">
+            <el-button
+              type="text"
+              @click="
+                switchPage('/user/user-management', {
+                  username: scope.row.username,
+                })
+              "
+              >{{ scope.row.username }}
+            </el-button>
+            /
+            <el-button
+              type="text"
+              style="margin-left: 0"
+              @click="
+                switchPage('/user/user-management', {
+                  tag: scope.row.tagId,
+                })
+              "
+              >{{ scope.row.resourceNameAbbreviation }}
+            </el-button>
+          </template>
+        </el-table-column>
+        <el-table-column label="标签" width="200">
           <template #default="scope">
             <div class="tags-box">
               <el-tag
                 class="tag"
                 closable
                 v-for="item in scope.row.tags"
-                :key="item.tagId"
-                @close="removeTag(scope.row.userId, item.tagId)"
+                :key="item"
+                @close="removeTag(scope.row.resourceId, item)"
               >
-                {{ item.tag }}
+                {{ item }}
               </el-tag>
-              <el-button
-                class="add-tag"
-                size="small"
+              <el-icon
+                class="icon-btn"
+                title="管理标签"
                 @click="setTag(scope.row)"
               >
-                管理标签
-              </el-button>
+                <edit />
+              </el-icon>
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="最近登录" width="160">
+        <el-table-column label="封面" width="120">
           <template #default="scope">
-            {{
-              scope.row.latestLoginDate
-                ? relativeTime(scope.row.latestLoginDate)
-                : "-"
-            }}
+            <el-image
+              class="cover-image"
+              :src="scope.row.coverImages[0]"
+              :preview-src-list="scope.row.coverImages"
+              preview-teleported
+              hide-on-click-modal
+            />
           </template>
         </el-table-column>
         <el-table-column
-          property="createdResourceCount"
-          label="发布资源数"
-          align="right"
-          width="120"
-        />
-        <el-table-column
-          property="createdNodeCount"
-          label="运营节点数"
-          align="right"
-          width="120"
-        />
-        <el-table-column
-          property="signedContractCount"
-          label="消费合约数"
-          align="right"
-          width="120"
-        />
-        <el-table-column
-          property="tradeCount"
-          label="交易次数"
-          align="right"
+          property="resourceType"
+          label="类型"
           width="100"
+          show-overflow-tooltip
         />
         <el-table-column
-          property="balance"
-          label="代币余额"
+          property="signCount"
+          label="需方合约数"
           align="right"
-          width="100"
+          width="120"
         />
-        <el-table-column label="注册时间" sortable width="160">
+        <el-table-column
+          property="collectCount"
+          label="收藏数"
+          align="right"
+          width="120"
+        />
+        <el-table-column label="最新版本">
+          <template #default="scope">
+            <div class="table-cell-item">
+              <span>{{ scope.row.latestVersion }}</span>
+              <el-icon
+                class="icon-btn"
+                title="查看历史记录"
+                @click="viewHistory(scope.row)"
+              >
+                <clock />
+              </el-icon>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column property="updateDate" label="更新时间" width="160">
+          <template #default="scope">{{
+            relativeTime(scope.row.updateDate)
+          }}</template>
+        </el-table-column>
+        <el-table-column property="createDate" label="创建时间" width="160">
           <template #default="scope">{{
             formatDate(scope.row.createDate)
           }}</template>
         </el-table-column>
-        <el-table-column label="账号状态">
+        <el-table-column label="资源状态">
           <template #default="scope">
             <el-tooltip
               effect="dark"
               :content="scope.row.statusChangeRemark"
               placement="top"
-              v-if="scope.row.status === 1"
+              v-if="scope.row.status === 0"
             >
               {{
                 statusMapping.find((item) => item.value === scope.row.status)
@@ -149,31 +204,36 @@
             }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" fixed="right" min-width="90">
+        <el-table-column fixed="right" width="70">
+          <template #header>
+            <el-icon class="operation-icon" title="操作">
+              <operation />
+            </el-icon>
+          </template>
           <template #default="scope">
-            <div class="operate-btns">
-              <el-button
-                type="danger"
-                @click="freeze(scope.row.userId)"
-                v-if="scope.row.status === 0"
-              >
-                冻结
-              </el-button>
-              <el-button
-                type="success"
-                @click="restore(scope.row.userId)"
-                v-if="scope.row.status === 1"
-              >
-                恢复
-              </el-button>
-              <el-button
-                type="primary"
-                @click="audit(scope.row.username)"
-                v-if="scope.row.status === 2"
-              >
-                审核
-              </el-button>
-            </div>
+            <el-icon
+              class="icon-btn"
+              title="封禁"
+              @click="banResources(scope.row.resourceId)"
+              v-if="scope.row.status === 1"
+            >
+              <close />
+            </el-icon>
+            <el-icon
+              class="icon-btn"
+              title="解禁"
+              @click="restore(scope.row.resourceId)"
+              v-if="scope.row.status === 0"
+            >
+              <check />
+            </el-icon>
+            <el-icon
+              class="icon-btn"
+              title="查看授权策略"
+              @click="viewPolicy(scope.row)"
+            >
+              <document />
+            </el-icon>
           </template>
         </el-table-column>
       </el-table>
@@ -190,19 +250,14 @@
     </template>
   </list-template>
 
-  <el-dialog v-model="setTagPopupShow" title="管理用户标签">
+  <el-dialog v-model="setTagPopupShow" title="管理资源标签">
     <el-select
       style="width: 100%"
       v-model="setTagData.tags"
       multiple
       placeholder="请选择标签"
     >
-      <el-option
-        v-for="item in userTagsList"
-        :key="item.tagId"
-        :label="item.tag"
-        :value="item.tagId"
-      />
+      <el-option v-for="item in resourceTagsList" :key="item" :value="item" />
     </el-select>
     <el-input
       style="margin-top: 10px"
@@ -216,92 +271,142 @@
     </template>
   </el-dialog>
 
-  <el-dialog v-model="freezePopupShow" title="冻结账户">
-    <el-radio-group v-model="operateData.freezeReason">
-      <el-radio label="抄袭、侵权"></el-radio>
-      <el-radio label="欺诈"></el-radio>
-      <el-radio label="垃圾广告"></el-radio>
-      <el-radio label="色情、暴力"></el-radio>
-      <el-radio label="不实信息"></el-radio>
-      <el-radio label="恶意操作"></el-radio>
-    </el-radio-group>
-    <el-input
-      style="margin-top: 10px"
-      v-model="operateData.remark"
-      :autosize="{ minRows: 2, maxRows: 4 }"
-      type="textarea"
-      placeholder="请输入备注（选填）"
-    />
+  <el-dialog v-model="policyPopupShow" title="授权策略" width="80%">
+    <div class="policy-box">
+      <div class="policy-item" v-for="item in policyData" :key="item.policyId">
+        <div class="policy-top">
+          <div class="policy-name" :title="item.policyName">
+            {{ item.policyName }}
+          </div>
+          <div class="policy-status" :class="{ active: item.status === 1 }">
+            <span v-if="item.status === 1">已启用</span>
+            <span v-if="item.status === 0">未启用</span>
+          </div>
+        </div>
+        <div class="policy-code" v-html="item.policyText"></div>
+      </div>
+    </div>
+  </el-dialog>
+
+  <el-dialog v-model="banPopupShow" title="封禁资源" width="800px">
+    <form-item label="封禁原因">
+      <el-radio-group v-model="operateData.reason">
+        <el-radio label="抄袭、侵权"></el-radio>
+        <el-radio label="欺诈"></el-radio>
+        <el-radio label="垃圾广告"></el-radio>
+        <el-radio label="色情、暴力"></el-radio>
+        <el-radio label="不实信息"></el-radio>
+        <el-radio label="恶意操作"></el-radio>
+      </el-radio-group>
+    </form-item>
+    <form-item label="备注">
+      <el-input
+        v-model="operateData.remark"
+        :autosize="{ minRows: 2, maxRows: 4 }"
+        type="textarea"
+        placeholder="请输入备注（选填）"
+      />
+    </form-item>
     <template #footer>
-      <el-button @click="freezePopupShow = false">取消</el-button>
-      <el-button type="primary" @click="operateConfirm(1)">冻结</el-button>
+      <el-button @click="banPopupShow = false">取消</el-button>
+      <el-button type="primary" @click="operateConfirm(1)">封禁</el-button>
     </template>
   </el-dialog>
 </template>
 
 <script lang="ts">
-import { reactive, toRefs, watch } from "vue-demi";
-import { formatDate, relativeTime } from "../../utils/common";
+import { reactive, toRefs } from "vue-demi";
+import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
 import {
-  ContractsService,
-  NodeService,
   ResourceService,
   ListParams,
   UserService,
   OperateParams,
+  ContractsService,
 } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
+import {
+  Operation,
+  Edit,
+  Clock,
+  Close,
+  Check,
+  Document,
+} from "@element-plus/icons-vue";
 
-/** 用户数据 */
-export interface User {
+/** 资源数据 */
+export interface Resource {
+  resourceId: string;
+  resourceType: string;
+  resourceName: string;
   userId: number;
   username: string;
-  tags: any[];
-  latestLoginDate: string;
-  createdResourceCount: number;
-  createdNodeCount: number;
-  signedContractCount: number;
-  tradeCount: number;
-  balance: string;
-  mobile: string;
-  email: string;
-  createDate: string;
-  status: 0 | 1 | 2 | 3;
+  coverImages: string[];
+  intro: string;
+  tags: string[];
+  latestVersion: string;
+  resourceVersions: any[];
+  policies: any[];
+  baseUpcastResources: any[];
+  signCount: number;
+  collectCount: number;
 }
 
-/** 用户标签数据 */
-export interface UserTag {
+/** 资源标签数据 */
+export interface ResourceTag {
   tagId: string;
   tag: string;
 }
 
 export default {
+  components: {
+    Operation,
+    Edit,
+    Clock,
+    Close,
+    Check,
+    Document,
+  },
+
   setup() {
-    const { switchPage } = useMyRouter();
+    const { query, switchPage } = useMyRouter();
     const assetsData = {
+      resourceTypeList: [
+        "image",
+        "audio",
+        "video",
+        "markdown",
+        "widget",
+        "theme",
+      ],
       statusMapping: [
-        { value: 0, label: "正常" },
-        { value: 1, label: "冻结" },
-        { value: 2, label: "待审核" },
-        { value: 3, label: "未通过" },
+        { value: 0, label: "下线" },
+        { value: 1, label: "上线" },
+      ],
+      sortTypeList: [
+        { value: "updateDate:1", label: "更新时间升序" },
+        { value: "updateDate:-1", label: "更新时间降序" },
+        { value: "createDate:1", label: "创建时间升序" },
+        { value: "createDate:-1", label: "创建时间降序" },
       ],
     };
     const data = reactive({
-      tableData: [] as User[],
+      tableData: [] as Resource[],
       total: 0,
-      selectedData: [] as User[],
-      userTagsList: [] as UserTag[],
+      selectedData: [] as Resource[],
+      resourceTagsList: [] as ResourceTag[],
       searchData: {
         currentPage: 1,
         limit: 20,
       } as ListParams,
       setTagData: {} as any,
+      policyData: [] as any[],
       operateData: {} as OperateParams,
-      copyValue: "",
       setTagPopupShow: false,
-      freezePopupShow: false,
+      policyPopupShow: false,
+      banPopupShow: false,
     });
 
     const methods = {
@@ -311,13 +416,15 @@ export default {
         const {
           currentPage,
           limit,
-          tags = [],
-          registerDate = ["", ""],
+          sort,
+          selectedTags = [],
+          createDate,
         } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
-        data.searchData.tagIds = tags.join(",");
-        data.searchData.startRegisteredDate = registerDate[0];
-        data.searchData.endRegisteredDate = registerDate[1];
+        if (!sort) delete data.searchData.sort;
+        data.searchData.tags = selectedTags.join(",");
+        [data.searchData.startCreateDate, data.searchData.endCreateDate] =
+          dateRange(createDate);
         const result = await ResourceService.getResourceList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
@@ -328,47 +435,42 @@ export default {
             return;
           }
 
-          const userIds = dataList
-            .map((item: User) => {
-              return item.userId;
+          const ids = dataList
+            .map((item: Resource) => {
+              return item.resourceId;
             })
             .join(",");
           const results = await Promise.all([
-            ResourceService.getUserResourcesCount({ userIds }),
-            NodeService.getUserNodesCount({ userIds }),
-            ContractsService.getUserContractsCount({ userIds }),
-            UserService.getUserTradeCount({ userIds }),
-            UserService.getUserAccount({ userIds }),
+            ContractsService.getResourcesSignCount({
+              subjectIds: ids,
+              subjectType: 1,
+            }),
+            ResourceService.getResourcesCollectCount({ resourceIds: ids }),
           ]);
-          dataList.forEach((user: User) => {
-            const { userId } = user;
-            user.createdResourceCount = results[0].data.data.find(
-              (item: { userId: number; createdResourceCount: number }) =>
-                item.userId === userId
-            ).createdResourceCount;
-            user.createdNodeCount = results[1].data.data.find(
-              (item: { userId: number; createdNodeCount: number }) =>
-                item.userId === userId
-            ).createdNodeCount;
-            user.signedContractCount = results[2].data.data.find(
-              (item: { userId: number; signedContractCount: number }) =>
-                item.userId === userId
-            ).signedContractCount;
-            user.tradeCount = results[3].data.data.find(
-              (item: { userId: number; count: number }) =>
-                item.userId === userId
+          dataList.forEach((resource: Resource) => {
+            const { resourceId } = resource;
+            resource.signCount = results[0].data.data.find(
+              (item: { subjectId: string; count: number }) =>
+                item.subjectId === resourceId
             ).count;
-            user.balance = (
-              results[4].data.data.find(
-                (item: { ownerUserId: number; balance: string }) =>
-                  item.ownerUserId == userId
-              ) || { balance: "-" }
-            ).balance;
+            resource.collectCount = results[1].data.data.find(
+              (item: { resourceId: string; count: number }) =>
+                item.resourceId === resourceId
+            ).count;
           });
 
           data.tableData = dataList;
           data.total = totalItem;
         }
+      },
+
+      /** 重置 */
+      clearSearch() {
+        data.searchData = {
+          currentPage: 1,
+          limit: 20,
+        };
+        this.getData(true);
       },
 
       /** 切换表格页码 */
@@ -377,19 +479,22 @@ export default {
         this.getData();
       },
 
-      /** 冻结操作 */
-      freeze(userId: string) {
-        data.operateData = { userId };
-        data.freezePopupShow = true;
+      /** 封禁操作 */
+      banResources(resourceId?: string) {
+        data.operateData = {
+          resourceId:
+            resourceId || data.selectedData.map((item) => item.resourceId),
+        };
+        data.banPopupShow = true;
       },
 
-      /** 恢复操作 */
-      restore(userId: string) {
-        ElMessageBox.confirm("确认要恢复该账号的使用吗？", "恢复账号", {
-          confirmButtonText: "恢复",
+      /** 解封操作 */
+      restore(resourceId: string) {
+        ElMessageBox.confirm("确认要解除该资源的封禁吗？", "解封封禁", {
+          confirmButtonText: "解封",
           cancelButtonText: "取消",
         }).then(() => {
-          data.operateData.userId = userId;
+          data.operateData.resourceId = resourceId;
           this.operateConfirm(0);
         });
       },
@@ -399,33 +504,33 @@ export default {
         switchPage("/user/qualification-audit", { username });
       },
 
-      /** 操作（冻结/恢复） */
+      /** 操作（封禁/解封） */
       async operateConfirm(type: number) {
         data.operateData.status = type;
         const result = await UserService.freeOrRecoverUser(data.operateData);
         const { errcode } = result.data;
         if (errcode === 0) {
-          data.freezePopupShow = false;
+          data.banPopupShow = false;
           this.getData();
         }
       },
 
       /** 选择表格项 */
-      selectTable(selected: User[]) {
+      selectTable(selected: Resource[]) {
         data.selectedData = selected;
       },
 
-      /** 设置用户标签 */
-      setTag(item?: User) {
+      /** 设置资源标签 */
+      setTag(item?: Resource) {
         if (item) {
-          data.setTagData.users = [item];
-          data.setTagData.tags = item.tags.map((item) => item.tagId);
+          data.setTagData.resources = [item];
+          data.setTagData.tags = [...item.tags];
         } else {
           if (data.selectedData.length === 0) {
-            ElMessage.info("请选择需要管理用户标签的条目");
+            ElMessage.info("请选择需要管理资源标签的条目");
             return;
           }
-          data.setTagData.users = data.selectedData;
+          data.setTagData.resources = data.selectedData;
           data.setTagData.tags = [];
         }
         data.setTagPopupShow = true;
@@ -436,44 +541,67 @@ export default {
         const { newTag } = data.setTagData;
         if (!newTag) return;
 
-        const result = await UserService.createUserTag({
-          tags: [data.setTagData.newTag],
+        const existTag = data.resourceTagsList.find((item) => item === newTag);
+
+        if (existTag) {
+          if (data.setTagData.tags.includes(existTag)) {
+            // 输入的标签已选择
+            return;
+          }
+
+          // 输入的标签已存在且未选择，直接选择该标签
+          data.setTagData.tags.push(existTag);
+          data.setTagData.newTag = "";
+          return;
+        }
+
+        const result = await ResourceService.createResourceTag({
+          tagName: newTag,
+          tagType: 2,
+          resourceRange: [],
+          resourceRangeType: 3,
+          authority: 3,
         });
         const { errcode } = result.data;
         if (errcode === 0) {
-          const newTag = result.data.data[0];
-          data.userTagsList.push(newTag);
-          data.setTagData.tags.push(newTag.tagId);
+          data.resourceTagsList.push(newTag);
+          data.setTagData.tags.push(newTag);
           data.setTagData.newTag = "";
         }
       },
 
-      /** 设置用户标签 */
+      /** 设置资源标签 */
       async setTagConfirm() {
-        const { users, tags } = data.setTagData;
+        const { resources, tags } = data.setTagData;
         let addTags = [];
-        if (users.length === 1) {
+        if (resources.length === 1) {
           // 非批量操作，统计删除标签与添加标签
-          const user = users[0];
-          const deleteTags = [] as number[];
-          user.tags.forEach((item: { tagId: number }) => {
-            const { tagId } = item;
-            if (!tags.includes(tagId)) deleteTags.push(tagId);
+          const resource = resources[0];
+          const deleteTags = [] as string[];
+          resource.tags.forEach((item: string) => {
+            if (!tags.includes(item)) deleteTags.push(item);
           });
-          tags.forEach((id: number) => {
-            if (
-              !user.tags.find((item: { tagId: number }) => item.tagId === id)
-            ) {
-              addTags.push(id);
+          tags.forEach((tag: string) => {
+            if (!resource.tags.find((item: string) => item === tag)) {
+              addTags.push(tag);
             }
           });
           if (deleteTags.length !== 0) {
             // 存在删除标签，执行删除
-            const result = await UserService.unsetTag(user.userId, {
-              tagIds: deleteTags,
+            const result = await ResourceService.setResourceTag({
+              tags: deleteTags,
+              resourceIds: [resource.resourceId],
+              setType: 2,
             });
             const { errcode } = result.data;
             if (errcode !== 0) return;
+            if (addTags.length === 0) {
+              ElMessage(
+                "更新成功，批量操作更新有延迟，请过几秒刷新页面查看数据变化"
+              );
+              data.setTagPopupShow = false;
+              this.getData();
+            }
           }
         } else {
           // 批量操作，无删除标签，所有所选标签为添加标签
@@ -481,45 +609,71 @@ export default {
         }
         if (addTags.length !== 0) {
           // 存在添加标签，执行添加
-          const userIds = users.map((item: User) => item.userId).join(",");
-          const result = await UserService.setTag(userIds, {
-            tagIds: addTags,
+          const resourceIds = resources.map(
+            (item: Resource) => item.resourceId
+          );
+          const result = await ResourceService.setResourceTag({
+            tags: addTags,
+            resourceIds: resourceIds,
+            setType: 1,
           });
           const { errcode } = result.data;
           if (errcode === 0) {
+            ElMessage(
+              "更新成功，批量操作更新有延迟，请过几秒刷新页面查看数据变化"
+            );
             data.setTagPopupShow = false;
             this.getData();
           }
         }
       },
 
-      /** 删除用户标签 */
-      async removeTag(userId: number, tagId: number) {
-        const result = await UserService.unsetTag(userId, {
-          tagIds: [tagId],
+      /** 删除资源标签 */
+      async removeTag(resourceId: string, tagName: string) {
+        const result = await ResourceService.setResourceTag({
+          tags: [tagName],
+          resourceIds: [resourceId],
+          setType: 2,
         });
         const { errcode } = result.data;
         if (errcode === 0) {
-          const item = data.tableData.find((user) => user.userId === userId);
+          const item = data.tableData.find(
+            (resource) => resource.resourceId === resourceId
+          );
           if (!item) return;
-          item.tags = item.tags.filter((tag) => tag.tagId !== tagId);
+          item.tags = item.tags.filter((tag) => tag !== tagName);
         }
+      },
+
+      /** 查看授权策略 */
+      viewPolicy(resource: Resource) {
+        data.policyPopupShow = true;
+        data.policyData = resource.policies;
+      },
+
+      /** 查看历史版本 */
+      viewHistory(resource: Resource) {
+        const { versionId } = resource.resourceVersions[0];
+        this.getVersionFile(versionId);
+      },
+
+      /** 获取响应版本文件内容 */
+      async getVersionFile(versionId: string) {
+        const result = await ResourceService.getResourceFile(versionId);
+        console.error(result);
       },
     };
 
-    /** 获取用户标签 */
+    /** 获取资源标签 */
     const getUserTags = async () => {
-      const result = await UserService.getUserTagsList();
-      data.userTagsList = result.data.data;
+      const result = await ResourceService.getResourcesTagsList({ limit: 100 });
+      data.resourceTagsList = result.data.data.dataList.map(
+        (item: { tagName: string }) => item.tagName
+      );
     };
 
-    watch(
-      () => data.operateData.freezeReason,
-      (cur) => {
-        data.operateData.remark = cur || "";
-      }
-    );
-
+    data.searchData.keywords = query.value.username;
+    if (query.value.tag) data.searchData.selectedTags = [query.value.tag];
     methods.getData(true);
     getUserTags();
 
@@ -539,36 +693,81 @@ export default {
 <style lang="scss" scoped>
 .tags-box {
   width: 100%;
-  padding: 0 16px;
-  box-sizing: border-box;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
 
   .tag {
     flex-shrink: 0;
-    margin: 2px;
+    margin: 0 8px 5px 0;
   }
 
-  .add-tag {
-    color: #409eff;
-    margin-left: 5px;
-    border-style: dashed;
-    margin-left: 2px;
+  .icon-btn {
+    margin-left: 0;
+    margin-bottom: 5px;
   }
 }
 
-.info-group {
-  word-break: keep-all;
-  display: flex;
-  align-items: center;
+.cover-image {
+  width: 100px;
+  border: 1px solid #eee;
 }
 
-.operate-btns {
+.policy-box {
+  width: 100%;
   display: flex;
+  flex-wrap: wrap;
 
-  button + button {
-    margin-left: 10px;
+  .policy-item {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    width: 32%;
+    margin-right: 2%;
+    padding: 15px;
+    box-sizing: border-box;
+    transition: all 0.2s linear;
+
+    &:hover {
+      box-shadow: 0 0 10px #999;
+    }
+
+    &:nth-child(3n) {
+      margin-right: 0;
+    }
+
+    &:nth-child(n + 4) {
+      margin-top: 15px;
+    }
+
+    .policy-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .policy-name {
+        flex: 1;
+        width: 0;
+        font-size: 16px;
+        font-weight: bold;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .policy-status {
+        color: #666;
+        margin-left: 20px;
+
+        &.active {
+          color: #67c23a;
+        }
+      }
+    }
+
+    .policy-code {
+      margin-top: 15px;
+      white-space: pre-wrap;
+    }
   }
 }
 </style>

@@ -10,7 +10,11 @@
       @click="switchPage(item.fullPath)"
     >
       <span>{{ item.meta.title }}</span>
-      <el-icon class="delete-btn" @click.stop="deleteHistory(item)" v-if="routerHistory.length > 1">
+      <el-icon
+        class="delete-btn"
+        @click.stop="deleteHistory(item)"
+        v-if="routerHistory.length > 1"
+      >
         <close-bold />
       </el-icon>
     </div>
@@ -41,7 +45,9 @@ export default {
     const addHistory = (current: RouteLocationNormalizedLoaded) => {
       const { routerHistory } = store.state;
       if (
-        !routerHistory.some((item: RouteLocationNormalizedLoaded) => item.path === current.path) &&
+        !routerHistory.some(
+          (item: RouteLocationNormalizedLoaded) => item.path === current.path
+        ) &&
         !current.meta.noHistory
       ) {
         // 历史中没有此页面，添加历史
@@ -66,11 +72,15 @@ export default {
       const startOffset = item.offsetLeft - 210;
       const endOffset = startOffset + item.offsetWidth;
       // 已完全存在于可视区域，不滚动
-      if (startOffset > scrollLeft && endOffset < scrollLeft + clientWidth) return;
+      if (startOffset > scrollLeft && endOffset < scrollLeft + clientWidth)
+        return;
 
       if (scrollLeft <= startOffset) {
         // 从左向右滚动
-        bar.value.scroll({ left: endOffset - clientWidth + 5, behavior: "smooth" });
+        bar.value.scroll({
+          left: endOffset - clientWidth + 5,
+          behavior: "smooth",
+        });
       } else {
         // 从右向左滚动
         bar.value.scroll({ left: startOffset - 5, behavior: "smooth" });
@@ -80,9 +90,12 @@ export default {
     // 删除历史
     const deleteHistory = (select: RouteLocationNormalizedLoaded) => {
       const { routerHistory } = store.state;
-      const index = routerHistory.findIndex((item: RouteLocationNormalizedLoaded) => item.path === select.path);
+      const index = routerHistory.findIndex(
+        (item: RouteLocationNormalizedLoaded) => item.path === select.path
+      );
       // 当删除的是最后一个历史页面，则自动跳转到上一个历史页面
-      if (index === routerHistory.length - 1) switchPage(routerHistory[routerHistory.length - 2].fullPath);
+      if (index === routerHistory.length - 1)
+        switchPage(routerHistory[routerHistory.length - 2].fullPath);
       routerHistory.splice(index, 1);
       store.commit("setData", { key: "routerHistory", value: routerHistory });
     };
@@ -105,12 +118,12 @@ export default {
   width: 100%;
   height: 40px;
   background: #fff;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 12%), 0 0 3px 0 rgb(0 0 0 / 4%);
   padding: 2px 16px 0;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   overflow-x: auto;
+  border-bottom: 1px solid #f0f2f5;
   z-index: 1;
 
   &::-webkit-scrollbar {
@@ -129,13 +142,13 @@ export default {
   .history-item {
     flex-shrink: 0;
     width: fit-content;
-    height: 22px;
-    border: 1px solid #eee;
-    color: #666;
-    background: #fff;
-    padding: 0 8px;
+    height: 26px;
+    color: #aaa;
+    background-color: #fff;
+    border: 1px solid #f0f2f5;
+    padding: 0 20px;
     box-sizing: border-box;
-    font-size: 12px;
+    font-size: 14px;
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -143,18 +156,28 @@ export default {
     transition: all 0.2s linear;
 
     & + .history-item {
-      margin-left: 5px;
+      margin-left: 8px;
+    }
+
+    &:hover {
+      background-color: #f0f2f5;
     }
 
     &.active {
       background-color: #f0f2f5;
-      border-color: #f0f2f5;
+      color: #7c7c7c;
+      background-image: url(../assets/images/texture.png);
     }
 
     .delete-btn {
       margin-left: 5px;
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
+      transition: all 0.2s linear;
+
+      &:hover {
+        color: #626262;
+      }
     }
   }
 }

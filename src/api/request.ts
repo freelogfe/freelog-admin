@@ -16,6 +16,7 @@ interface HttpResponse {
 export interface ListParams {
   skip?: number;
   limit: number;
+  sort?: string;
   [key: string]: any;
 }
 
@@ -54,6 +55,16 @@ export interface CreateCodeParams {
   startEffectiveDate?: string;
   endEffectiveDate?: string;
   [key: string]: any;
+}
+
+/** 创建/编辑资源标签参数 */
+export interface OperateResourceTag {
+  tagIds?: string[];
+  tagName?: string;
+  tagType: number;
+  resourceRange: string[];
+  resourceRangeType: number;
+  authority: number;
 }
 
 /** Passport 类接口 */
@@ -102,8 +113,8 @@ export class UserService {
   }
 
   /** 设置用户标签 */
-  static setTag(userId: number, data: { tagIds: number[] }): Promise<HttpResponse> {
-    return Axios(`/v2/users/${userId}/setTag`, { method: "PUT", data });
+  static setTag(data: { userIds: number[]; tagIds: number[] }): Promise<HttpResponse> {
+    return Axios(`/v2/users/batchSetTag`, { method: "PUT", data });
   }
 
   /** 取消用户标签 */
@@ -161,12 +172,47 @@ export class UserService {
 export class ResourceService {
   /** 获取资源列表 */
   static getResourceList(params: ListParams): Promise<HttpResponse> {
-    return Axios("/v2/resources", { method: "GET", params });
+    return Axios("/v2/resources", { method: "GET", params: { ...params, isLoadPolicyInfo: 1 } });
   }
 
   /** 获取用户发布资源数 */
   static getUserResourcesCount(params: UserIdsParams): Promise<HttpResponse> {
     return Axios("/v2/resources/count", { method: "GET", params });
+  }
+
+  /** 获取资源收藏数 */
+  static getResourcesCollectCount(params: { resourceIds: string }): Promise<HttpResponse> {
+    return Axios("/v2/collections/resources/batch/count", { method: "GET", params });
+  }
+
+  /** 获取资源文件内容 */
+  static getResourceFile(versionId: string): Promise<HttpResponse> {
+    return Axios(`/v2/resources/versions/${versionId}/internalClientDownload`, { method: "GET" });
+  }
+
+  /** 获取资源标签列表 */
+  static getResourcesTagsList(params: ListParams): Promise<HttpResponse> {
+    return Axios("/v2/resources/tags/admin", { method: "GET", params });
+  }
+
+  /** 获取资源标签使用数量 */
+  static getResourcesUseCount(params: { tagIds: string }): Promise<HttpResponse> {
+    return Axios("/v2/resources/tags/statistics", { method: "GET", params });
+  }
+
+  /** 设置或移除资源标签 */
+  static setResourceTag(data: { tags: string[]; resourceIds: string[]; setType: number }): Promise<HttpResponse> {
+    return Axios("/v2/resources/tags/batchSetOrRemoveResourceTag", { method: "PUT", data });
+  }
+
+  /** 创建资源标签 */
+  static createResourceTag(data: OperateResourceTag): Promise<HttpResponse> {
+    return Axios("/v2/resources/tags", { method: "POST", data });
+  }
+
+  /** 编辑资源标签 */
+  static updateResourceTag(data: OperateResourceTag): Promise<HttpResponse> {
+    return Axios("/v2/resources/tags", { method: "PUT", data });
   }
 }
 
@@ -183,5 +229,10 @@ export class ContractsService {
   /** 获取用户消费合约数 */
   static getUserContractsCount(params: UserIdsParams): Promise<HttpResponse> {
     return Axios("/v2/contracts/count", { method: "GET", params });
+  }
+
+  /** 获取标的物签约数 */
+  static getResourcesSignCount(params: { subjectIds: string; subjectType: 1 | 2 | 3 }): Promise<HttpResponse> {
+    return Axios("/v2/contracts/subjects/signCount", { method: "GET", params });
   }
 }

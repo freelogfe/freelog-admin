@@ -22,8 +22,9 @@
     <template v-slot:filterBar>
       <form-item label="关键字搜索">
         <el-input
+          style="width: 250px"
           v-model="searchData.keywords"
-          placeholder="请输入邀请码或邀请者用户名"
+          placeholder="请输入邀请码、邀请者用户名"
           clearable
           @keyup.enter="getData(true)"
         />
@@ -56,6 +57,7 @@
       </form-item>
       <form-item>
         <el-button type="primary" @click="getData()">搜索</el-button>
+        <el-button @click="clearSearch()">重置</el-button>
       </form-item>
     </template>
 
@@ -64,10 +66,10 @@
         <el-table-column type="selection" />
         <el-table-column label="邀请码" width="150" show-overflow-tooltip>
           <template #default="scope">
-            <div class="info-group">
-              {{ scope.row.code }}
+            <div class="table-cell-item">
+              <span>{{ scope.row.code }}</span>
               <el-icon
-                class="copy-btn"
+                class="icon-btn"
                 title="复制"
                 @click="copy(scope.row.code)"
                 ><copy-document
@@ -99,36 +101,47 @@
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column label="剩余次数">
+        <el-table-column label="剩余次数" width="100">
           <template #default="scope">
-            <div class="info-group">
-              {{ scope.row.limitCount - scope.row.usedCount }}/{{
-                scope.row.limitCount
-              }}
+            <div class="table-cell-item">
+              <span v-if="scope.row.limitCount">
+                {{ scope.row.limitCount - scope.row.usedCount }}/
+                {{ scope.row.limitCount }}
+              </span>
+              <span v-else>不限</span>
               <el-icon
-                class="copy-btn"
-                title="使用记录"
+                class="icon-btn"
+                title="查看使用记录"
                 @click="viewRecord(scope.row.code)"
                 ><document
               /></el-icon>
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="有效期" width="200">
+        <el-table-column label="有效期" width="250">
           <template #default="scope">
             <span v-if="scope.row.endEffectiveDate"
               >{{ formatDate(scope.row.startEffectiveDate, "YYYY-MM-DD") }} 至
               {{ formatDate(scope.row.endEffectiveDate, "YYYY-MM-DD") }}</span
             >
             <span v-else>永久</span>
+            <el-tag
+              style="margin-left: 5px"
+              type="danger"
+              v-if="
+                scope.row.endEffectiveDate &&
+                !isValid(scope.row.endEffectiveDate)
+              "
+            >
+              已过期
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column
-          property="beizhu"
-          label="备注"
-          min-width="150"
-          show-overflow-tooltip
-        />
+        <el-table-column label="备注" min-width="150" show-overflow-tooltip>
+          <template #default="scope">
+            {{ scope.row.remark || "-" }}
+          </template>
+        </el-table-column>
         <el-table-column label="状态">
           <template #default="scope">
             {{
@@ -137,20 +150,29 @@
             }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" fixed="right" min-width="90">
+        <el-table-column fixed="right" width="40">
+          <template #header>
+            <el-icon class="operation-icon" title="操作">
+              <operation />
+            </el-icon>
+          </template>
           <template #default="scope">
-            <el-button
-              type="primary"
+            <el-icon
+              class="icon-btn"
+              title="禁用"
               @click="operate(1, scope.row.code)"
               v-if="scope.row.status === 0"
-              >禁用</el-button
             >
-            <el-button
-              type="primary"
+              <close />
+            </el-icon>
+            <el-icon
+              class="icon-btn"
+              title="解禁"
               @click="operate(0, scope.row.code)"
               v-if="scope.row.status === 1"
-              >解禁</el-button
             >
+              <check />
+            </el-icon>
           </template>
         </el-table-column>
       </el-table>
@@ -281,10 +303,16 @@
 
 <script lang="ts">
 import { reactive, toRefs } from "vue-demi";
-import { formatDate, relativeTime } from "../../utils/common";
+import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { CopyDocument, Document } from "@element-plus/icons-vue";
+import {
+  Operation,
+  CopyDocument,
+  Document,
+  Close,
+  Check,
+} from "@element-plus/icons-vue";
 import { nextTick } from "vue";
 import { dateRangeShortcuts } from "@/assets/data";
 import { CreateCodeParams, ListParams, UserService } from "@/api/request";
@@ -313,17 +341,19 @@ export interface CodeRecord {
 
 export default {
   components: {
+    Operation,
     CopyDocument,
     Document,
+    Close,
+    Check,
   },
 
   setup() {
     const { switchPage } = useMyRouter();
     const assetsData = {
       statusMapping: [
-        { value: 0, label: "生效中" },
-        { value: 1, label: "已过期" },
-        { value: 2, label: "已禁用" },
+        { value: 0, label: "正常" },
+        { value: 1, label: "已禁用" },
       ],
     };
     const data = reactive({
@@ -349,10 +379,10 @@ export default {
       /** 获取列表数据 */
       async getData(init = false) {
         if (init) data.searchData.currentPage = 1;
-        const { currentPage, limit, createDate = ["", ""] } = data.searchData;
+        const { currentPage, limit, createDate } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
-        data.searchData.beginCreateDate = createDate[0];
-        data.searchData.endCreateDate = createDate[1];
+        [data.searchData.beginCreateDate, data.searchData.endCreateDate] =
+          dateRange(createDate);
         const result = await UserService.getCodeList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
@@ -360,6 +390,15 @@ export default {
           data.tableData = dataList;
           data.total = totalItem;
         }
+      },
+
+      /** 重置 */
+      clearSearch() {
+        data.searchData = {
+          currentPage: 1,
+          limit: 20,
+        };
+        this.getData(true);
       },
 
       /** 切换表格页码 */
@@ -467,6 +506,13 @@ export default {
       selectTable(selected: Code[]) {
         data.selectedData = selected;
       },
+
+      /** 判断是否处于有效期 */
+      isValid(time: string) {
+        const now = new Date();
+        const timestamp = new Date(time);
+        return now < timestamp;
+      },
     };
 
     /** 表单验证 */
@@ -494,7 +540,7 @@ export default {
       return true;
     };
 
-    methods.getData();
+    methods.getData(true);
 
     return {
       dateRangeShortcuts,
@@ -510,32 +556,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.info-group {
-  word-break: keep-all;
-  display: flex;
-  align-items: center;
-
-  &:hover .copy-btn {
-    opacity: 1;
-  }
-
-  .copy-btn {
-    color: #169bd5;
-    margin-left: 5px;
-    cursor: pointer;
-    transition: all 0.2s linear;
-    opacity: 0;
-
-    &:hover {
-      color: #005980;
-    }
-
-    &:active {
-      color: #00b3ff;
-    }
-  }
-}
-
 .popup-item {
   display: flex;
 
