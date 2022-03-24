@@ -15,9 +15,7 @@
         <template v-for="group in router.options.routes" :key="group.name">
           <el-sub-menu :index="group.name" v-if="!group.meta.hidden">
             <template #title>
-              <el-icon class="item-icon"
-                ><component :is="group.meta.icon"
-              /></el-icon>
+              <el-icon class="item-icon"><component :is="group.meta.icon" /></el-icon>
               <span>{{ group.meta.title }}</span>
             </template>
             <template v-for="item in group.children" :key="item.name">

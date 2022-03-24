@@ -10,11 +10,7 @@
       @click="switchPage(item.fullPath)"
     >
       <span>{{ item.meta.title }}</span>
-      <el-icon
-        class="delete-btn"
-        @click.stop="deleteHistory(item)"
-        v-if="routerHistory.length > 1"
-      >
+      <el-icon class="delete-btn" @click.stop="deleteHistory(item)" v-if="routerHistory.length > 1">
         <close-bold />
       </el-icon>
     </div>
@@ -45,9 +41,7 @@ export default {
     const addHistory = (current: RouteLocationNormalizedLoaded) => {
       const { routerHistory } = store.state;
       if (
-        !routerHistory.some(
-          (item: RouteLocationNormalizedLoaded) => item.path === current.path
-        ) &&
+        !routerHistory.some((item: RouteLocationNormalizedLoaded) => item.path === current.path) &&
         !current.meta.noHistory
       ) {
         // 历史中没有此页面，添加历史
@@ -72,8 +66,7 @@ export default {
       const startOffset = item.offsetLeft - 210;
       const endOffset = startOffset + item.offsetWidth;
       // 已完全存在于可视区域，不滚动
-      if (startOffset > scrollLeft && endOffset < scrollLeft + clientWidth)
-        return;
+      if (startOffset > scrollLeft && endOffset < scrollLeft + clientWidth) return;
 
       if (scrollLeft <= startOffset) {
         // 从左向右滚动
@@ -90,12 +83,9 @@ export default {
     // 删除历史
     const deleteHistory = (select: RouteLocationNormalizedLoaded) => {
       const { routerHistory } = store.state;
-      const index = routerHistory.findIndex(
-        (item: RouteLocationNormalizedLoaded) => item.path === select.path
-      );
+      const index = routerHistory.findIndex((item: RouteLocationNormalizedLoaded) => item.path === select.path);
       // 当删除的是最后一个历史页面，则自动跳转到上一个历史页面
-      if (index === routerHistory.length - 1)
-        switchPage(routerHistory[routerHistory.length - 2].fullPath);
+      if (index === routerHistory.length - 1) switchPage(routerHistory[routerHistory.length - 2].fullPath);
       routerHistory.splice(index, 1);
       store.commit("setData", { key: "routerHistory", value: routerHistory });
     };
@@ -131,7 +121,7 @@ export default {
   }
 
   &::-webkit-scrollbar-thumb {
-    background-color: rgba(144, 147, 153, 0.3);
+    background-color: rgba(144, 147, 153, 0.1);
     border-radius: 4px;
 
     &:hover {

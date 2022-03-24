@@ -1,3 +1,7 @@
+/**
+ * 请求封装
+ */
+
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import qs from "qs";
 import { ElMessage } from "element-plus";
@@ -67,7 +71,7 @@ const service = axios.create({
   },
   transformResponse: [
     (data) => {
-      if (typeof data === "string" && data.startsWith("{")) {
+      if (typeof data === "string" && data.startsWith("{") && !data.startsWith("{{")) {
         data = JSON.parse(data);
       }
       return data;
@@ -152,7 +156,7 @@ service.interceptors.response.use(
         response.data.msg = msg;
       }
     }
-    if (response.data.errcode !== 0) {
+    if (response.data.errcode !== 0 && response.data.msg) {
       ElMessage.error(response.data.msg);
     }
     return response;

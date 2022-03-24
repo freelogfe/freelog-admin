@@ -1,71 +1,18 @@
+/**
+ * 服务器接口
+ */
+
 import Axios from "./http";
-
-/** 接口响应数据 */
-interface HttpResponse {
-  data: {
-    data: any;
-    errcode: number;
-    msg: string;
-    [key: string]: any;
-  };
-  status: number;
-  statusText: string;
-}
-
-/** 列表请求参数 */
-export interface ListParams {
-  skip?: number;
-  limit: number;
-  sort?: string;
-  [key: string]: any;
-}
-
-/** 批量以用户 id 请求参数 */
-export interface UserIdsParams {
-  userIds: string;
-}
-
-/** 操作类请求参数 */
-export interface OperateParams {
-  status?: number;
-  [key: string]: any;
-}
-
-/** 登录参数 */
-export interface LoginParams {
-  loginName: string;
-  password: string;
-  isRemember?: number;
-  returnUrl?: string;
-  jwtType?: string;
-}
-
-/** 审核内测资格参数 */
-export interface AuditQualifications {
-  recordIds?: string;
-  status?: 1 | 2;
-  auditMsg: string;
-  [key: string]: any;
-}
-
-/** 生成邀请码参数 */
-export interface CreateCodeParams {
-  createQuantity: string;
-  limitCount: number;
-  startEffectiveDate?: string;
-  endEffectiveDate?: string;
-  [key: string]: any;
-}
-
-/** 创建/编辑资源标签参数 */
-export interface OperateResourceTag {
-  tagIds?: string[];
-  tagName?: string;
-  tagType: number;
-  resourceRange: string[];
-  resourceRangeType: number;
-  authority: number;
-}
+import {
+  AuditQualifications,
+  CreateCodeParams,
+  HttpResponse,
+  ListParams,
+  LoginParams,
+  OperateParams,
+  OperateResourceTag,
+  UserIdsParams,
+} from "./interface";
 
 /** Passport 类接口 */
 export class PassportService {
@@ -128,13 +75,13 @@ export class UserService {
   }
 
   /** 编辑用户标签 */
-  static editUserTag(tagId: string, data: { tag: string }): Promise<HttpResponse> {
+  static editUserTag(tagId: number, data: { tag: string }): Promise<HttpResponse> {
     return Axios("/v2/users/tags/" + tagId, { method: "PUT", data });
   }
 
   /** 删除用户标签 */
-  static deleteUserTag(tagId: string): Promise<HttpResponse> {
-    return Axios("/v2/users/tags/" + tagId, { method: "DELETE" });
+  static deleteUserTag(data: { tagIds: number[] }): Promise<HttpResponse> {
+    return Axios("/v2/users/tags", { method: "PUT", data });
   }
 
   /** 获取内测资格审核列表 */
@@ -172,7 +119,7 @@ export class UserService {
 export class ResourceService {
   /** 获取资源列表 */
   static getResourceList(params: ListParams): Promise<HttpResponse> {
-    return Axios("/v2/resources", { method: "GET", params: { ...params, isLoadPolicyInfo: 1 } });
+    return Axios("/v2/resources/search", { method: "GET", params: { ...params, isLoadPolicyInfo: 1 } });
   }
 
   /** 获取用户发布资源数 */
@@ -186,8 +133,13 @@ export class ResourceService {
   }
 
   /** 获取资源文件内容 */
-  static getResourceFile(versionId: string): Promise<HttpResponse> {
+  static getResourceFile(versionId: string): Promise<any> {
     return Axios(`/v2/resources/versions/${versionId}/internalClientDownload`, { method: "GET" });
+  }
+
+  /** 获取资源依赖树 */
+  static getResourceDeps(resourceId: string, params: { version: string }): Promise<any> {
+    return Axios(`/v2/resources/${resourceId}/dependencyTree`, { method: "GET", params });
   }
 
   /** 获取资源标签列表 */
@@ -201,7 +153,7 @@ export class ResourceService {
   }
 
   /** 设置或移除资源标签 */
-  static setResourceTag(data: { tags: string[]; resourceIds: string[]; setType: number }): Promise<HttpResponse> {
+  static setResourceTag(data: { tagNames: string[]; resourceIds: string[]; setType: number }): Promise<HttpResponse> {
     return Axios("/v2/resources/tags/batchSetOrRemoveResourceTag", { method: "PUT", data });
   }
 
@@ -213,6 +165,25 @@ export class ResourceService {
   /** 编辑资源标签 */
   static updateResourceTag(data: OperateResourceTag): Promise<HttpResponse> {
     return Axios("/v2/resources/tags", { method: "PUT", data });
+  }
+
+  /** 禁用/解禁资源 */
+  static updateResources(data: {
+    resourceIds: string[];
+    operationType: 1 | 2;
+    reason?: string;
+    remark?: string;
+  }): Promise<HttpResponse> {
+    return Axios("/v2/resources/freeOrRecover/batch", { method: "PUT", data });
+  }
+
+  /** 查看资源禁用记录 */
+  static getCodeRecordList(params: {
+    resourceIds: string;
+    recordDesc?: 0 | 1;
+    recordLimit?: number;
+  }): Promise<HttpResponse> {
+    return Axios("/v2/resources/freeOrRecover/records", { method: "GET", params });
   }
 }
 

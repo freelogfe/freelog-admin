@@ -2,9 +2,7 @@
 <template>
   <list-template>
     <template v-slot:barLeft>
-      <span class="selected-tip" v-show="selectedData.length"
-        >已选中{{ selectedData.length }}条</span
-      >
+      <span class="selected-tip" v-show="selectedData.length">已选中{{ selectedData.length }}条</span>
     </template>
 
     <template v-slot:barRight>
@@ -22,17 +20,8 @@
         />
       </form-item>
       <form-item label="状态">
-        <el-select
-          v-model="searchData.status"
-          clearable
-          placeholder="请选择状态"
-        >
-          <el-option
-            v-for="item in statusMapping"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
+        <el-select v-model="searchData.status" clearable placeholder="请选择状态">
+          <el-option v-for="item in statusMapping" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </form-item>
       <form-item>
@@ -43,65 +32,27 @@
 
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable">
-        <el-table-column
-          type="selection"
-          :selectable="(row) => row.status === 0"
-        />
+        <el-table-column type="selection" :selectable="(row) => row.status === 0" />
         <el-table-column label="申请日期" width="160">
-          <template #default="scope">{{
-            formatDate(scope.row.createDate)
-          }}</template>
+          <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
-        <el-table-column
-          property="occupation"
-          label="职业"
-          min-width="100"
-          show-overflow-tooltip
-        />
+        <el-table-column property="occupation" label="职业" min-width="100" show-overflow-tooltip />
         <el-table-column property="city" label="区域" show-overflow-tooltip />
-        <el-table-column
-          property="description"
-          label="其他"
-          min-width="150"
-          show-overflow-tooltip
-        />
-        <el-table-column
-          property="username"
-          label="用户名"
-          min-width="150"
-          show-overflow-tooltip
-        />
+        <el-table-column property="description" label="其他" min-width="150" show-overflow-tooltip />
+        <el-table-column property="username" label="用户名" min-width="150" show-overflow-tooltip />
         <el-table-column label="手机" min-width="130" show-overflow-tooltip>
           <template #default="scope">{{ scope.row.mobile || "-" }}</template>
         </el-table-column>
-        <el-table-column
-          property="email"
-          label="邮箱"
-          min-width="250"
-          show-overflow-tooltip
-        />
+        <el-table-column property="email" label="邮箱" min-width="250" show-overflow-tooltip />
         <el-table-column label="最后登录" width="160">
-          <template #default="scope">{{
-            relativeTime(scope.row.latestLoginData)
-          }}</template>
+          <template #default="scope">{{ relativeTime(scope.row.latestLoginData) }}</template>
         </el-table-column>
         <el-table-column label="审核状态">
           <template #default="scope">
-            <el-tooltip
-              effect="dark"
-              :content="scope.row.auditMsg"
-              placement="top"
-              v-if="scope.row.status === 2"
-            >
-              {{
-                statusMapping.find((item) => item.value === scope.row.status)
-                  .label
-              }}
+            <el-tooltip effect="dark" :content="scope.row.auditMsg" placement="top" v-if="scope.row.status === 2">
+              {{ statusMapping.find((item) => item.value === scope.row.status).label }}
             </el-tooltip>
-            <span v-else>{{
-              statusMapping.find((item) => item.value === scope.row.status)
-                .label
-            }}</span>
+            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status).label }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
@@ -111,12 +62,7 @@
             </el-icon>
           </template>
           <template #default="scope">
-            <el-icon
-              class="icon-btn"
-              title="审核"
-              @click="audit(scope.row)"
-              v-if="scope.row.status === 0"
-            >
+            <el-icon class="icon-btn" title="审核" @click="audit(scope.row)" v-if="scope.row.status === 0">
               <checked />
             </el-icon>
           </template>
@@ -139,11 +85,7 @@
     <div class="audit-popup-body">
       <div class="title">申请信息</div>
       <div class="apply-info-box">
-        <div
-          class="apply-info"
-          v-for="(item, index) in operateData.items"
-          :key="item.username + index"
-        >
+        <div class="apply-info" v-for="(item, index) in operateData.items" :key="item.username + index">
           <div>用户：{{ item.username }}</div>
           <div>职业：{{ item.occupation }}</div>
           <div>区域：{{ item.city }}</div>
@@ -177,9 +119,10 @@ import { reactive, toRefs } from "vue-demi";
 import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage } from "element-plus";
-import { AuditQualifications, ListParams, UserService } from "@/api/request";
+import { UserService } from "@/api/request";
 import { watch } from "vue";
 import { Operation, Checked } from "@element-plus/icons-vue";
+import { AuditQualifications, ListParams } from "@/api/interface";
 
 /** 内测资格审核数据 */
 export interface Qualifications {

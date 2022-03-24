@@ -6,17 +6,13 @@
     </template>
 
     <template v-slot:barLeft>
-      <span class="selected-tip" v-show="selectedData.length"
-        >已选中{{ selectedData.length }}条</span
-      >
+      <span class="selected-tip" v-show="selectedData.length">已选中{{ selectedData.length }}条</span>
     </template>
 
     <template v-slot:barRight>
       <el-button type="primary" @click="operate(1)">批量禁用</el-button>
       <el-button type="primary" @click="operate(0)">批量解禁</el-button>
-      <el-button type="primary" @click="createInviteCode()">
-        批量生成邀请码
-      </el-button>
+      <el-button type="primary" @click="createInviteCode()"> 批量生成邀请码 </el-button>
     </template>
 
     <template v-slot:filterBar>
@@ -30,17 +26,8 @@
         />
       </form-item>
       <form-item label="状态">
-        <el-select
-          v-model="searchData.status"
-          clearable
-          placeholder="请选择状态"
-        >
-          <el-option
-            v-for="item in statusMapping"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
+        <el-select v-model="searchData.status" clearable placeholder="请选择状态">
+          <el-option v-for="item in statusMapping" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </form-item>
       <form-item label="创建时间">
@@ -68,25 +55,14 @@
           <template #default="scope">
             <div class="table-cell-item">
               <span>{{ scope.row.code }}</span>
-              <el-icon
-                class="icon-btn"
-                title="复制"
-                @click="copy(scope.row.code)"
-                ><copy-document
-              /></el-icon>
+              <el-icon class="icon-btn" title="复制" @click="copy(scope.row.code)"><copy-document /></el-icon>
             </div>
           </template>
         </el-table-column>
         <el-table-column label="创建时间" width="160">
-          <template #default="scope">{{
-            formatDate(scope.row.createDate)
-          }}</template>
+          <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
-        <el-table-column
-          label="邀请者(用户名)"
-          min-width="120"
-          show-overflow-tooltip
-        >
+        <el-table-column label="邀请者(用户名)" min-width="120" show-overflow-tooltip>
           <template #default="scope">
             <el-button
               type="text"
@@ -109,12 +85,7 @@
                 {{ scope.row.limitCount }}
               </span>
               <span v-else>不限</span>
-              <el-icon
-                class="icon-btn"
-                title="查看使用记录"
-                @click="viewRecord(scope.row.code)"
-                ><document
-              /></el-icon>
+              <el-icon class="icon-btn" title="查看使用记录" @click="viewRecord(scope.row.code)"><document /></el-icon>
             </div>
           </template>
         </el-table-column>
@@ -128,10 +99,7 @@
             <el-tag
               style="margin-left: 5px"
               type="danger"
-              v-if="
-                scope.row.endEffectiveDate &&
-                !isValid(scope.row.endEffectiveDate)
-              "
+              v-if="scope.row.endEffectiveDate && !isValid(scope.row.endEffectiveDate)"
             >
               已过期
             </el-tag>
@@ -144,10 +112,7 @@
         </el-table-column>
         <el-table-column label="状态">
           <template #default="scope">
-            {{
-              statusMapping.find((item) => item.value === scope.row.status)
-                .label
-            }}
+            {{ statusMapping.find((item) => item.value === scope.row.status).label }}
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
@@ -157,20 +122,10 @@
             </el-icon>
           </template>
           <template #default="scope">
-            <el-icon
-              class="icon-btn"
-              title="禁用"
-              @click="operate(1, scope.row.code)"
-              v-if="scope.row.status === 0"
-            >
+            <el-icon class="icon-btn" title="禁用" @click="operate(1, scope.row.code)" v-if="scope.row.status === 0">
               <close />
             </el-icon>
-            <el-icon
-              class="icon-btn"
-              title="解禁"
-              @click="operate(0, scope.row.code)"
-              v-if="scope.row.status === 1"
-            >
+            <el-icon class="icon-btn" title="解禁" @click="operate(0, scope.row.code)" v-if="scope.row.status === 1">
               <check />
             </el-icon>
           </template>
@@ -193,10 +148,7 @@
     <div class="popup-item">
       <div class="item-label">生成数量</div>
       <div class="item-value">
-        <el-input
-          v-model="operateData.createQuantity"
-          placeholder="请输入生成数量"
-        />
+        <el-input v-model="operateData.createQuantity" placeholder="请输入生成数量" />
       </div>
     </div>
     <div class="popup-item">
@@ -205,10 +157,7 @@
         <el-radio-group v-model="operateData.limitCountType">
           <el-radio :label="1">不限</el-radio>
           <el-radio :label="2">
-            限制使用<el-input
-              style="width: 50px; margin: 0 10px"
-              v-model="operateData.limitCountText"
-            />次
+            限制使用<el-input style="width: 50px; margin: 0 10px" v-model="operateData.limitCountText" />次
           </el-radio>
         </el-radio-group>
       </div>
@@ -252,41 +201,22 @@
     </template>
   </el-dialog>
 
-  <el-dialog
-    v-model="recordPopupShow"
-    :title="'使用记录 > ' + recordData?.code"
-  >
+  <el-dialog v-model="recordPopupShow" :title="'使用记录 > ' + recordData?.code">
     <div class="filter-bar">
       <form-item label="关键字搜索">
-        <el-input
-          v-model="recordSearchData.keywords"
-          placeholder="请输入使用者用户名"
-          clearable
-        />
+        <el-input v-model="recordSearchData.keywords" placeholder="请输入使用者用户名" clearable />
       </form-item>
       <form-item>
-        <el-button type="primary" @click="getRecordList(recordData?.code)"
-          >搜索</el-button
-        >
+        <el-button type="primary" @click="getRecordList(recordData?.code)">搜索</el-button>
       </form-item>
     </div>
 
     <el-table :data="recordData?.list" stripe border>
       <el-table-column label="序号" type="index" width="80" />
-      <el-table-column
-        property="username"
-        label="使用者(用户名)"
-        show-overflow-tooltip
-      />
-      <el-table-column
-        property="loginIp"
-        label="IP地址"
-        show-overflow-tooltip
-      />
+      <el-table-column property="username" label="使用者(用户名)" show-overflow-tooltip />
+      <el-table-column property="loginIp" label="IP地址" show-overflow-tooltip />
       <el-table-column label="使用时间">
-        <template #default="scope">{{
-          formatDate(scope.row.createDate)
-        }}</template>
+        <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
       </el-table-column>
     </el-table>
     <div class="pagination-box">
@@ -306,16 +236,11 @@ import { reactive, toRefs } from "vue-demi";
 import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
-import {
-  Operation,
-  CopyDocument,
-  Document,
-  Close,
-  Check,
-} from "@element-plus/icons-vue";
+import { Operation, CopyDocument, Document, Close, Check } from "@element-plus/icons-vue";
 import { nextTick } from "vue";
 import { dateRangeShortcuts } from "@/assets/data";
-import { CreateCodeParams, ListParams, UserService } from "@/api/request";
+import { UserService } from "@/api/request";
+import { CreateCodeParams, ListParams } from "@/api/interface";
 
 /** 邀请码数据 */
 export interface Code {
@@ -381,8 +306,7 @@ export default {
         if (init) data.searchData.currentPage = 1;
         const { currentPage, limit, createDate } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
-        [data.searchData.beginCreateDate, data.searchData.endCreateDate] =
-          dateRange(createDate);
+        [data.searchData.beginCreateDate, data.searchData.endCreateDate] = dateRange(createDate);
         const result = await UserService.getCodeList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
@@ -428,16 +352,14 @@ export default {
       async createCode() {
         if (!validate()) return;
 
-        const { limitCountType, limitCountText, effectiveDateType } =
-          data.operateData;
+        const { limitCountType, limitCountText, effectiveDateType } = data.operateData;
         if (limitCountType === 1) {
           data.operateData.limitCount = 0;
         } else if (limitCountType === 2) {
           data.operateData.limitCount = limitCountText;
         }
         if (effectiveDateType === 2) {
-          data.operateData.startEffectiveDate =
-            data.operateData.effectiveDate[0];
+          data.operateData.startEffectiveDate = data.operateData.effectiveDate[0];
           data.operateData.endEffectiveDate = data.operateData.effectiveDate[1];
         }
 
@@ -460,9 +382,7 @@ export default {
         if (init) data.recordSearchData.currentPage = 1;
         const { currentPage, limit } = data.recordSearchData;
         data.recordSearchData.skip = (currentPage - 1) * limit;
-        const result = await UserService.getCodeRecordList(
-          data.recordSearchData
-        );
+        const result = await UserService.getCodeRecordList(data.recordSearchData);
         const { errcode } = result.data;
         if (errcode === 0) {
           const { dataList, totalItem } = result.data.data;
@@ -481,16 +401,10 @@ export default {
           return;
         }
 
-        ElMessageBox.confirm(
-          `确认${type === 1 ? "禁用" : "解禁"}${
-            code ? "当前" : "所有已选"
-          }条目？`,
-          "",
-          {
-            confirmButtonText: type === 1 ? "禁用" : "解禁",
-            cancelButtonText: "取消",
-          }
-        ).then(async () => {
+        ElMessageBox.confirm(`确认${type === 1 ? "禁用" : "解禁"}${code ? "当前" : "所有已选"}条目？`, "", {
+          confirmButtonText: type === 1 ? "禁用" : "解禁",
+          cancelButtonText: "取消",
+        }).then(async () => {
           const result = await UserService.updateCode({
             codes: code ? [code] : data.selectedData.map((item) => item.code),
             status: type,
@@ -517,23 +431,14 @@ export default {
 
     /** 表单验证 */
     const validate = () => {
-      const {
-        createQuantity,
-        limitCountType,
-        limitCountText,
-        effectiveDateType,
-        effectiveDate,
-      } = data.operateData;
+      const { createQuantity, limitCountType, limitCountText, effectiveDateType, effectiveDate } = data.operateData;
       if (!createQuantity) {
         ElMessage("请输入生成数量");
         return false;
       } else if (!limitCountType || (limitCountType === 2 && !limitCountText)) {
         ElMessage("请输入使用次数");
         return false;
-      } else if (
-        !effectiveDateType ||
-        (effectiveDateType === 2 && !effectiveDate)
-      ) {
+      } else if (!effectiveDateType || (effectiveDateType === 2 && !effectiveDate)) {
         ElMessage("请选择有效期");
         return false;
       }

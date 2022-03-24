@@ -2,17 +2,13 @@
 <template>
   <list-template>
     <template v-slot:barLeft>
-      <span class="selected-tip" v-show="selectedData.length"
-        >已选中{{ selectedData.length }}条</span
-      >
+      <span class="selected-tip" v-show="selectedData.length">已选中{{ selectedData.length }}条</span>
     </template>
 
     <template v-slot:barRight>
       <el-button type="primary" @click="banResources()">批量封禁资源</el-button>
       <el-button type="primary" @click="setTag()">批量添加资源标签</el-button>
-      <el-button type="primary" @click="switchPage('/resource/tag-management')"
-        >管理标签</el-button
-      >
+      <el-button type="primary" @click="switchPage('/resource/tag-management')">管理标签</el-button>
     </template>
 
     <template v-slot:filterBar>
@@ -25,30 +21,13 @@
         />
       </form-item>
       <form-item label="标签">
-        <el-select
-          v-model="searchData.selectedTags"
-          multiple
-          placeholder="请选择标签"
-          clearable
-        >
-          <el-option
-            v-for="item in resourceTagsList"
-            :key="item"
-            :value="item"
-          />
+        <el-select v-model="searchData.selectedTags" multiple placeholder="请选择标签" clearable>
+          <el-option v-for="item in resourceTagsList" :key="item" :value="item" />
         </el-select>
       </form-item>
       <form-item label="类型">
-        <el-select
-          v-model="searchData.resourceType"
-          placeholder="请选择类型"
-          clearable
-        >
-          <el-option
-            v-for="item in resourceTypeList"
-            :key="item"
-            :value="item"
-          />
+        <el-select v-model="searchData.resourceType" placeholder="请选择类型" clearable>
+          <el-option v-for="item in resourceTypeList" :key="item" :value="item" />
         </el-select>
       </form-item>
       <form-item label="创建时间">
@@ -64,17 +43,8 @@
         />
       </form-item>
       <form-item label="排序">
-        <el-select
-          v-model="searchData.sort"
-          placeholder="请选择排序方式"
-          clearable
-        >
-          <el-option
-            v-for="item in sortTypeList"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
+        <el-select v-model="searchData.sort" placeholder="请选择排序方式" clearable>
+          <el-option v-for="item in sortTypeList" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </form-item>
       <form-item>
@@ -98,14 +68,7 @@
               >{{ scope.row.username }}
             </el-button>
             /
-            <el-button
-              type="text"
-              style="margin-left: 0"
-              @click="
-                switchPage('/user/user-management', {
-                  tag: scope.row.tagId,
-                })
-              "
+            <el-button type="text" style="margin-left: 0" @click="viewHistory(scope.row)"
               >{{ scope.row.resourceNameAbbreviation }}
             </el-button>
           </template>
@@ -122,11 +85,7 @@
               >
                 {{ item }}
               </el-tag>
-              <el-icon
-                class="icon-btn"
-                title="管理标签"
-                @click="setTag(scope.row)"
-              >
+              <el-icon class="icon-btn" title="管理标签" @click="setTag(scope.row)">
                 <edit />
               </el-icon>
             </div>
@@ -143,24 +102,9 @@
             />
           </template>
         </el-table-column>
-        <el-table-column
-          property="resourceType"
-          label="类型"
-          width="100"
-          show-overflow-tooltip
-        />
-        <el-table-column
-          property="signCount"
-          label="需方合约数"
-          align="right"
-          width="120"
-        />
-        <el-table-column
-          property="collectCount"
-          label="收藏数"
-          align="right"
-          width="120"
-        />
+        <el-table-column property="resourceType" label="类型" width="100" show-overflow-tooltip />
+        <el-table-column property="signCount" label="需方合约数" align="right" width="120" />
+        <el-table-column property="collectCount" label="收藏数" align="right" width="120" />
         <el-table-column label="最新版本">
           <template #default="scope">
             <div class="table-cell-item">
@@ -169,6 +113,7 @@
                 class="icon-btn"
                 title="查看历史记录"
                 @click="viewHistory(scope.row)"
+                v-if="scope.row.resourceVersions.length"
               >
                 <clock />
               </el-icon>
@@ -176,32 +121,22 @@
           </template>
         </el-table-column>
         <el-table-column property="updateDate" label="更新时间" width="160">
-          <template #default="scope">{{
-            relativeTime(scope.row.updateDate)
-          }}</template>
+          <template #default="scope">{{ relativeTime(scope.row.updateDate) }}</template>
         </el-table-column>
         <el-table-column property="createDate" label="创建时间" width="160">
-          <template #default="scope">{{
-            formatDate(scope.row.createDate)
-          }}</template>
+          <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
         <el-table-column label="资源状态">
           <template #default="scope">
             <el-tooltip
               effect="dark"
-              :content="scope.row.statusChangeRemark"
+              :content="`${scope.row.reason}${scope.row.remark ? '（' + scope.row.remark + '）' : ''}`"
               placement="top"
-              v-if="scope.row.status === 0"
+              v-if="[2, 3].includes(scope.row.status)"
             >
-              {{
-                statusMapping.find((item) => item.value === scope.row.status)
-                  .label
-              }}
+              {{ statusMapping.find((item) => item.value === scope.row.status).label }}
             </el-tooltip>
-            <span v-else>{{
-              statusMapping.find((item) => item.value === scope.row.status)
-                .label
-            }}</span>
+            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status).label }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="70">
@@ -215,7 +150,7 @@
               class="icon-btn"
               title="封禁"
               @click="banResources(scope.row.resourceId)"
-              v-if="scope.row.status === 1"
+              v-if="![2, 3].includes(scope.row.status)"
             >
               <close />
             </el-icon>
@@ -223,15 +158,11 @@
               class="icon-btn"
               title="解禁"
               @click="restore(scope.row.resourceId)"
-              v-if="scope.row.status === 0"
+              v-if="[2, 3].includes(scope.row.status)"
             >
               <check />
             </el-icon>
-            <el-icon
-              class="icon-btn"
-              title="查看授权策略"
-              @click="viewPolicy(scope.row)"
-            >
+            <el-icon class="icon-btn" title="查看授权策略" @click="viewPolicy(scope.row)">
               <document />
             </el-icon>
           </template>
@@ -251,12 +182,7 @@
   </list-template>
 
   <el-dialog v-model="setTagPopupShow" title="管理资源标签">
-    <el-select
-      style="width: 100%"
-      v-model="setTagData.tags"
-      multiple
-      placeholder="请选择标签"
-    >
+    <el-select style="width: 100%" v-model="setTagData.tags" multiple placeholder="请选择标签">
       <el-option v-for="item in resourceTagsList" :key="item" :value="item" />
     </el-select>
     <el-input
@@ -296,7 +222,6 @@
         <el-radio label="垃圾广告"></el-radio>
         <el-radio label="色情、暴力"></el-radio>
         <el-radio label="不实信息"></el-radio>
-        <el-radio label="恶意操作"></el-radio>
       </el-radio-group>
     </form-item>
     <form-item label="备注">
@@ -312,6 +237,65 @@
       <el-button type="primary" @click="operateConfirm(1)">封禁</el-button>
     </template>
   </el-dialog>
+
+  <el-dialog v-model="versionData.versionPopupShow" title="版本历史记录" width="840px">
+    <div class="version-history">
+      <el-scrollbar class="side-bar">
+        <div
+          class="version-item"
+          :class="{ active: versionData.activeIndex === index }"
+          v-for="(item, index) in versionData.versionList"
+          :key="item.versionId"
+          @click="getVersionFile(item)"
+        >
+          <div class="version">
+            <div class="version-name" :title="item.version">{{ item.version }}</div>
+            <a
+              class="icon-btn"
+              title="下载"
+              :href="`/api/v2/resources/versions/${
+                versionData.versionList[versionData.activeIndex].versionId
+              }/internalClientDownload`"
+              download
+              @click.stop
+            >
+              <el-icon><download /></el-icon>
+            </a>
+          </div>
+          <div class="create-date">{{ relativeTime(item.createDate) }}</div>
+        </div>
+      </el-scrollbar>
+      <el-scrollbar
+        class="version-content"
+        v-loading="versionData.loading"
+        v-if="versionData.versionList[versionData.activeIndex].mime?.startsWith('text')"
+      >
+        <my-markdown :data="versionData" @done="versionData.loading = false" />
+      </el-scrollbar>
+      <div class="version-content media" v-loading="versionData.loading" v-else>
+        <el-image
+          style="width: 570px; height: 570px"
+          fit="contain"
+          :src="versionData.versionList[versionData.activeIndex].content"
+          :preview-src-list="[versionData.versionList[versionData.activeIndex].content]"
+          preview-teleported
+          hide-on-click-modal
+          v-if="versionData.versionList[versionData.activeIndex].mime?.startsWith('image')"
+        />
+        <video
+          style="width: 100%"
+          :src="versionData.versionList[versionData.activeIndex].content"
+          controls
+          v-else-if="versionData.versionList[versionData.activeIndex].mime?.startsWith('video')"
+        />
+        <audio
+          :src="versionData.versionList[versionData.activeIndex].content"
+          controls
+          v-else-if="versionData.versionList[versionData.activeIndex].mime?.startsWith('audio')"
+        />
+      </div>
+    </div>
+  </el-dialog>
 </template>
 
 <script lang="ts">
@@ -319,30 +303,20 @@ import { reactive, toRefs } from "vue-demi";
 import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
-import {
-  ResourceService,
-  ListParams,
-  UserService,
-  OperateParams,
-  ContractsService,
-} from "@/api/request";
+import { ResourceService, ContractsService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
-import {
-  Operation,
-  Edit,
-  Clock,
-  Close,
-  Check,
-  Document,
-} from "@element-plus/icons-vue";
+import { Operation, Edit, Clock, Close, Check, Document, Download } from "@element-plus/icons-vue";
+import { defineAsyncComponent } from "vue";
+import { ListParams, OperateParams } from "@/api/interface";
 
 /** 资源数据 */
-export interface Resource {
+interface Resource {
   resourceId: string;
   resourceType: string;
   resourceName: string;
   userId: number;
   username: string;
+  resourceNameAbbreviation: string;
   coverImages: string[];
   intro: string;
   tags: string[];
@@ -352,38 +326,47 @@ export interface Resource {
   baseUpcastResources: any[];
   signCount: number;
   collectCount: number;
+  status: 0 | 1 | 2 | 3;
+  reason: string;
+  remark: string;
 }
 
 /** 资源标签数据 */
-export interface ResourceTag {
+interface ResourceTag {
   tagId: string;
   tag: string;
 }
 
+/** 资源版本数据 */
+export interface ResourceVersion {
+  versionId: string;
+  version: string;
+  createDate: string;
+  content: string;
+  mime: string;
+}
+
 export default {
   components: {
+    "my-markdown": defineAsyncComponent(() => import("@/components/markdown.vue")),
     Operation,
     Edit,
     Clock,
     Close,
     Check,
     Document,
+    Download,
   },
 
   setup() {
     const { query, switchPage } = useMyRouter();
     const assetsData = {
-      resourceTypeList: [
-        "image",
-        "audio",
-        "video",
-        "markdown",
-        "widget",
-        "theme",
-      ],
+      resourceTypeList: ["image", "audio", "video", "markdown", "widget", "theme"],
       statusMapping: [
         { value: 0, label: "下线" },
         { value: 1, label: "上线" },
+        { value: 2, label: "禁用" },
+        { value: 3, label: "禁用" },
       ],
       sortTypeList: [
         { value: "updateDate:1", label: "更新时间升序" },
@@ -401,6 +384,13 @@ export default {
         currentPage: 1,
         limit: 20,
       } as ListParams,
+      versionData: {
+        resourceId: "",
+        activeIndex: 0,
+        versionList: [] as ResourceVersion[],
+        versionPopupShow: false,
+        loading: false,
+      },
       setTagData: {} as any,
       policyData: [] as any[],
       operateData: {} as OperateParams,
@@ -413,18 +403,11 @@ export default {
       /** 获取列表数据 */
       async getData(init = false) {
         if (init) data.searchData.currentPage = 1;
-        const {
-          currentPage,
-          limit,
-          sort,
-          selectedTags = [],
-          createDate,
-        } = data.searchData;
+        const { currentPage, limit, sort, selectedTags = [], createDate } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
         if (!sort) delete data.searchData.sort;
         data.searchData.tags = selectedTags.join(",");
-        [data.searchData.startCreateDate, data.searchData.endCreateDate] =
-          dateRange(createDate);
+        [data.searchData.startCreateDate, data.searchData.endCreateDate] = dateRange(createDate);
         const result = await ResourceService.getResourceList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
@@ -449,15 +432,35 @@ export default {
           ]);
           dataList.forEach((resource: Resource) => {
             const { resourceId } = resource;
+            resource.resourceNameAbbreviation = resource.resourceName.split("/")[1];
+            resource.resourceVersions.reverse();
             resource.signCount = results[0].data.data.find(
-              (item: { subjectId: string; count: number }) =>
-                item.subjectId === resourceId
+              (item: { subjectId: string; count: number }) => item.subjectId === resourceId
             ).count;
             resource.collectCount = results[1].data.data.find(
-              (item: { resourceId: string; count: number }) =>
-                item.resourceId === resourceId
+              (item: { resourceId: string; count: number }) => item.resourceId === resourceId
             ).count;
           });
+          const bannedIds = dataList
+            .filter((item: Resource) => [2, 3].includes(item.status))
+            .map((item: Resource) => {
+              return item.resourceId;
+            })
+            .join(",");
+
+          if (bannedIds) {
+            const bannedResult = await ResourceService.getCodeRecordList({ resourceIds: bannedIds });
+            bannedResult.data.data.forEach(
+              (item: { resourceId: string; records: { reason: string; remark: string }[] }) => {
+                const resource: Resource = dataList.find(
+                  (resource: Resource) => resource.resourceId === item.resourceId
+                );
+                resource.reason = item.records[0].reason;
+                resource.remark = item.records[0].remark;
+              }
+            );
+            console.error(bannedResult);
+          }
 
           data.tableData = dataList;
           data.total = totalItem;
@@ -482,8 +485,7 @@ export default {
       /** 封禁操作 */
       banResources(resourceId?: string) {
         data.operateData = {
-          resourceId:
-            resourceId || data.selectedData.map((item) => item.resourceId),
+          resourceIds: resourceId ? [resourceId] : data.selectedData.map((item) => item.resourceId),
         };
         data.banPopupShow = true;
       },
@@ -494,8 +496,8 @@ export default {
           confirmButtonText: "解封",
           cancelButtonText: "取消",
         }).then(() => {
-          data.operateData.resourceId = resourceId;
-          this.operateConfirm(0);
+          data.operateData.resourceIds = [resourceId];
+          this.operateConfirm(2);
         });
       },
 
@@ -505,9 +507,10 @@ export default {
       },
 
       /** 操作（封禁/解封） */
-      async operateConfirm(type: number) {
-        data.operateData.status = type;
-        const result = await UserService.freeOrRecoverUser(data.operateData);
+      async operateConfirm(type: 1 | 2) {
+        const { resourceIds, reason, remark } = data.operateData;
+        const params = { resourceIds, reason, remark, operationType: type };
+        const result = await ResourceService.updateResources(params);
         const { errcode } = result.data;
         if (errcode === 0) {
           data.banPopupShow = false;
@@ -589,16 +592,13 @@ export default {
           if (deleteTags.length !== 0) {
             // 存在删除标签，执行删除
             const result = await ResourceService.setResourceTag({
-              tags: deleteTags,
+              tagNames: deleteTags,
               resourceIds: [resource.resourceId],
               setType: 2,
             });
             const { errcode } = result.data;
             if (errcode !== 0) return;
             if (addTags.length === 0) {
-              ElMessage(
-                "更新成功，批量操作更新有延迟，请过几秒刷新页面查看数据变化"
-              );
               data.setTagPopupShow = false;
               this.getData();
             }
@@ -609,19 +609,14 @@ export default {
         }
         if (addTags.length !== 0) {
           // 存在添加标签，执行添加
-          const resourceIds = resources.map(
-            (item: Resource) => item.resourceId
-          );
+          const resourceIds = resources.map((item: Resource) => item.resourceId);
           const result = await ResourceService.setResourceTag({
-            tags: addTags,
+            tagNames: addTags,
             resourceIds: resourceIds,
             setType: 1,
           });
           const { errcode } = result.data;
           if (errcode === 0) {
-            ElMessage(
-              "更新成功，批量操作更新有延迟，请过几秒刷新页面查看数据变化"
-            );
             data.setTagPopupShow = false;
             this.getData();
           }
@@ -631,15 +626,13 @@ export default {
       /** 删除资源标签 */
       async removeTag(resourceId: string, tagName: string) {
         const result = await ResourceService.setResourceTag({
-          tags: [tagName],
+          tagNames: [tagName],
           resourceIds: [resourceId],
           setType: 2,
         });
         const { errcode } = result.data;
         if (errcode === 0) {
-          const item = data.tableData.find(
-            (resource) => resource.resourceId === resourceId
-          );
+          const item = data.tableData.find((resource) => resource.resourceId === resourceId);
           if (!item) return;
           item.tags = item.tags.filter((tag) => tag !== tagName);
         }
@@ -653,23 +646,36 @@ export default {
 
       /** 查看历史版本 */
       viewHistory(resource: Resource) {
-        const { versionId } = resource.resourceVersions[0];
-        this.getVersionFile(versionId);
+        const { resourceId, resourceVersions } = resource;
+        data.versionData.resourceId = resourceId;
+        data.versionData.versionList = resourceVersions;
+        data.versionData.versionPopupShow = true;
+        this.getVersionFile(data.versionData.versionList[0]);
       },
 
       /** 获取响应版本文件内容 */
-      async getVersionFile(versionId: string) {
+      async getVersionFile(version: ResourceVersion) {
+        const { versionId } = version;
+        data.versionData.activeIndex = data.versionData.versionList.findIndex((item) => item.versionId === versionId);
+        if (version.content) return;
+
+        data.versionData.loading = true;
         const result = await ResourceService.getResourceFile(versionId);
-        console.error(result);
+        version.mime = result.headers["content-type"];
+        if (version.mime.startsWith("image") || version.mime.startsWith("video") || version.mime.startsWith("audio")) {
+          // 媒体资源
+          version.content = `/api/v2/resources/versions/${versionId}/internalClientDownload`;
+          data.versionData.loading = false;
+        } else {
+          version.content = result.data;
+        }
       },
     };
 
     /** 获取资源标签 */
     const getUserTags = async () => {
       const result = await ResourceService.getResourcesTagsList({ limit: 100 });
-      data.resourceTagsList = result.data.data.dataList.map(
-        (item: { tagName: string }) => item.tagName
-      );
+      data.resourceTagsList = result.data.data.dataList.map((item: { tagName: string }) => item.tagName);
     };
 
     data.searchData.keywords = query.value.username;
@@ -767,6 +773,77 @@ export default {
     .policy-code {
       margin-top: 15px;
       white-space: pre-wrap;
+    }
+  }
+}
+
+.version-history {
+  display: flex;
+  height: 600px;
+
+  .side-bar {
+    flex-shrink: 0;
+    width: 200px;
+
+    .version-item {
+      width: 100%;
+      padding: 10px 20px;
+      box-sizing: border-box;
+      border-radius: 6px 0 0 6px;
+      cursor: pointer;
+      transition: all 0.2s linear;
+
+      &:hover {
+        background-color: #f5f5f5;
+
+        .icon-btn {
+          opacity: 1 !important;
+        }
+      }
+
+      &.active {
+        background-color: #ebebeb;
+      }
+
+      .version {
+        display: flex;
+        align-items: center;
+
+        .version-name {
+          flex: 1;
+          width: 0;
+          font-size: 16px;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+
+        .icon-btn {
+          opacity: 0;
+        }
+      }
+
+      .create-date {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+      }
+    }
+  }
+
+  .version-content {
+    flex-shrink: 0;
+    width: 600px;
+    height: 600px;
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 0 6px 6px 6px;
+    background-color: #ebebeb;
+
+    &.media {
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   }
 }

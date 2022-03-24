@@ -1,3 +1,7 @@
+/**
+ * 静态数据
+ */
+
 /** 日期段选择器快速选项 */
 export const dateRangeShortcuts = [
   {

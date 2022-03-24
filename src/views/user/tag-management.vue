@@ -1,12 +1,18 @@
 <!-- 用户标签管理 -->
 <template>
   <list-template>
+    <template v-slot:barLeft>
+      <span class="selected-tip" v-show="selectedData.length">已选中{{ selectedData.length }}条</span>
+    </template>
+
     <template v-slot:barRight>
+      <el-button type="primary" @click="batchDelete()">批量删除</el-button>
       <el-button type="primary" @click="openTagPopup()">创建标签</el-button>
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe>
+      <el-table :data="tableData" stripe @selection-change="selectTable">
+        <el-table-column type="selection" />
         <el-table-column label="标签" min-width="100" show-overflow-tooltip>
           <template #default="scope">
             <el-button
@@ -20,18 +26,10 @@
             </el-button>
           </template>
         </el-table-column>
-        <el-table-column
-          property="totalSetCount"
-          label="用户数"
-          align="right"
-          min-width="100"
-          show-overflow-tooltip
-        />
+        <el-table-column property="totalSetCount" label="用户数" align="right" min-width="100" show-overflow-tooltip />
         <el-table-column label="类型" min-width="100" show-overflow-tooltip>
           <template #default="scope">
-            {{
-              typeMapping.find((item) => item.value === scope.row.type).label
-            }}
+            {{ typeMapping.find((item) => item.value === scope.row.type).label }}
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="70">
@@ -41,18 +39,10 @@
             </el-icon>
           </template>
           <template #default="scope">
-            <el-icon
-              class="icon-btn"
-              title="编辑"
-              @click="openTagPopup(scope.row)"
-            >
+            <el-icon class="icon-btn" title="编辑" @click="openTagPopup(scope.row)">
               <edit />
             </el-icon>
-            <el-icon
-              class="icon-btn"
-              title="删除"
-              @click="deleteTag(scope.row.tagId)"
-            >
+            <el-icon class="icon-btn" title="删除" @click="deleteTag([scope.row])">
               <delete />
             </el-icon>
           </template>
@@ -61,15 +51,8 @@
     </template>
   </list-template>
 
-  <el-dialog
-    v-model="tagPopupShow"
-    :title="operateData.tagId ? '编辑标签' : '创建标签'"
-  >
-    <el-input
-      v-model="operateData.tag"
-      placeholder="请输入标签"
-      @keyup.enter="save()"
-    />
+  <el-dialog v-model="tagPopupShow" :title="operateData.tagId ? '编辑标签' : '创建标签'">
+    <el-input v-model="operateData.tag" placeholder="请输入标签" @keyup.enter="save()" />
     <template #footer>
       <el-button @click="tagPopupShow = false">取消</el-button>
       <el-button type="primary" @click="save()">保存</el-button>
@@ -88,7 +71,7 @@ import { Operation, Edit, Delete } from "@element-plus/icons-vue";
 
 /** 用户标签数据 */
 export interface UserTag {
-  tagId: string;
+  tagId: number;
   tag: string;
   totalSetCount: number;
   type: 1 | 2;
@@ -111,6 +94,7 @@ export default {
     };
     const data = reactive({
       tableData: [] as UserTag[],
+      selectedData: [] as UserTag[],
       operateData: {} as UserTag,
       tagPopupShow: false,
     });
@@ -129,12 +113,14 @@ export default {
       },
 
       /** 删除操作 */
-      deleteTag(id: string) {
-        ElMessageBox.confirm("确认删除当前条目？", "删除标签", {
+      deleteTag(tags: UserTag[]) {
+        const tagName = tags.map((item) => "【" + item.tag + "】").join("、");
+        ElMessageBox.confirm(`确认删除${tagName}？`, "删除标签", {
           confirmButtonText: "删除",
           cancelButtonText: "取消",
         }).then(async () => {
-          const result = await UserService.deleteUserTag(id);
+          const ids = tags.map((item) => item.tagId);
+          const result = await UserService.deleteUserTag({ tagIds: ids });
           const { errcode } = result.data;
           if (errcode === 0) {
             this.getData();
@@ -158,6 +144,21 @@ export default {
           data.tagPopupShow = false;
           this.getData();
         }
+      },
+
+      /** 选择表格项 */
+      selectTable(selected: UserTag[]) {
+        data.selectedData = selected;
+      },
+
+      /** 批量编辑标签 */
+      batchDelete() {
+        if (data.selectedData.length === 0) {
+          ElMessage.info("请选择需要删除的标签");
+          return;
+        }
+
+        this.deleteTag(data.selectedData);
       },
     };
 

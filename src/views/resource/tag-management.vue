@@ -2,66 +2,31 @@
 <template>
   <list-template>
     <template v-slot:barLeft>
-      <span class="selected-tip" v-show="selectedData.length"
-        >已选中{{ selectedData.length }}条</span
-      >
+      <span class="selected-tip" v-show="selectedData.length">已选中{{ selectedData.length }}条</span>
     </template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="batchEditTags()"
-        >批量编辑资源标签</el-button
-      >
+      <el-button type="primary" @click="batchEditTags()">批量编辑资源标签</el-button>
       <el-button type="primary" @click="openTagPopup()">创建标签</el-button>
     </template>
 
     <template v-slot:filterBar>
       <form-item label="关键字搜索">
-        <el-input
-          v-model="searchData.keywords"
-          placeholder="请输入标签名称"
-          clearable
-          @keyup.enter="getData(true)"
-        />
+        <el-input v-model="searchData.keywords" placeholder="请输入标签名称" clearable @keyup.enter="getData(true)" />
       </form-item>
       <form-item label="类型">
-        <el-select
-          v-model="searchData.tagType"
-          placeholder="请选择类型"
-          clearable
-        >
-          <el-option
-            v-for="item in tagTypeMapping"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
+        <el-select v-model="searchData.tagType" placeholder="请选择类型" clearable>
+          <el-option v-for="item in tagTypeMapping" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </form-item>
       <form-item label="操作权限">
-        <el-select
-          v-model="searchData.authority"
-          placeholder="请选择操作权限"
-          clearable
-        >
-          <el-option
-            v-for="item in authorityMapping"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
+        <el-select v-model="searchData.authority" placeholder="请选择操作权限" clearable>
+          <el-option v-for="item in authorityMapping" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </form-item>
       <form-item label="资源类型">
-        <el-select
-          v-model="searchData.resourceType"
-          placeholder="请选择资源类型"
-          clearable
-        >
-          <el-option
-            v-for="item in resourceTypeList"
-            :key="item"
-            :value="item"
-          />
+        <el-select v-model="searchData.resourceType" placeholder="请选择资源类型" clearable>
+          <el-option v-for="item in resourceTypeList" :key="item" :value="item" />
         </el-select>
       </form-item>
       <form-item>
@@ -86,35 +51,22 @@
             </el-button>
           </template>
         </el-table-column>
-        <el-table-column
-          property="count"
-          label="使用次数"
-          align="right"
-          show-overflow-tooltip
-        />
+        <el-table-column property="count" label="使用次数" align="right" show-overflow-tooltip />
         <el-table-column label="类型">
           <template #default="scope">
-            {{
-              typeMapping.find((item) => item.value === scope.row.tagType).label
-            }}
+            {{ typeMapping.find((item) => item.value === scope.row.tagType).label }}
           </template>
         </el-table-column>
         <el-table-column label="操作权限">
           <template #default="scope">
-            {{
-              authorityMapping.find(
-                (item) => item.value === scope.row.authority
-              ).label
-            }}
+            {{ authorityMapping.find((item) => item.value === scope.row.authority).label }}
           </template>
         </el-table-column>
         <el-table-column label="适用类型" show-overflow-tooltip>
           <template #default="scope">
             <span v-if="scope.row.resourceRangeType === 3">所有</span>
             <span v-if="scope.row.resourceRangeType === 1">{{
-              scope.row.resourceRange.length
-                ? scope.row.resourceRange.join("、")
-                : "-"
+              scope.row.resourceRange.length ? scope.row.resourceRange.join("、") : "-"
             }}</span>
           </template>
         </el-table-column>
@@ -125,11 +77,7 @@
             </el-icon>
           </template>
           <template #default="scope">
-            <el-icon
-              class="icon-btn"
-              title="编辑"
-              @click="openTagPopup(scope.row)"
-            >
+            <el-icon class="icon-btn" title="编辑" @click="openTagPopup(scope.row)">
               <edit />
             </el-icon>
           </template>
@@ -138,78 +86,33 @@
     </template>
   </list-template>
 
-  <el-dialog
-    v-model="tagPopupShow"
-    :title="operateData.tagId || operateData.tagIds ? '编辑标签' : '创建标签'"
-  >
+  <el-dialog v-model="tagPopupShow" :title="operateData.tagId || operateData.tagIds ? '编辑标签' : '创建标签'">
     <form-item label="标签名称">
       <div class="tag-name" v-if="operateData.tagId || operateData.tagIds">
         {{ operateData.tagName }}
       </div>
-      <el-input
-        v-model="operateData.tagName"
-        placeholder="请输入标签"
-        @keyup.enter="save()"
-        v-else
-      />
+      <el-input v-model="operateData.tagName" placeholder="请输入标签" @keyup.enter="save()" v-else />
     </form-item>
     <form-item label="标签类型">
-      <el-select
-        style="width: 100%"
-        v-model="operateData.tagType"
-        clearable
-        placeholder="请选择标签类型"
-      >
-        <el-option
-          v-for="item in tagTypeMapping"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
-        />
+      <el-select style="width: 100%" v-model="operateData.tagType" clearable placeholder="请选择标签类型">
+        <el-option v-for="item in tagTypeMapping" :key="item.value" :label="item.label" :value="item.value" />
       </el-select>
     </form-item>
     <form-item label="操作权限">
-      <el-select
-        style="width: 100%"
-        v-model="operateData.authority"
-        clearable
-        placeholder="请选择操作权限"
-      >
-        <el-option
-          v-for="item in authorityMapping"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
-        />
+      <el-select style="width: 100%" v-model="operateData.authority" clearable placeholder="请选择操作权限">
+        <el-option v-for="item in authorityMapping" :key="item.value" :label="item.label" :value="item.value" />
       </el-select>
     </form-item>
     <form-item label="适用资源类型">
-      <el-select
-        style="width: 100%"
-        v-model="operateData.resourceRangeType"
-        clearable
-        placeholder="请选择适用资源类型"
-      >
-        <el-option
-          v-for="item in resourceRangeTypeMapping"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
-        />
+      <el-select style="width: 100%" v-model="operateData.resourceRangeType" clearable placeholder="请选择适用资源类型">
+        <el-option v-for="item in resourceRangeTypeMapping" :key="item.value" :label="item.label" :value="item.value" />
       </el-select>
     </form-item>
     <form-item v-show="operateData.resourceRangeType === 1">
-      <el-checkbox
-        v-model="operateData.checkAll"
-        :indeterminate="operateData.isIndeterminate"
-        @change="checkAllChange"
-      >
+      <el-checkbox v-model="operateData.checkAll" :indeterminate="operateData.isIndeterminate" @change="checkAllChange">
         全选
       </el-checkbox>
-      <el-checkbox-group
-        v-model="operateData.resourceRange"
-        @change="checkChange"
-      >
+      <el-checkbox-group v-model="operateData.resourceRange" @change="checkChange">
         <el-checkbox v-for="item in resourceTypeList" :key="item" :label="item">
           {{ item }}
         </el-checkbox>
@@ -226,9 +129,10 @@
 import { reactive, toRefs } from "vue-demi";
 import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
-import { ListParams, ResourceService } from "@/api/request";
+import { ResourceService } from "@/api/request";
 import { ElMessage } from "element-plus/lib/components";
 import { Operation, Edit } from "@element-plus/icons-vue";
+import { ListParams } from "@/api/interface";
 
 /** 资源标签数据 */
 export interface ResourceTag {
@@ -265,14 +169,7 @@ export default {
         // { value: 2, label: "排除类型" },
         { value: 3, label: "所有类型" },
       ],
-      resourceTypeList: [
-        "image",
-        "audio",
-        "video",
-        "markdown",
-        "widget",
-        "theme",
-      ],
+      resourceTypeList: ["image", "audio", "video", "markdown", "widget", "theme"],
       typeMapping: [
         { value: 1, label: "分类" },
         { value: 2, label: "运营" },
@@ -296,9 +193,7 @@ export default {
         if (init) data.searchData.currentPage = 1;
         const { currentPage, limit } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
-        const result = await ResourceService.getResourcesTagsList(
-          data.searchData
-        );
+        const result = await ResourceService.getResourcesTagsList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
           const { dataList, totalItem } = result.data.data;
@@ -318,9 +213,7 @@ export default {
           });
           dataList.forEach((tag: ResourceTag) => {
             const { tagId } = tag;
-            tag.count = results.data.data.find(
-              (item: { tagId: string; count: number }) => item.tagId === tagId
-            ).count;
+            tag.count = results.data.data.find((item: { tagId: string; count: number }) => item.tagId === tagId).count;
           });
 
           data.tableData = dataList;
@@ -344,19 +237,15 @@ export default {
 
       // 切换全选
       checkAllChange(checkAll: boolean) {
-        data.operateData.resourceRange = checkAll
-          ? assetsData.resourceTypeList
-          : [];
+        data.operateData.resourceRange = checkAll ? assetsData.resourceTypeList : [];
         data.operateData.isIndeterminate = false;
       },
 
       // 选择多选项
       checkChange(checked: string[]) {
         const checkedCount = checked.length;
-        data.operateData.checkAll =
-          checkedCount === assetsData.resourceTypeList.length;
-        data.operateData.isIndeterminate =
-          checkedCount > 0 && checkedCount < assetsData.resourceTypeList.length;
+        data.operateData.checkAll = checkedCount === assetsData.resourceTypeList.length;
+        data.operateData.isIndeterminate = checkedCount > 0 && checkedCount < assetsData.resourceTypeList.length;
       },
 
       /** 打开标签弹窗（有参数为编辑，反之为创建） */
@@ -367,8 +256,7 @@ export default {
         };
         if (item) {
           data.operateData.tagIds = [item.tagId];
-          data.operateData.checkAll =
-            item.resourceRange.length === assetsData.resourceTypeList.length;
+          data.operateData.checkAll = item.resourceRange.length === assetsData.resourceTypeList.length;
         }
         data.tagPopupShow = true;
       },
@@ -376,7 +264,7 @@ export default {
       /** 批量编辑标签 */
       batchEditTags() {
         if (data.selectedData.length === 0) {
-          ElMessage.info("请选择需要编辑的资源标签");
+          ElMessage.info("请选择需要编辑的标签");
           return;
         }
 
@@ -411,11 +299,13 @@ export default {
 
     /** 表单验证 */
     const validate = () => {
-      const { tagName, tagType, authority, resourceRange } = data.operateData;
+      const { tagIds, tagName, tagType, authority, resourceRange } = data.operateData;
       if (!tagName) {
         ElMessage("请输入标签");
         return false;
       }
+      if (tagIds) return true;
+
       if (!tagType) {
         ElMessage("请选择标签类型");
         return false;

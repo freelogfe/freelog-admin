@@ -6,16 +6,12 @@
     </template>
 
     <template v-slot:barLeft>
-      <span class="selected-tip" v-show="selectedData.length"
-        >已选中{{ selectedData.length }}条</span
-      >
+      <span class="selected-tip" v-show="selectedData.length">已选中{{ selectedData.length }}条</span>
     </template>
 
     <template v-slot:barRight>
       <el-button type="primary" @click="setTag()">批量添加用户标签</el-button>
-      <el-button type="primary" @click="switchPage('/user/tag-management')"
-        >管理标签</el-button
-      >
+      <el-button type="primary" @click="switchPage('/user/tag-management')">管理标签</el-button>
     </template>
 
     <template v-slot:filterBar>
@@ -29,18 +25,8 @@
         />
       </form-item>
       <form-item label="标签">
-        <el-select
-          v-model="searchData.tags"
-          multiple
-          placeholder="请选择标签"
-          clearable
-        >
-          <el-option
-            v-for="item in userTagsList"
-            :key="item.tagId"
-            :label="item.tag"
-            :value="item.tagId"
-          />
+        <el-select v-model="searchData.tags" multiple placeholder="请选择标签" clearable>
+          <el-option v-for="item in userTagsList" :key="item.tagId" :label="item.tag" :value="item.tagId" />
         </el-select>
       </form-item>
       <form-item label="注册时间">
@@ -65,12 +51,7 @@
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable">
         <el-table-column type="selection" />
-        <el-table-column
-          property="username"
-          label="用户"
-          min-width="150"
-          show-overflow-tooltip
-        />
+        <el-table-column property="username" label="用户" min-width="150" show-overflow-tooltip />
         <el-table-column label="标签" width="200">
           <template #default="scope">
             <div class="tags-box">
@@ -83,11 +64,7 @@
               >
                 {{ item.tag }}
               </el-tag>
-              <el-icon
-                class="icon-btn"
-                title="管理标签"
-                @click="setTag(scope.row)"
-              >
+              <el-icon class="icon-btn" title="管理标签" @click="setTag(scope.row)">
                 <edit />
               </el-icon>
             </div>
@@ -95,19 +72,10 @@
         </el-table-column>
         <el-table-column label="最近登录" width="160">
           <template #default="scope">
-            {{
-              scope.row.latestLoginDate
-                ? relativeTime(scope.row.latestLoginDate)
-                : "-"
-            }}
+            {{ scope.row.latestLoginDate ? relativeTime(scope.row.latestLoginDate) : "-" }}
           </template>
         </el-table-column>
-        <el-table-column
-          property="createdResourceCount"
-          label="发布资源数"
-          align="right"
-          width="120"
-        />
+        <el-table-column property="createdResourceCount" label="发布资源数" align="right" width="120" />
         <el-table-column label="发布资源数" width="120" align="right">
           <template #default="scope">
             <el-button
@@ -121,40 +89,15 @@
             </el-button>
           </template>
         </el-table-column>
-        <el-table-column
-          property="createdNodeCount"
-          label="运营节点数"
-          align="right"
-          width="120"
-        />
-        <el-table-column
-          property="signedContractCount"
-          label="消费合约数"
-          align="right"
-          width="120"
-        />
-        <el-table-column
-          property="tradeCount"
-          label="交易次数"
-          align="right"
-          width="100"
-        />
-        <el-table-column
-          property="balance"
-          label="代币余额"
-          align="right"
-          width="100"
-        />
+        <el-table-column property="createdNodeCount" label="运营节点数" align="right" width="120" />
+        <el-table-column property="signedContractCount" label="消费合约数" align="right" width="120" />
+        <el-table-column property="tradeCount" label="交易次数" align="right" width="100" />
+        <el-table-column property="balance" label="代币余额" align="right" width="100" />
         <el-table-column label="注册手机号" width="130">
           <template #default="scope">
             <div class="table-cell-item">
               <span>{{ scope.row.mobile || "-" }}</span>
-              <el-icon
-                class="icon-btn"
-                title="复制"
-                @click="copy(scope.row.mobile)"
-                v-if="scope.row.mobile"
-              >
+              <el-icon class="icon-btn" title="复制" @click="copy(scope.row.mobile)" v-if="scope.row.mobile">
                 <copy-document />
               </el-icon>
             </div>
@@ -164,41 +107,26 @@
           <template #default="scope">
             <div class="table-cell-item">
               <span>{{ scope.row.email || "-" }}</span>
-              <el-icon
-                class="icon-btn"
-                title="复制"
-                @click="copy(scope.row.email)"
-                v-if="scope.row.email"
-              >
+              <el-icon class="icon-btn" title="复制" @click="copy(scope.row.email)" v-if="scope.row.email">
                 <copy-document />
               </el-icon>
             </div>
           </template>
         </el-table-column>
         <el-table-column label="注册时间" width="160">
-          <template #default="scope">{{
-            formatDate(scope.row.createDate)
-          }}</template>
+          <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
         <el-table-column label="账号状态">
           <template #default="scope">
             <el-tooltip
               effect="dark"
-              :content="`${scope.row.reason}${
-                scope.row.remark ? '（' + scope.row.remark + '）' : ''
-              }`"
+              :content="`${scope.row.reason}${scope.row.remark ? '（' + scope.row.remark + '）' : ''}`"
               placement="top"
               v-if="scope.row.status === 1"
             >
-              {{
-                statusMapping.find((item) => item.value === scope.row.status)
-                  .label
-              }}
+              {{ statusMapping.find((item) => item.value === scope.row.status).label }}
             </el-tooltip>
-            <span v-else>{{
-              statusMapping.find((item) => item.value === scope.row.status)
-                .label
-            }}</span>
+            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status).label }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
@@ -209,28 +137,13 @@
           </template>
           <template #default="scope">
             <div class="operate-btns">
-              <el-icon
-                class="icon-btn"
-                title="冻结"
-                @click="freeze(scope.row.userId)"
-                v-if="scope.row.status === 0"
-              >
+              <el-icon class="icon-btn" title="冻结" @click="freeze(scope.row.userId)" v-if="scope.row.status === 0">
                 <close />
               </el-icon>
-              <el-icon
-                class="icon-btn"
-                title="恢复"
-                @click="restore(scope.row.userId)"
-                v-if="scope.row.status === 1"
-              >
+              <el-icon class="icon-btn" title="恢复" @click="restore(scope.row.userId)" v-if="scope.row.status === 1">
                 <check />
               </el-icon>
-              <el-icon
-                class="icon-btn"
-                title="审核"
-                @click="audit(scope.row.username)"
-                v-if="scope.row.status === 2"
-              >
+              <el-icon class="icon-btn" title="审核" @click="audit(scope.row.username)" v-if="scope.row.status === 2">
                 <checked />
               </el-icon>
             </div>
@@ -251,19 +164,8 @@
   </list-template>
 
   <el-dialog v-model="setTagPopupShow" title="管理用户标签">
-    <el-select
-      style="width: 100%"
-      v-model="setTagData.tags"
-      multiple
-      clearable
-      placeholder="请选择标签"
-    >
-      <el-option
-        v-for="item in userTagsList"
-        :key="item.tagId"
-        :label="item.tag"
-        :value="item.tagId"
-      />
+    <el-select style="width: 100%" v-model="setTagData.tags" multiple clearable placeholder="请选择标签">
+      <el-option v-for="item in userTagsList" :key="item.tagId" :label="item.tag" :value="item.tagId" />
     </el-select>
     <el-input
       style="margin-top: 10px"
@@ -306,25 +208,12 @@
 <script lang="ts">
 import { nextTick, reactive, toRefs } from "vue-demi";
 import { formatDate, relativeTime, dateRange } from "../../utils/common";
-import {
-  Edit,
-  Operation,
-  CopyDocument,
-  Close,
-  Check,
-  Checked,
-} from "@element-plus/icons-vue";
+import { Edit, Operation, CopyDocument, Close, Check, Checked } from "@element-plus/icons-vue";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
-import {
-  ContractsService,
-  NodeService,
-  ResourceService,
-  ListParams,
-  UserService,
-  OperateParams,
-} from "@/api/request";
+import { ContractsService, NodeService, ResourceService, UserService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
+import { ListParams, OperateParams } from "@/api/interface";
 
 /** 用户数据 */
 export interface User {
@@ -392,10 +281,7 @@ export default {
         const { currentPage, limit, tags = [], registerDate } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
         data.searchData.tagIds = tags.join(",");
-        [
-          data.searchData.startRegisteredDate,
-          data.searchData.endRegisteredDate,
-        ] = dateRange(registerDate);
+        [data.searchData.startRegisteredDate, data.searchData.endRegisteredDate] = dateRange(registerDate);
         const result = await UserService.getUserList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
@@ -421,25 +307,20 @@ export default {
           dataList.forEach((user: User) => {
             const { userId } = user;
             user.createdResourceCount = results[0].data.data.find(
-              (item: { userId: number; createdResourceCount: number }) =>
-                item.userId === userId
+              (item: { userId: number; createdResourceCount: number }) => item.userId === userId
             ).createdResourceCount;
             user.createdNodeCount = results[1].data.data.find(
-              (item: { userId: number; createdNodeCount: number }) =>
-                item.userId === userId
+              (item: { userId: number; createdNodeCount: number }) => item.userId === userId
             ).createdNodeCount;
             user.signedContractCount = results[2].data.data.find(
-              (item: { userId: number; signedContractCount: number }) =>
-                item.userId === userId
+              (item: { userId: number; signedContractCount: number }) => item.userId === userId
             ).signedContractCount;
             user.tradeCount = results[3].data.data.find(
-              (item: { userId: number; count: number }) =>
-                item.userId === userId
+              (item: { userId: number; count: number }) => item.userId === userId
             ).count;
             user.balance = (
               results[4].data.data.find(
-                (item: { ownerUserId: number; balance: string }) =>
-                  item.ownerUserId == userId
+                (item: { ownerUserId: number; balance: string }) => item.ownerUserId == userId
               ) || { balance: "-" }
             ).balance;
           });
@@ -578,9 +459,7 @@ export default {
             if (!tags.includes(tagId)) deleteTags.push(tagId);
           });
           tags.forEach((id: number) => {
-            if (
-              !user.tags.find((item: { tagId: number }) => item.tagId === id)
-            ) {
+            if (!user.tags.find((item: { tagId: number }) => item.tagId === id)) {
               addTags.push(id);
             }
           });
