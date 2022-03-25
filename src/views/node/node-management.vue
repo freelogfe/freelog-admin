@@ -1,53 +1,136 @@
-<!-- 国际化管理 -->
+<!-- 节点管理 -->
 <template>
   <list-template>
-    <!-- <template v-slot:title>用户管理</template>
+    <template v-slot:barLeft>
+      <span class="selected-tip" v-show="selectedData.length">已选中{{ selectedData.length }}条</span>
+    </template>
 
-    <template v-slot:barRight>right</template> -->
+    <template v-slot:barRight>
+      <el-button type="primary" @click="setTag()">批量添加节点标签</el-button>
+      <el-button type="primary" @click="switchPage('/node/tag-management')">管理标签</el-button>
+    </template>
 
-    <template v-slot:filterBar>filterBar</template>
+    <template v-slot:filterBar>
+      <form-item label="关键字搜索">
+        <el-input
+          v-model="searchData.keywords"
+          placeholder="请输入节点名、地址"
+          clearable
+          @keyup.enter="getData(true)"
+        />
+      </form-item>
+      <form-item label="标签">
+        <el-select v-model="searchData.selectedTags" multiple placeholder="请选择标签" clearable>
+          <el-option v-for="item in nodeTagsList" :key="item" :value="item" />
+        </el-select>
+      </form-item>
+      <form-item label="创建时间">
+        <el-date-picker
+          v-model="searchData.createDate"
+          type="daterange"
+          unlink-panels
+          range-separator="-"
+          format="YYYY/MM/DD"
+          start-placeholder="起始日期"
+          end-placeholder="截止日期"
+          :shortcuts="dateRangeShortcuts"
+        />
+      </form-item>
+      <form-item>
+        <el-button type="primary" @click="getData(true)">搜索</el-button>
+        <el-button @click="clearSearch()">重置</el-button>
+      </form-item>
+    </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe style="min-width: 100%">
+      <el-table :data="tableData" stripe @selection-change="selectTable">
         <el-table-column type="selection" />
-        <el-table-column property="yonghu" label="用户" min-width="100" show-overflow-tooltip />
-        <el-table-column property="biaoqian" min-width="200">
+        <el-table-column label="节点" width="150" show-overflow-tooltip>
+          <template #default="scope">
+            <el-button type="text" @click="openPage(scope.row.nodeDomain)">{{ scope.row.nodeName }} </el-button>
+          </template>
+        </el-table-column>
+        <el-table-column label="地址" width="300" show-overflow-tooltip>
+          <template #default="scope">
+            <el-button type="text" @click="openPage(scope.row.nodeDomain)"
+              >{{ domain.replace("api", scope.row.nodeDomain) }}
+            </el-button>
+          </template>
+        </el-table-column>
+        <el-table-column label="标签" width="250">
           <template #default="scope">
             <div class="tags-box">
-              <div class="tag" v-for="item in scope.row.biaoqian" :key="item">{{ item }}</div>
+              <el-tag
+                class="tag"
+                closable
+                v-for="item in scope.row.tags"
+                :key="item"
+                @close="removeTag(scope.row.nodeId, item)"
+              >
+                {{ item }}
+              </el-tag>
             </div>
+            <el-icon class="icon-btn" title="管理标签" @click="setTag(scope.row)">
+              <edit />
+            </el-icon>
           </template>
         </el-table-column>
-        <el-table-column property="zuijindenglu" label="最近登录" width="110">
-          <template #default="scope">{{ relativeTime(scope.row.zuijindenglu) }}</template>
-        </el-table-column>
-        <el-table-column property="fabuziyuanshu" label="发布资源数" sortable width="120" />
-        <el-table-column property="xiaofeiheyueshu" label="消费合约数" sortable width="120" />
-        <el-table-column property="jiaoyicishu" label="交易次数" width="100" />
-        <el-table-column property="daibiyue" label="代币余额" width="100" />
-        <el-table-column property="zhuceshoujihaoyouxiang" label="注册手机号/邮箱" min-width="200">
+        <el-table-column label="用户" width="200" show-overflow-tooltip>
           <template #default="scope">
-            <div class="phone-email">
-              {{ scope.row.zhuceshoujihao }}
-              <el-icon class="copy-btn" title="复制"><copy-document /></el-icon>
-            </div>
-            <div class="phone-email">
-              {{ scope.row.zhuceshouyouxiang }}
-              <el-icon class="copy-btn" title="复制"><copy-document /></el-icon>
-            </div>
+            <el-button
+              type="text"
+              @click="
+                switchPage('/user/user-management', {
+                  keywords: scope.row.ownerUserName,
+                })
+              "
+              >{{ scope.row.ownerUserName }}
+            </el-button>
           </template>
         </el-table-column>
-        <el-table-column property="zhuceshijian" label="注册时间" sortable width="110">
-          <template #default="scope">{{ formatDate(scope.row.zhuceshijian, "YYYY-MM-DD") }}</template>
-        </el-table-column>
-        <el-table-column property="zhanghaozhuangtai" label="账号状态">
-          <template #default="scope">{{ statusMapping[scope.row.zhanghaozhuangtai] }}</template>
-        </el-table-column>
-        <el-table-column property="caozuo" label="操作" fixed="right">
+        <el-table-column label="运营展品数" width="120" align="right">
           <template #default="scope">
-            <div class="operate-btn freeze" v-if="scope.row.zhanghaozhuangtai === 1">冻结</div>
-            <div class="operate-btn audit" v-if="scope.row.zhanghaozhuangtai === 2">审核</div>
-            <div class="operate-btn restore" v-if="scope.row.zhanghaozhuangtai === 3">恢复</div>
+            <el-button
+              type="text"
+              @click="
+                switchPage('/node/exhibit-management', {
+                  keywords: scope.row.nodeName,
+                })
+              "
+              >{{ scope.row.collectCount || 0 }}
+            </el-button>
+          </template>
+        </el-table-column>
+        <el-table-column property="signCount" label="需方合约数" align="right" width="120" />
+        <el-table-column property="createDate" label="创建时间" width="160">
+          <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
+        </el-table-column>
+        <el-table-column label="状态">
+          <template #default="scope">
+            <el-tooltip
+              effect="dark"
+              :content="`${scope.row.reason}${scope.row.remark ? '（' + scope.row.remark + '）' : ''}`"
+              placement="top"
+              v-if="scope.row.status === 4"
+            >
+              {{ statusMapping.find((item) => item.value === scope.row.status).label }}
+            </el-tooltip>
+            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status).label }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column fixed="right" width="40">
+          <template #header>
+            <el-icon class="operation-icon" title="操作">
+              <operation />
+            </el-icon>
+          </template>
+          <template #default="scope">
+            <el-icon class="icon-btn" title="封禁" @click="banNode(scope.row.nodeId)" v-if="scope.row.status !== 4">
+              <close />
+            </el-icon>
+            <el-icon class="icon-btn" title="解禁" @click="restore(scope.row.nodeId)" v-if="scope.row.status === 4">
+              <check />
+            </el-icon>
           </template>
         </el-table-column>
       </el-table>
@@ -56,382 +139,344 @@
     <template v-slot:pagination>
       <el-pagination
         layout="total, prev, pager, next, jumper"
-        v-model:currentPage="currentPage"
-        :total="list.length"
+        v-model:currentPage="searchData.currentPage"
+        :total="total"
+        :page-size="searchData.limit"
         @current-change="changePage($event)"
-      >
-      </el-pagination>
+      />
     </template>
   </list-template>
+
+  <el-dialog v-model="setTagPopupShow" title="管理节点标签">
+    <el-select style="width: 100%" v-model="setTagData.tags" multiple placeholder="请选择标签">
+      <el-option v-for="item in nodeTagsList" :key="item" :value="item" />
+    </el-select>
+    <el-input
+      style="margin-top: 10px"
+      v-model="setTagData.newTag"
+      placeholder="输入标签按回车键确认"
+      @keyup.enter="newTag()"
+    />
+    <template #footer>
+      <el-button @click="setTagPopupShow = false">取消</el-button>
+      <el-button type="primary" @click="setTagConfirm()">确认</el-button>
+    </template>
+  </el-dialog>
+
+  <el-dialog v-model="banPopupShow" title="封禁节点" width="800px">
+    <form-item label="封禁原因">
+      <el-radio-group v-model="operateData.reason">
+        <el-radio label="抄袭、侵权"></el-radio>
+        <el-radio label="色情、暴力"></el-radio>
+        <el-radio label="不实信息"></el-radio>
+        <el-radio label="恶意营销"></el-radio>
+        <el-radio label="垃圾广告"></el-radio>
+        <el-radio label="欺诈"></el-radio>
+        <el-radio label="其他违法违规"></el-radio>
+      </el-radio-group>
+    </form-item>
+    <form-item label="备注">
+      <el-input
+        v-model="operateData.remark"
+        :autosize="{ minRows: 2, maxRows: 4 }"
+        type="textarea"
+        placeholder="请输入备注（选填）"
+      />
+    </form-item>
+    <template #footer>
+      <el-button @click="banPopupShow = false">取消</el-button>
+      <el-button type="primary" @click="operateConfirm(1)">封禁</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script lang="ts">
-import { defineAsyncComponent, reactive, toRefs } from "vue-demi";
-import { formatDate, relativeTime } from "../../utils/common";
-import { CopyDocument } from "@element-plus/icons-vue";
+import { reactive, toRefs } from "vue-demi";
+import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { ContractsService, NodeService } from "@/api/request";
+import { dateRangeShortcuts } from "@/assets/data";
+import { Operation, Edit, Close, Check } from "@element-plus/icons-vue";
+import { ListParams, OperateParams } from "@/api/interface";
+
+/** 节点数据 */
+interface Node {
+  nodeId: number;
+  nodeName: string;
+  nodeDomain: string;
+  nodeThemeId: string;
+  ownerUserId: number;
+  ownerUserName: string;
+  status: number;
+  createDate: string;
+  tags: string[];
+  signCount: number;
+}
+
+/** 节点标签数据 */
+interface NodeTag {
+  tagId: string;
+  tag: string;
+}
 
 export default {
   components: {
-    "list-template": defineAsyncComponent(() => import("@/components/list-template.vue")),
-    CopyDocument,
+    Operation,
+    Edit,
+    Close,
+    Check,
   },
 
   setup() {
-    const { switchPage } = useMyRouter();
-    const data = reactive({
-      list: [
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2", "标签3", "标签4", "标签5"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 3000,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuChenzhuchenzhuchen",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 3000,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 2,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 3000,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 3,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 3000,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 3000,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
+    const { query, switchPage } = useMyRouter();
+    const assetsData = {
+      statusMapping: [
+        { value: 1, label: "下线" },
+        { value: 2, label: "上线" },
+        { value: 4, label: "冻结" },
       ],
-      tableData: [] as any[],
-      currentPage: 1,
-      statusMapping: {
-        1: "正常",
-        2: "待审核",
-        3: "冻结",
-      },
+      domain: process.env.VUE_APP_BASE_API,
+    };
+    const data = reactive({
+      tableData: [] as Node[],
+      total: 0,
+      selectedData: [] as Node[],
+      nodeTagsList: [] as NodeTag[],
+      searchData: {
+        currentPage: 1,
+        limit: 20,
+      } as ListParams,
+      setTagData: {} as any,
+      operateData: {} as OperateParams,
+      setTagPopupShow: false,
+      banPopupShow: false,
     });
 
     const methods = {
-      getData() {
-        const lastIndex = data.currentPage * 10 - 1;
-        const result = data.list.slice(lastIndex - 9, lastIndex);
-        data.tableData = result;
+      /** 获取列表数据 */
+      async getData(init = false) {
+        if (init) data.searchData.currentPage = 1;
+        const { currentPage, limit, selectedTags = [], createDate } = data.searchData;
+        data.searchData.skip = (currentPage - 1) * limit;
+        data.searchData.tags = selectedTags.join(",");
+        [data.searchData.startCreateDate, data.searchData.endCreateDate] = dateRange(createDate);
+        const result = await NodeService.getNodeList(data.searchData);
+        const { errcode } = result.data;
+        if (errcode === 0) {
+          const { dataList, totalItem } = result.data.data;
+
+          if (dataList.length === 0) {
+            data.tableData = [];
+            return;
+          }
+
+          const ids = dataList
+            .map((item: Node) => {
+              return item.nodeId;
+            })
+            .join(",");
+          const results = await Promise.all([
+            ContractsService.getSubjectSignCount({
+              subjectIds: ids,
+              subjectType: 2,
+            }),
+          ]);
+          dataList.forEach((node: Node) => {
+            const { nodeId } = node;
+            node.signCount = results[0].data.data.find(
+              (item: { subjectId: string; count: number }) => item.subjectId === String(nodeId)
+            ).count;
+          });
+
+          data.tableData = dataList;
+          data.total = totalItem;
+        }
       },
 
-      changePage(e: number) {
-        data.currentPage = e;
+      /** 打开新页面 */
+      openPage(domain: string) {
+        const url = assetsData.domain?.replace("api", domain);
+        window.open(url);
+      },
+
+      /** 重置 */
+      clearSearch() {
+        data.searchData = {
+          currentPage: 1,
+          limit: 20,
+        };
+        this.getData(true);
+      },
+
+      /** 切换表格页码 */
+      changePage(value: number) {
+        data.searchData.currentPage = value;
         this.getData();
+      },
+
+      /** 封禁操作 */
+      banNode(nodeId: string) {
+        data.operateData = {
+          nodeIds: [nodeId],
+        };
+        data.banPopupShow = true;
+      },
+
+      /** 解封操作 */
+      restore(nodeId: string) {
+        ElMessageBox.confirm("确认要解除该节点的封禁吗？", "解封封禁", {
+          confirmButtonText: "解封",
+          cancelButtonText: "取消",
+        }).then(() => {
+          data.operateData.nodeIds = [nodeId];
+          this.operateConfirm(2);
+        });
+      },
+
+      /** 操作（封禁/解封） */
+      async operateConfirm(type: 1 | 2) {
+        const { nodeIds, reason, remark } = data.operateData;
+        const params = { nodeIds, reason, remark, operationType: type };
+        const result = await NodeService.updateNodes(params);
+        const { errcode } = result.data;
+        if (errcode === 0) {
+          data.banPopupShow = false;
+          this.getData();
+        }
+      },
+
+      /** 选择表格项 */
+      selectTable(selected: Node[]) {
+        data.selectedData = selected;
+      },
+
+      /** 设置节点标签 */
+      setTag(item?: Node) {
+        if (item) {
+          data.setTagData.nodes = [item];
+          data.setTagData.tags = [...item.tags];
+        } else {
+          if (data.selectedData.length === 0) {
+            ElMessage.info("请选择需要管理节点标签的条目");
+            return;
+          }
+          data.setTagData.nodes = data.selectedData;
+          data.setTagData.tags = [];
+        }
+        data.setTagPopupShow = true;
+      },
+
+      /** 添加新标签 */
+      async newTag() {
+        const { newTag } = data.setTagData;
+        if (!newTag) return;
+
+        const existTag = data.nodeTagsList.find((item) => item === newTag);
+
+        if (existTag) {
+          if (data.setTagData.tags.includes(existTag)) {
+            // 输入的标签已选择
+            return;
+          }
+
+          // 输入的标签已存在且未选择，直接选择该标签
+          data.setTagData.tags.push(existTag);
+          data.setTagData.newTag = "";
+          return;
+        }
+
+        const result = await NodeService.createNodeTag({
+          tags: [newTag],
+        });
+        const { errcode } = result.data;
+        if (errcode === 0) {
+          data.nodeTagsList.push(newTag);
+          data.setTagData.tags.push(newTag);
+          data.setTagData.newTag = "";
+        }
+      },
+
+      /** 设置节点标签 */
+      async setTagConfirm() {
+        const { nodes, tags } = data.setTagData;
+        let addTags = [];
+        if (nodes.length === 1) {
+          // 非批量操作，统计删除标签与添加标签
+          const node = nodes[0];
+          const deleteTags = [] as string[];
+          node.tags.forEach((item: string) => {
+            if (!tags.includes(item)) deleteTags.push(item);
+          });
+          tags.forEach((tag: string) => {
+            if (!node.tags.find((item: string) => item === tag)) {
+              addTags.push(tag);
+            }
+          });
+          if (deleteTags.length !== 0) {
+            // 存在删除标签，执行删除
+            const result = await NodeService.setNodeTag({
+              tagNames: deleteTags,
+              nodeIds: [node.nodeId],
+              setType: 2,
+            });
+            const { errcode } = result.data;
+            if (errcode !== 0) return;
+            if (addTags.length === 0) {
+              data.setTagPopupShow = false;
+              this.getData();
+            }
+          }
+        } else {
+          // 批量操作，无删除标签，所有所选标签为添加标签
+          addTags = tags;
+        }
+        if (addTags.length !== 0) {
+          // 存在添加标签，执行添加
+          const nodeIds = nodes.map((item: Node) => item.nodeId);
+          const result = await NodeService.setNodeTag({
+            tagNames: addTags,
+            nodeIds,
+            setType: 1,
+          });
+          const { errcode } = result.data;
+          if (errcode === 0) {
+            data.setTagPopupShow = false;
+            this.getData();
+          }
+        }
+      },
+
+      /** 删除节点标签 */
+      async removeTag(nodeId: number, tagName: string) {
+        const result = await NodeService.setNodeTag({
+          tagNames: [tagName],
+          nodeIds: [nodeId],
+          setType: 2,
+        });
+        const { errcode } = result.data;
+        if (errcode === 0) {
+          const item = data.tableData.find((node) => node.nodeId === nodeId);
+          if (!item) return;
+          item.tags = item.tags.filter((tag) => tag !== tagName);
+        }
       },
     };
 
-    methods.getData();
+    /** 获取节点标签 */
+    const getNodeTags = async () => {
+      const result = await NodeService.getNodeTagsList();
+      data.nodeTagsList = result.data.data.map((item: { tagName: string }) => item.tagName);
+    };
+
+    data.searchData.keywords = query.value.keywords;
+    if (query.value.tag) data.searchData.selectedTags = [query.value.tag];
+    methods.getData(true);
+    getNodeTags();
 
     return {
+      dateRangeShortcuts,
+      ...assetsData,
       ...toRefs(data),
       ...methods,
       formatDate,
@@ -444,70 +489,14 @@ export default {
 
 <style lang="scss" scoped>
 .tags-box {
+  width: 100%;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
 
   .tag {
     flex-shrink: 0;
-    padding: 0 3px;
-    cursor: pointer;
-    background-color: #304156;
-    color: #fff;
-    border-radius: 4px;
-
-    & + .tag {
-      margin-left: 5px;
-    }
-  }
-}
-
-.phone-email {
-  word-break: keep-all;
-  display: flex;
-  align-items: center;
-
-  .copy-btn {
-    color: #169bd5;
-    margin-left: 5px;
-    cursor: pointer;
-    transition: all 0.2s linear;
-
-    &:hover {
-      color: #005980;
-    }
-
-    &:active {
-      color: #00b3ff;
-    }
-  }
-}
-
-.operate-btn {
-  width: fit-content;
-  padding: 3px 8px;
-  border-radius: 4px;
-  color: #fff;
-  cursor: pointer;
-  transition: all 0.2s linear;
-
-  &:hover {
-    opacity: 0.6;
-  }
-
-  &:active {
-    opacity: 0.8;
-  }
-
-  &.freeze {
-    background-color: #f56c6c;
-  }
-
-  &.audit {
-    background-color: #169bd5;
-  }
-
-  &.restore {
-    background-color: #67c23a;
+    margin: 0 8px 5px 0;
   }
 }
 </style>

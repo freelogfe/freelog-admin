@@ -148,7 +148,7 @@ export class ResourceService {
   }
 
   /** 获取资源标签使用数量 */
-  static getResourcesUseCount(params: { tagIds: string }): Promise<HttpResponse> {
+  static getResourcesTagUseCount(params: { tagIds: string }): Promise<HttpResponse> {
     return Axios("/v2/resources/tags/statistics", { method: "GET", params });
   }
 
@@ -189,9 +189,59 @@ export class ResourceService {
 
 /** Node 类接口 */
 export class NodeService {
+  /** 获取节点列表 */
+  static getNodeList(params: ListParams): Promise<HttpResponse> {
+    return Axios("/v2/nodes/search", { method: "GET", params });
+  }
+
   /** 获取用户运营节点数 */
   static getUserNodesCount(params: UserIdsParams): Promise<HttpResponse> {
     return Axios("/v2/nodes/count", { method: "GET", params });
+  }
+
+  /** 获取节点标签列表 */
+  static getNodeTagsList(): Promise<HttpResponse> {
+    return Axios("/v2/nodes/tags", { method: "GET" });
+  }
+
+  /** 获取节点标签使用数量 */
+  static getNodeTagUseCount(params: { tagIds: string }): Promise<HttpResponse> {
+    return Axios("/v2/nodes/tags/statistics", { method: "GET", params });
+  }
+
+  /** 创建节点标签 */
+  static createNodeTag(data: { tags: string[] }): Promise<HttpResponse> {
+    return Axios("/v2/nodes/tags", { method: "POST", data });
+  }
+
+  /** 编辑节点标签 */
+  static editNodeTag(tagId: string, data: { tag: string }): Promise<HttpResponse> {
+    return Axios("/v2/nodes/tags/" + tagId, { method: "PUT", data });
+  }
+
+  /** 删除节点标签 */
+  static deleteNodeTag(tagId: string): Promise<HttpResponse> {
+    return Axios("/v2/nodes/tags/" + tagId, { method: "DELETE" });
+  }
+
+  /** 设置或移除节点标签 */
+  static setNodeTag(data: { tagNames: string[]; nodeIds: number[]; setType: 1 | 2 }): Promise<HttpResponse> {
+    return Axios("/v2/nodes/batchSetOrRemoveNodeTag", { method: "PUT", data });
+  }
+
+  /** 禁用/解禁资源 */
+  static updateNodes(data: {
+    nodeIds: string[];
+    operationType: 1 | 2;
+    reason?: string;
+    remark?: string;
+  }): Promise<HttpResponse> {
+    return Axios("/v2/resources/freeOrRecover/batch", { method: "PUT", data });
+  }
+
+  /** 获取展品列表 */
+  static getExhibitList(params: ListParams): Promise<HttpResponse> {
+    return Axios("/v2/presentables/search", { method: "GET", params });
   }
 }
 
@@ -203,7 +253,7 @@ export class ContractsService {
   }
 
   /** 获取标的物签约数 */
-  static getResourcesSignCount(params: { subjectIds: string; subjectType: 1 | 2 | 3 }): Promise<HttpResponse> {
+  static getSubjectSignCount(params: { subjectIds: string; subjectType: 1 | 2 | 3 }): Promise<HttpResponse> {
     return Axios("/v2/contracts/subjects/signCount", { method: "GET", params });
   }
 }

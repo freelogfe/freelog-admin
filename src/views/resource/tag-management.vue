@@ -6,13 +6,13 @@
     </template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="batchEditTags()">批量编辑资源标签</el-button>
+      <el-button type="primary" @click="batchEditTags()">批量编辑</el-button>
       <el-button type="primary" @click="openTagPopup()">创建标签</el-button>
     </template>
 
     <template v-slot:filterBar>
       <form-item label="关键字搜索">
-        <el-input v-model="searchData.keywords" placeholder="请输入标签名称" clearable @keyup.enter="getData(true)" />
+        <el-input v-model="searchData.keywords" placeholder="请输入标签名" clearable @keyup.enter="getData(true)" />
       </form-item>
       <form-item label="类型">
         <el-select v-model="searchData.tagType" placeholder="请选择类型" clearable>
@@ -70,7 +70,7 @@
             }}</span>
           </template>
         </el-table-column>
-        <el-table-column fixed="right" width="70">
+        <el-table-column fixed="right" width="40">
           <template #header>
             <el-icon class="operation-icon" title="操作">
               <operation />
@@ -208,7 +208,7 @@ export default {
               return item.tagId;
             })
             .join(",");
-          const results = await ResourceService.getResourcesUseCount({
+          const results = await ResourceService.getResourcesTagUseCount({
             tagIds: ids,
           });
           dataList.forEach((tag: ResourceTag) => {

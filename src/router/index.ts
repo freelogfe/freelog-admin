@@ -151,6 +151,16 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
+        path: "tag-management",
+        name: "nodeTagManagement",
+        component: () => import("../views/node/tag-management.vue"),
+        meta: {
+          title: "节点标签管理",
+          sideBarItem: "nodeManagement",
+          hidden: true,
+        },
+      },
+      {
         path: "exhibit-management",
         name: "exhibitManagement",
         component: () => import("../views/node/exhibit-management.vue"),

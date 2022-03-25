@@ -14,7 +14,7 @@
         <el-input
           style="width: 250px"
           v-model="searchData.keywords"
-          placeholder="请输入用户名、注册手机号/邮箱"
+          placeholder="请输入用户名、手机号、邮箱"
           clearable
           @keyup.enter="getData(true)"
         />
@@ -36,14 +36,14 @@
         <el-table-column label="申请日期" width="160">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
-        <el-table-column property="occupation" label="职业" min-width="100" show-overflow-tooltip />
-        <el-table-column property="city" label="区域" show-overflow-tooltip />
-        <el-table-column property="description" label="其他" min-width="150" show-overflow-tooltip />
-        <el-table-column property="username" label="用户名" min-width="150" show-overflow-tooltip />
-        <el-table-column label="手机" min-width="130" show-overflow-tooltip>
+        <el-table-column property="occupation" label="职业" width="150" />
+        <el-table-column property="city" label="区域" />
+        <el-table-column property="description" label="其他" width="200" />
+        <el-table-column property="username" label="用户名" width="150" />
+        <el-table-column label="手机" width="130" show-overflow-tooltip>
           <template #default="scope">{{ scope.row.mobile || "-" }}</template>
         </el-table-column>
-        <el-table-column property="email" label="邮箱" min-width="250" show-overflow-tooltip />
+        <el-table-column property="email" label="邮箱" width="250" show-overflow-tooltip />
         <el-table-column label="最后登录" width="160">
           <template #default="scope">{{ relativeTime(scope.row.latestLoginData) }}</template>
         </el-table-column>

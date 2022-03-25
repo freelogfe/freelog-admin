@@ -10,7 +10,7 @@
     </template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="setTag()">批量添加用户标签</el-button>
+      <el-button type="primary" @click="setTag()">批量添加标签</el-button>
       <el-button type="primary" @click="switchPage('/user/tag-management')">管理标签</el-button>
     </template>
 
@@ -19,7 +19,7 @@
         <el-input
           style="width: 250px"
           v-model="searchData.keywords"
-          placeholder="请输入用户名、注册手机号/邮箱"
+          placeholder="请输入用户名、手机号、邮箱"
           clearable
           @keyup.enter="getData(true)"
         />
@@ -51,8 +51,8 @@
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable">
         <el-table-column type="selection" />
-        <el-table-column property="username" label="用户" min-width="150" show-overflow-tooltip />
-        <el-table-column label="标签" width="200">
+        <el-table-column property="username" label="用户" width="200" />
+        <el-table-column label="标签" width="250">
           <template #default="scope">
             <div class="tags-box">
               <el-tag
@@ -64,10 +64,10 @@
               >
                 {{ item.tag }}
               </el-tag>
-              <el-icon class="icon-btn" title="管理标签" @click="setTag(scope.row)">
-                <edit />
-              </el-icon>
             </div>
+            <el-icon class="icon-btn" title="管理标签" @click="setTag(scope.row)">
+              <edit />
+            </el-icon>
           </template>
         </el-table-column>
         <el-table-column label="最近登录" width="160">
@@ -75,25 +75,36 @@
             {{ scope.row.latestLoginDate ? relativeTime(scope.row.latestLoginDate) : "-" }}
           </template>
         </el-table-column>
-        <el-table-column property="createdResourceCount" label="发布资源数" align="right" width="120" />
         <el-table-column label="发布资源数" width="120" align="right">
           <template #default="scope">
             <el-button
               type="text"
               @click="
                 switchPage('/resource/resource-management', {
-                  username: scope.row.username,
+                  keywords: scope.row.username,
                 })
               "
               >{{ scope.row.createdResourceCount }}
             </el-button>
           </template>
         </el-table-column>
-        <el-table-column property="createdNodeCount" label="运营节点数" align="right" width="120" />
+        <el-table-column label="运营节点数" width="120" align="right">
+          <template #default="scope">
+            <el-button
+              type="text"
+              @click="
+                switchPage('/node/node-management', {
+                  username: scope.row.username,
+                })
+              "
+              >{{ scope.row.createdNodeCount }}
+            </el-button>
+          </template>
+        </el-table-column>
         <el-table-column property="signedContractCount" label="消费合约数" align="right" width="120" />
         <el-table-column property="tradeCount" label="交易次数" align="right" width="100" />
         <el-table-column property="balance" label="代币余额" align="right" width="100" />
-        <el-table-column label="注册手机号" width="130">
+        <el-table-column label="手机号" width="150">
           <template #default="scope">
             <div class="table-cell-item">
               <span>{{ scope.row.mobile || "-" }}</span>
@@ -103,7 +114,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="注册邮箱" min-width="250">
+        <el-table-column label="邮箱" width="250">
           <template #default="scope">
             <div class="table-cell-item">
               <span>{{ scope.row.email || "-" }}</span>
@@ -511,7 +522,7 @@ export default {
       data.userTagsList = result.data.data;
     };
 
-    data.searchData.keywords = query.value.username;
+    data.searchData.keywords = query.value.keywords;
     data.searchData.tags = query.value.tag ? [Number(query.value.tag)] : [];
     methods.getData(true);
     getUserTags();
@@ -540,11 +551,6 @@ export default {
   .tag {
     flex-shrink: 0;
     margin: 0 8px 5px 0;
-  }
-
-  .icon-btn {
-    margin-left: 0;
-    margin-bottom: 5px;
   }
 }
 </style>

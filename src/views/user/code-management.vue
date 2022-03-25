@@ -12,15 +12,14 @@
     <template v-slot:barRight>
       <el-button type="primary" @click="operate(1)">批量禁用</el-button>
       <el-button type="primary" @click="operate(0)">批量解禁</el-button>
-      <el-button type="primary" @click="createInviteCode()"> 批量生成邀请码 </el-button>
+      <el-button type="primary" @click="createInviteCode()">批量生成</el-button>
     </template>
 
     <template v-slot:filterBar>
       <form-item label="关键字搜索">
         <el-input
-          style="width: 250px"
           v-model="searchData.keywords"
-          placeholder="请输入邀请码、邀请者用户名"
+          placeholder="请输入邀请码、邀请者"
           clearable
           @keyup.enter="getData(true)"
         />
@@ -51,7 +50,7 @@
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable">
         <el-table-column type="selection" />
-        <el-table-column label="邀请码" width="150" show-overflow-tooltip>
+        <el-table-column label="邀请码" width="200">
           <template #default="scope">
             <div class="table-cell-item">
               <span>{{ scope.row.code }}</span>
@@ -62,13 +61,13 @@
         <el-table-column label="创建时间" width="160">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
-        <el-table-column label="邀请者(用户名)" min-width="120" show-overflow-tooltip>
+        <el-table-column label="邀请者" width="150" show-overflow-tooltip>
           <template #default="scope">
             <el-button
               type="text"
               @click="
                 switchPage('/user/user-management', {
-                  username: scope.row.username,
+                  keywords: scope.row.username,
                 })
               "
               v-if="scope.row.username"
@@ -77,11 +76,12 @@
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column label="剩余次数" width="100">
+        <el-table-column label="剩余次数" width="120">
           <template #default="scope">
             <div class="table-cell-item">
               <span v-if="scope.row.limitCount">
-                {{ scope.row.limitCount - scope.row.usedCount }}/
+                {{ scope.row.limitCount - scope.row.usedCount }}
+                /
                 {{ scope.row.limitCount }}
               </span>
               <span v-else>不限</span>
@@ -105,7 +105,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="备注" min-width="150" show-overflow-tooltip>
+        <el-table-column label="备注" width="150">
           <template #default="scope">
             {{ scope.row.remark || "-" }}
           </template>

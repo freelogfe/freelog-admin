@@ -6,8 +6,8 @@
     </template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="banResources()">批量封禁资源</el-button>
-      <el-button type="primary" @click="setTag()">批量添加资源标签</el-button>
+      <el-button type="primary" @click="banResources()">批量封禁</el-button>
+      <el-button type="primary" @click="setTag()">批量添加标签</el-button>
       <el-button type="primary" @click="switchPage('/resource/tag-management')">管理标签</el-button>
     </template>
 
@@ -15,7 +15,7 @@
       <form-item label="关键字搜索">
         <el-input
           v-model="searchData.keywords"
-          placeholder="请输入用户名、资源名称"
+          placeholder="请输入用户名、资源名"
           clearable
           @keyup.enter="getData(true)"
         />
@@ -56,13 +56,13 @@
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable">
         <el-table-column type="selection" />
-        <el-table-column label="资源" width="200" show-overflow-tooltip>
+        <el-table-column label="资源" width="250" show-overflow-tooltip>
           <template #default="scope">
             <el-button
               type="text"
               @click="
                 switchPage('/user/user-management', {
-                  username: scope.row.username,
+                  keywords: scope.row.username,
                 })
               "
               >{{ scope.row.username }}
@@ -73,7 +73,7 @@
             </el-button>
           </template>
         </el-table-column>
-        <el-table-column label="标签" width="200">
+        <el-table-column label="标签" width="250">
           <template #default="scope">
             <div class="tags-box">
               <el-tag
@@ -85,10 +85,10 @@
               >
                 {{ item }}
               </el-tag>
-              <el-icon class="icon-btn" title="管理标签" @click="setTag(scope.row)">
-                <edit />
-              </el-icon>
             </div>
+            <el-icon class="icon-btn" title="管理标签" @click="setTag(scope.row)">
+              <edit />
+            </el-icon>
           </template>
         </el-table-column>
         <el-table-column label="封面" width="120">
@@ -105,10 +105,10 @@
         <el-table-column property="resourceType" label="类型" width="100" show-overflow-tooltip />
         <el-table-column property="signCount" label="需方合约数" align="right" width="120" />
         <el-table-column property="collectCount" label="收藏数" align="right" width="120" />
-        <el-table-column label="最新版本">
+        <el-table-column label="最新版本" width="100">
           <template #default="scope">
             <div class="table-cell-item">
-              <span>{{ scope.row.latestVersion }}</span>
+              <span>{{ scope.row.latestVersion || "-" }}</span>
               <el-icon
                 class="icon-btn"
                 title="查看历史记录"
@@ -126,7 +126,7 @@
         <el-table-column property="createDate" label="创建时间" width="160">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
-        <el-table-column label="资源状态">
+        <el-table-column label="状态">
           <template #default="scope">
             <el-tooltip
               effect="dark"
@@ -424,7 +424,7 @@ export default {
             })
             .join(",");
           const results = await Promise.all([
-            ContractsService.getResourcesSignCount({
+            ContractsService.getSubjectSignCount({
               subjectIds: ids,
               subjectType: 1,
             }),
@@ -499,11 +499,6 @@ export default {
           data.operateData.resourceIds = [resourceId];
           this.operateConfirm(2);
         });
-      },
-
-      /** 审核 */
-      audit(username: string) {
-        switchPage("/user/qualification-audit", { username });
       },
 
       /** 操作（封禁/解封） */
@@ -673,15 +668,15 @@ export default {
     };
 
     /** 获取资源标签 */
-    const getUserTags = async () => {
+    const getResourceTags = async () => {
       const result = await ResourceService.getResourcesTagsList({ limit: 100 });
       data.resourceTagsList = result.data.data.dataList.map((item: { tagName: string }) => item.tagName);
     };
 
-    data.searchData.keywords = query.value.username;
+    data.searchData.keywords = query.value.keywords;
     if (query.value.tag) data.searchData.selectedTags = [query.value.tag];
     methods.getData(true);
-    getUserTags();
+    getResourceTags();
 
     return {
       dateRangeShortcuts,
@@ -707,16 +702,12 @@ export default {
     flex-shrink: 0;
     margin: 0 8px 5px 0;
   }
-
-  .icon-btn {
-    margin-left: 0;
-    margin-bottom: 5px;
-  }
 }
 
 .cover-image {
   width: 100px;
   border: 1px solid #eee;
+  border-radius: 4px;
 }
 
 .policy-box {
@@ -794,7 +785,7 @@ export default {
       transition: all 0.2s linear;
 
       &:hover {
-        background-color: #f5f5f5;
+        background-color: #fafafa;
 
         .icon-btn {
           opacity: 1 !important;
@@ -802,7 +793,7 @@ export default {
       }
 
       &.active {
-        background-color: #ebebeb;
+        background-color: #f5f5f5;
       }
 
       .version {
@@ -838,7 +829,7 @@ export default {
     padding: 10px;
     box-sizing: border-box;
     border-radius: 0 6px 6px 6px;
-    background-color: #ebebeb;
+    background-color: #f5f5f5;
 
     &.media {
       display: flex;
