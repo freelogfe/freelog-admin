@@ -47,7 +47,7 @@
             <el-icon class="icon-btn" title="编辑" @click="openTagPopup(scope.row)">
               <edit />
             </el-icon>
-            <el-icon class="icon-btn" title="删除" @click="deleteTag(scope.row)">
+            <el-icon class="icon-btn" title="删除" @click="deleteTag([scope.row])">
               <delete />
             </el-icon>
           </template>
@@ -133,12 +133,14 @@ export default {
       },
 
       /** 删除操作 */
-      deleteTag(tag: NodeTag) {
-        ElMessageBox.confirm(`确认删除【${tag.tagName}】？`, "删除标签", {
+      deleteTag(tags: NodeTag[]) {
+        const tagName = tags.map((item) => "【" + item.tagName + "】").join("、");
+        ElMessageBox.confirm(`确认删除${tagName}？`, "删除标签", {
           confirmButtonText: "删除",
           cancelButtonText: "取消",
         }).then(async () => {
-          const result = await NodeService.deleteNodeTag(tag.tagId);
+          const ids = tags.map((item) => item.tagId).join(",");
+          const result = await NodeService.deleteNodeTag({ tagIds: ids });
           const { errcode } = result.data;
           if (errcode === 0) {
             this.getData();
@@ -153,7 +155,7 @@ export default {
         const { tagId, tagName } = data.operateData;
         let result;
         if (tagId) {
-          result = await NodeService.editNodeTag(tagId, { tag: tagName });
+          result = await NodeService.editNodeTag(tagId, { tagName });
         } else {
           result = await NodeService.createNodeTag({ tags: [tagName] });
         }
@@ -176,7 +178,7 @@ export default {
           return;
         }
 
-        // this.deleteTag(data.selectedData);
+        this.deleteTag(data.selectedData);
       },
     };
 

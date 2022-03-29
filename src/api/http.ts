@@ -50,8 +50,7 @@ const showStatus = (status: number) => {
 
 const service = axios.create({
   // 联调
-  // baseURL: process.env.NODE_ENV === 'production' ? `/` : '/api',
-  baseURL: "/api",
+  baseURL: process.env.NODE_ENV === "development" ? "/api" : process.env.VUE_APP_BASE_API,
   headers: {
     "Content-Type": "application/json;charset=utf-8",
   },

@@ -94,7 +94,7 @@
               type="text"
               @click="
                 switchPage('/node/node-management', {
-                  username: scope.row.username,
+                  userId: scope.row.userId,
                 })
               "
               >{{ scope.row.createdNodeCount }}

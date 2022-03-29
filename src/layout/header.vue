@@ -70,7 +70,7 @@ export default {
           currentRouter = currentRouter.children.find((item: RouteRecordRaw) => item.path === pathArr[i]);
         }
 
-        const { title } = currentRouter?.meta as any;
+        const { title } = currentRouter.meta as any;
 
         if (i === pathArr.length - 1) {
           pageTitle += title;

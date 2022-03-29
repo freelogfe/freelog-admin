@@ -1,7 +1,9 @@
 <!-- 侧边栏 -->
 <template>
   <div class="side-bar-wrapper">
-    <div class="logo">freelog admin</div>
+    <div class="logo-box">
+      <img class="logo" src="@/assets/images/logo.png" />
+    </div>
 
     <el-scrollbar>
       <el-menu
@@ -61,7 +63,7 @@ export default {
   background-image: url(../assets/images/texture.png);
   box-shadow: 0 1px 4px rgb(0 21 41 / 8%);
 
-  .logo {
+  .logo-box {
     width: 100%;
     height: 50px;
     color: #fff;
@@ -71,6 +73,10 @@ export default {
     font-size: 18px;
     font-weight: bold;
     font-style: italic;
+
+    .logo {
+      height: 24px;
+    }
   }
 
   .menu {
@@ -91,7 +97,7 @@ export default {
       }
     }
 
-    ::v-deep .el-sub-menu__title:hover {
+    :deep .el-sub-menu__title:hover {
       background-color: #3b3737 !important;
     }
   }

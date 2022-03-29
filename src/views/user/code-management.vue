@@ -201,17 +201,17 @@
     </template>
   </el-dialog>
 
-  <el-dialog v-model="recordPopupShow" :title="'使用记录 > ' + recordData?.code">
+  <el-dialog v-model="recordPopupShow" :title="'使用记录 > ' + recordData.code">
     <div class="filter-bar">
       <form-item label="关键字搜索">
         <el-input v-model="recordSearchData.keywords" placeholder="请输入使用者用户名" clearable />
       </form-item>
       <form-item>
-        <el-button type="primary" @click="getRecordList(recordData?.code)">搜索</el-button>
+        <el-button type="primary" @click="getRecordList(recordData.code)">搜索</el-button>
       </form-item>
     </div>
 
-    <el-table :data="recordData?.list" stripe border>
+    <el-table :data="recordData.list" stripe border>
       <el-table-column label="序号" type="index" width="80" />
       <el-table-column property="username" label="使用者(用户名)" show-overflow-tooltip />
       <el-table-column property="loginIp" label="IP地址" show-overflow-tooltip />
@@ -294,7 +294,7 @@ export default {
         currentPage: 1,
         limit: 20,
       } as ListParams,
-      recordData: {} as { code: string; list: CodeRecord[]; total: number },
+      recordData: { code: "", list: [] as CodeRecord[], total: 0 },
       copyValue: "",
       createCodePopupShow: false,
       recordPopupShow: false,

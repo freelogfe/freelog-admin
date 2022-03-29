@@ -22,7 +22,8 @@ const cookie = {
   get(key: string) {
     const cookies = document.cookie.split("; ");
     const cookie = cookies.find((item) => item.startsWith(key));
-    const value = cookie?.split(key + "=")[1];
+    if (!cookie) return "";
+    const value = cookie.split(key + "=")[1];
     return value;
   },
 

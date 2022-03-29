@@ -97,11 +97,23 @@
                   keywords: scope.row.nodeName,
                 })
               "
-              >{{ scope.row.collectCount || 0 }}
+              >{{ scope.row.exhibitCount }}
             </el-button>
           </template>
         </el-table-column>
-        <el-table-column property="signCount" label="需方合约数" align="right" width="120" />
+        <el-table-column label="需方合约数" width="120" align="right">
+          <template #default="scope">
+            <el-button
+              type="text"
+              @click="
+                switchPage('/node/exhibit-management', {
+                  keywords: scope.row.nodeName,
+                })
+              "
+              >{{ scope.row.signCount }}
+            </el-button>
+          </template>
+        </el-table-column>
         <el-table-column property="createDate" label="创建时间" width="160">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
@@ -111,7 +123,7 @@
               effect="dark"
               :content="`${scope.row.reason}${scope.row.remark ? '（' + scope.row.remark + '）' : ''}`"
               placement="top"
-              v-if="scope.row.status === 4"
+              v-if="[5, 6].includes(scope.row.status)"
             >
               {{ statusMapping.find((item) => item.value === scope.row.status).label }}
             </el-tooltip>
@@ -125,10 +137,20 @@
             </el-icon>
           </template>
           <template #default="scope">
-            <el-icon class="icon-btn" title="封禁" @click="banNode(scope.row.nodeId)" v-if="scope.row.status !== 4">
+            <el-icon
+              class="icon-btn"
+              title="封禁"
+              @click="banNode(scope.row.nodeId)"
+              v-if="![5, 6].includes(scope.row.status)"
+            >
               <close />
             </el-icon>
-            <el-icon class="icon-btn" title="解禁" @click="restore(scope.row.nodeId)" v-if="scope.row.status === 4">
+            <el-icon
+              class="icon-btn"
+              title="解禁"
+              @click="restore(scope.row.nodeId)"
+              v-if="[5, 6].includes(scope.row.status)"
+            >
               <check />
             </el-icon>
           </template>
@@ -195,7 +217,7 @@ import { reactive, toRefs } from "vue-demi";
 import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { ContractsService, NodeService } from "@/api/request";
+import { NodeService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
 import { Operation, Edit, Close, Check } from "@element-plus/icons-vue";
 import { ListParams, OperateParams } from "@/api/interface";
@@ -211,7 +233,10 @@ interface Node {
   status: number;
   createDate: string;
   tags: string[];
+  exhibitCount: number;
   signCount: number;
+  reason: string;
+  remark: string;
 }
 
 /** 节点标签数据 */
@@ -234,9 +259,10 @@ export default {
       statusMapping: [
         { value: 1, label: "下线" },
         { value: 2, label: "上线" },
-        { value: 4, label: "冻结" },
+        { value: 5, label: "封禁" },
+        { value: 6, label: "封禁" },
       ],
-      domain: process.env.VUE_APP_BASE_API,
+      domain: process.env.VUE_APP_BASE_API as string,
     };
     const data = reactive({
       tableData: [] as Node[],
@@ -277,17 +303,35 @@ export default {
             })
             .join(",");
           const results = await Promise.all([
-            ContractsService.getSubjectSignCount({
-              subjectIds: ids,
-              subjectType: 2,
-            }),
+            NodeService.getNodeExhibitCount({ nodeIds: ids }),
+            NodeService.getNodeExhibitSignCount({ licensorIds: ids }),
           ]);
           dataList.forEach((node: Node) => {
             const { nodeId } = node;
-            node.signCount = results[0].data.data.find(
-              (item: { subjectId: string; count: number }) => item.subjectId === String(nodeId)
+            node.exhibitCount = results[0].data.data.find(
+              (item: { nodeId: number; count: number }) => item.nodeId === nodeId
+            ).count;
+            node.signCount = results[1].data.data.find(
+              (item: { licensorId: string; count: number }) => item.licensorId === String(nodeId)
             ).count;
           });
+
+          const bannedIds = dataList
+            .filter((item: Node) => [5, 6].includes(item.status))
+            .map((item: Node) => {
+              return item.nodeId;
+            })
+            .join(",");
+          if (bannedIds) {
+            const bannedResult = await NodeService.getNodeRecordList({ nodeIds: bannedIds });
+            bannedResult.data.data.forEach(
+              (item: { nodeId: number; records: { reason: string; remark: string }[] }) => {
+                const resource: Node = dataList.find((resource: Node) => resource.nodeId === item.nodeId);
+                resource.reason = item.records[0].reason;
+                resource.remark = item.records[0].remark;
+              }
+            );
+          }
 
           data.tableData = dataList;
           data.total = totalItem;
@@ -296,7 +340,7 @@ export default {
 
       /** 打开新页面 */
       openPage(domain: string) {
-        const url = assetsData.domain?.replace("api", domain);
+        const url = assetsData.domain.replace("api", domain);
         window.open(url);
       },
 
@@ -317,9 +361,7 @@ export default {
 
       /** 封禁操作 */
       banNode(nodeId: string) {
-        data.operateData = {
-          nodeIds: [nodeId],
-        };
+        data.operateData = { nodeId };
         data.banPopupShow = true;
       },
 
@@ -329,16 +371,20 @@ export default {
           confirmButtonText: "解封",
           cancelButtonText: "取消",
         }).then(() => {
-          data.operateData.nodeIds = [nodeId];
+          data.operateData.nodeId = nodeId;
           this.operateConfirm(2);
         });
       },
 
       /** 操作（封禁/解封） */
       async operateConfirm(type: 1 | 2) {
-        const { nodeIds, reason, remark } = data.operateData;
-        const params = { nodeIds, reason, remark, operationType: type };
-        const result = await NodeService.updateNodes(params);
+        const { nodeId, reason, remark } = data.operateData;
+        let result = null;
+        if (type === 1) {
+          result = await NodeService.banNode(nodeId, { reason, remark });
+        } else {
+          result = await NodeService.restoreNode(nodeId);
+        }
         const { errcode } = result.data;
         if (errcode === 0) {
           data.banPopupShow = false;
@@ -470,6 +516,7 @@ export default {
     };
 
     data.searchData.keywords = query.value.keywords;
+    data.searchData.ownerUserId = query.value.userId;
     if (query.value.tag) data.searchData.selectedTags = [query.value.tag];
     methods.getData(true);
     getNodeTags();

@@ -141,7 +141,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-::v-deep.markdown-wrapper {
+:deep.markdown-wrapper {
   width: 100%;
   font-size: 16px;
   color: #222;

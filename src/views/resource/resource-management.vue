@@ -162,7 +162,12 @@
             >
               <check />
             </el-icon>
-            <el-icon class="icon-btn" title="查看授权策略" @click="viewPolicy(scope.row)">
+            <el-icon
+              class="icon-btn"
+              title="查看授权策略"
+              @click="viewPolicy(scope.row)"
+              v-if="scope.row.policies.length"
+            >
               <document />
             </el-icon>
           </template>
@@ -253,9 +258,7 @@
             <a
               class="icon-btn"
               title="下载"
-              :href="`/api/v2/resources/versions/${
-                versionData.versionList[versionData.activeIndex].versionId
-              }/internalClientDownload`"
+              :href="`/api/v2/resources/versions/${currentVersionData.versionId}/internalClientDownload`"
               download
               @click.stop
             >
@@ -268,7 +271,7 @@
       <el-scrollbar
         class="version-content"
         v-loading="versionData.loading"
-        v-if="versionData.versionList[versionData.activeIndex].mime?.startsWith('text')"
+        v-if="currentVersionData.mime && currentVersionData.mime.startsWith('text')"
       >
         <my-markdown :data="versionData" @done="versionData.loading = false" />
       </el-scrollbar>
@@ -276,22 +279,22 @@
         <el-image
           style="width: 570px; height: 570px"
           fit="contain"
-          :src="versionData.versionList[versionData.activeIndex].content"
-          :preview-src-list="[versionData.versionList[versionData.activeIndex].content]"
+          :src="currentVersionData.content"
+          :preview-src-list="[currentVersionData.content]"
           preview-teleported
           hide-on-click-modal
-          v-if="versionData.versionList[versionData.activeIndex].mime?.startsWith('image')"
+          v-if="currentVersionData.mime && currentVersionData.mime.startsWith('image')"
         />
         <video
           style="width: 100%"
-          :src="versionData.versionList[versionData.activeIndex].content"
+          :src="currentVersionData.content"
           controls
-          v-else-if="versionData.versionList[versionData.activeIndex].mime?.startsWith('video')"
+          v-else-if="currentVersionData.mime && currentVersionData.mime.startsWith('video')"
         />
         <audio
-          :src="versionData.versionList[versionData.activeIndex].content"
+          :src="currentVersionData.content"
           controls
-          v-else-if="versionData.versionList[versionData.activeIndex].mime?.startsWith('audio')"
+          v-else-if="currentVersionData.mime && currentVersionData.mime.startsWith('audio')"
         />
       </div>
     </div>
@@ -306,7 +309,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { ResourceService, ContractsService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
 import { Operation, Edit, Clock, Close, Check, Document, Download } from "@element-plus/icons-vue";
-import { defineAsyncComponent } from "vue";
+import { computed, defineAsyncComponent } from "vue";
 import { ListParams, OperateParams } from "@/api/interface";
 
 /** 资源数据 */
@@ -398,6 +401,10 @@ export default {
       policyPopupShow: false,
       banPopupShow: false,
     });
+    const currentVersionData = computed(() => {
+      const { versionList, activeIndex } = data.versionData;
+      return versionList[activeIndex];
+    });
 
     const methods = {
       /** 获取列表数据 */
@@ -449,7 +456,7 @@ export default {
             .join(",");
 
           if (bannedIds) {
-            const bannedResult = await ResourceService.getCodeRecordList({ resourceIds: bannedIds });
+            const bannedResult = await ResourceService.getResourceRecordList({ resourceIds: bannedIds });
             bannedResult.data.data.forEach(
               (item: { resourceId: string; records: { reason: string; remark: string }[] }) => {
                 const resource: Resource = dataList.find(
@@ -459,7 +466,6 @@ export default {
                 resource.remark = item.records[0].remark;
               }
             );
-            console.error(bannedResult);
           }
 
           data.tableData = dataList;
@@ -682,6 +688,7 @@ export default {
       dateRangeShortcuts,
       ...assetsData,
       ...toRefs(data),
+      currentVersionData,
       ...methods,
       formatDate,
       switchPage,

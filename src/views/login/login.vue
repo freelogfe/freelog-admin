@@ -9,12 +9,7 @@
       <div class="title">登录</div>
       <el-form ref="ruleFormRef" :model="loginData" :rules="rules">
         <el-form-item prop="loginName">
-          <el-input
-            v-model="loginData.loginName"
-            placeholder="用户名"
-            autofocus
-            @keyup.enter="login()"
-          >
+          <el-input v-model="loginData.loginName" placeholder="用户名" autofocus @keyup.enter="login()">
             <template #prefix>
               <el-icon><user-filled /></el-icon>
             </template>
@@ -35,21 +30,11 @@
         </el-form-item>
       </el-form>
       <div class="btns">
-        <el-button class="normal-btn" type="primary" @click="login()"
-          >登录</el-button
-        >
-        <el-button
-          class="text-btn"
-          type="text"
-          @click="openPage('http://user.testfreelog.com/retrieve')"
-        >
+        <el-button class="normal-btn" type="primary" @click="login()">登录</el-button>
+        <el-button class="text-btn" type="text" @click="openPage('http://user.testfreelog.com/retrieve')">
           忘记密码？
         </el-button>
-        <el-button
-          class="normal-btn"
-          @click="openPage('http://user.testfreelog.com/logon')"
-          >注册</el-button
-        >
+        <el-button class="normal-btn" @click="openPage('http://user.testfreelog.com/logon')">注册</el-button>
       </div>
     </div>
   </div>
@@ -68,7 +53,6 @@ type FormInstance = InstanceType<typeof ElForm>;
 
 export default {
   components: {
-    // "form-item": defineAsyncComponent(() => import("@/components/form-item.vue")),
     UserFilled,
     Lock,
   },
@@ -188,11 +172,11 @@ export default {
       margin-top: 50px;
     }
 
-    ::v-deep .el-input__inner {
+    :deep .el-input__inner {
       height: 40px;
     }
 
-    ::v-deep .el-input__prefix-inner {
+    :deep .el-input__prefix-inner {
       display: flex;
       align-items: center;
       font-size: 20px;

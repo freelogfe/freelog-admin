@@ -122,6 +122,11 @@ export class ResourceService {
     return Axios("/v2/resources/search", { method: "GET", params: { ...params, isLoadPolicyInfo: 1 } });
   }
 
+  /** 查询资源 */
+  static searchResource(resourceIds: string): Promise<HttpResponse> {
+    return Axios("/v2/resources/list", { method: "GET", params: { resourceIds, projection: "coverImages" } });
+  }
+
   /** 获取用户发布资源数 */
   static getUserResourcesCount(params: UserIdsParams): Promise<HttpResponse> {
     return Axios("/v2/resources/count", { method: "GET", params });
@@ -178,7 +183,7 @@ export class ResourceService {
   }
 
   /** 查看资源禁用记录 */
-  static getCodeRecordList(params: {
+  static getResourceRecordList(params: {
     resourceIds: string;
     recordDesc?: 0 | 1;
     recordLimit?: number;
@@ -191,7 +196,7 @@ export class ResourceService {
 export class NodeService {
   /** 获取节点列表 */
   static getNodeList(params: ListParams): Promise<HttpResponse> {
-    return Axios("/v2/nodes/search", { method: "GET", params });
+    return Axios("/v2/nodes/search", { method: "GET", params: { ...params, sort: "createDate:-1" } });
   }
 
   /** 获取用户运营节点数 */
@@ -202,6 +207,16 @@ export class NodeService {
   /** 获取节点标签列表 */
   static getNodeTagsList(): Promise<HttpResponse> {
     return Axios("/v2/nodes/tags", { method: "GET" });
+  }
+
+  /** 获取节点运营的展品数 */
+  static getNodeExhibitCount(params: { nodeIds: string }): Promise<HttpResponse> {
+    return Axios("/v2/presentables/admin/presentableStatistics", { method: "GET", params });
+  }
+
+  /** 获取节点下所有展品的签约数总和 */
+  static getNodeExhibitSignCount(params: { licensorIds: string; subjectType?: 1 | 2 | 3 }): Promise<HttpResponse> {
+    return Axios("/v2/contracts/licensors/signCount", { method: "GET", params });
   }
 
   /** 获取节点标签使用数量 */
@@ -215,13 +230,13 @@ export class NodeService {
   }
 
   /** 编辑节点标签 */
-  static editNodeTag(tagId: string, data: { tag: string }): Promise<HttpResponse> {
+  static editNodeTag(tagId: string, data: { tagName: string }): Promise<HttpResponse> {
     return Axios("/v2/nodes/tags/" + tagId, { method: "PUT", data });
   }
 
   /** 删除节点标签 */
-  static deleteNodeTag(tagId: string): Promise<HttpResponse> {
-    return Axios("/v2/nodes/tags/" + tagId, { method: "DELETE" });
+  static deleteNodeTag(params: { tagIds: string }): Promise<HttpResponse> {
+    return Axios("/v2/nodes/tags/", { method: "DELETE", params });
   }
 
   /** 设置或移除节点标签 */
@@ -229,24 +244,49 @@ export class NodeService {
     return Axios("/v2/nodes/batchSetOrRemoveNodeTag", { method: "PUT", data });
   }
 
-  /** 禁用/解禁资源 */
-  static updateNodes(data: {
-    nodeIds: string[];
-    operationType: 1 | 2;
-    reason?: string;
-    remark?: string;
+  /** 禁用节点 */
+  static banNode(
+    nodeId: number,
+    data: {
+      reason: string;
+      remark?: string;
+    }
+  ): Promise<HttpResponse> {
+    return Axios(`/v2/nodes/${nodeId}/freeze`, { method: "PUT", data });
+  }
+
+  /** 解禁节点 */
+  static restoreNode(nodeId: number): Promise<HttpResponse> {
+    return Axios(`/v2/nodes/${nodeId}/deArchive`, { method: "PUT" });
+  }
+
+  /** 查看节点禁用记录 */
+  static getNodeRecordList(params: {
+    nodeIds: string;
+    recordDesc?: 0 | 1;
+    recordLimit?: number;
   }): Promise<HttpResponse> {
-    return Axios("/v2/resources/freeOrRecover/batch", { method: "PUT", data });
+    return Axios("/v2/nodes/freeOrRecover/records", { method: "GET", params });
   }
 
   /** 获取展品列表 */
   static getExhibitList(params: ListParams): Promise<HttpResponse> {
     return Axios("/v2/presentables/search", { method: "GET", params });
   }
+
+  /** 查询展品 */
+  static searchExhibit(presentableIds: string): Promise<HttpResponse> {
+    return Axios("/v2/presentables/list", { method: "GET", params: { presentableIds, projection: "coverImages" } });
+  }
 }
 
 /** Contracts 类接口 */
 export class ContractsService {
+  /** 获取合约列表 */
+  static getContractList(params: ListParams): Promise<HttpResponse> {
+    return Axios("/v2/contracts", { method: "GET", params: { ...params, identityType: 2 } });
+  }
+
   /** 获取用户消费合约数 */
   static getUserContractsCount(params: UserIdsParams): Promise<HttpResponse> {
     return Axios("/v2/contracts/count", { method: "GET", params });

@@ -68,7 +68,7 @@
       width: 100%;
       margin-top: 20px;
 
-      ::v-deep .el-table-fixed-column--right {
+      :deep .el-table-fixed-column--right {
         z-index: 1;
       }
     }

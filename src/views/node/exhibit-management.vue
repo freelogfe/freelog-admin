@@ -220,7 +220,7 @@ export default {
         const { currentPage, limit, sort, createDate } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
         if (!sort) delete data.searchData.sort;
-        [data.searchData.startCreateDate, data.searchData.endCreateDate] = dateRange(createDate);
+        [data.searchData.startCreatedDate, data.searchData.endCreatedDate] = dateRange(createDate);
         const result = await NodeService.getExhibitList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
