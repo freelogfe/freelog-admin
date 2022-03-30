@@ -101,7 +101,20 @@
             </el-button>
           </template>
         </el-table-column>
-        <el-table-column property="signedContractCount" label="消费合约数" align="right" width="120" />
+        <el-table-column label="消费合约数" width="120" align="right">
+          <template #default="scope">
+            <el-button
+              type="text"
+              @click="
+                switchPage('/contract/contract-management', {
+                  keywordsType: 4,
+                  keywords: scope.row.username,
+                })
+              "
+              >{{ scope.row.signedContractCount }}
+            </el-button>
+          </template>
+        </el-table-column>
         <el-table-column property="tradeCount" label="交易次数" align="right" width="100" />
         <el-table-column property="balance" label="代币余额" align="right" width="100" />
         <el-table-column label="手机号" width="150">
@@ -217,7 +230,7 @@
 </template>
 
 <script lang="ts">
-import { nextTick, reactive, toRefs } from "vue-demi";
+import { nextTick, reactive, toRefs } from "vue";
 import { formatDate, relativeTime, dateRange } from "../../utils/common";
 import { Edit, Operation, CopyDocument, Close, Check, Checked } from "@element-plus/icons-vue";
 import { useMyRouter } from "@/utils/hooks";
@@ -539,18 +552,3 @@ export default {
   },
 };
 </script>
-
-<style lang="scss" scoped>
-.tags-box {
-  width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-
-  .tag {
-    flex-shrink: 0;
-    margin: 0 8px 5px 0;
-  }
-}
-</style>

@@ -93,7 +93,20 @@
         <el-table-column label="资源类型" width="100" show-overflow-tooltip>
           <template #default="scope">{{ scope.row.resourceInfo.resourceType }}</template>
         </el-table-column>
-        <el-table-column property="signCount" label="需方合约数" align="right" width="120" />
+        <el-table-column label="需方合约数" width="120" align="right">
+          <template #default="scope">
+            <el-button
+              type="text"
+              @click="
+                switchPage('/contract/contract-management', {
+                  keywordsType: 3,
+                  keywords: scope.row.presentableName,
+                })
+              "
+              >{{ scope.row.signCount }}
+            </el-button>
+          </template>
+        </el-table-column>
         <el-table-column property="collectCount" label="策略授权次数" align="right" width="120" />
         <el-table-column property="createDate" label="创建时间" width="160">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
@@ -153,7 +166,7 @@
 </template>
 
 <script lang="ts">
-import { reactive, toRefs } from "vue-demi";
+import { reactive, toRefs } from "vue";
 import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ContractsService, NodeService } from "@/api/request";
@@ -299,12 +312,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.cover-image {
-  width: 100px;
-  border: 1px solid #eee;
-  border-radius: 4px;
-}
-
 .policy-box {
   width: 100%;
   display: flex;

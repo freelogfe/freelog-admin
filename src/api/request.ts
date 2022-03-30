@@ -284,7 +284,12 @@ export class NodeService {
 export class ContractsService {
   /** 获取合约列表 */
   static getContractList(params: ListParams): Promise<HttpResponse> {
-    return Axios("/v2/contracts", { method: "GET", params: { ...params, identityType: 2 } });
+    return Axios("/v2/contracts/search", { method: "GET", params: { ...params, isLoadPolicyInfo: 1, isTranslate: 1 } });
+  }
+
+  /** 获取合约流转记录 */
+  static getContractTransitionRecords(contractId: string): Promise<HttpResponse> {
+    return Axios(`/v2/contracts/${contractId}/transitionRecords`, { method: "GET", params: { isTranslate: 1 } });
   }
 
   /** 获取用户消费合约数 */
@@ -295,5 +300,13 @@ export class ContractsService {
   /** 获取标的物签约数 */
   static getSubjectSignCount(params: { subjectIds: string; subjectType: 1 | 2 | 3 }): Promise<HttpResponse> {
     return Axios("/v2/contracts/subjects/signCount", { method: "GET", params });
+  }
+}
+
+/** Transactions 类接口 */
+export class TransactionsService {
+  /** 获取交易列表 */
+  static getContractList(params: ListParams): Promise<HttpResponse> {
+    return Axios("/v2/transactions/admin/records", { method: "GET", params });
   }
 }

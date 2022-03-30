@@ -22,11 +22,11 @@
 
 <script lang="ts">
 import { useMyRouter } from "@/utils/hooks";
-import { reactive, toRefs, watch } from "vue-demi";
 import { RouteRecordRaw } from "vue-router";
 import { useStore } from "vuex";
 import { PassportService } from "@/api/request";
 import Cookie from "@/utils/cookie";
+import { reactive, toRefs, watch } from "vue";
 
 export default {
   name: "my-header",

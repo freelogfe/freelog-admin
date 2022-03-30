@@ -66,7 +66,7 @@
 </template>
 
 <script lang="ts">
-import { defineAsyncComponent, reactive, toRefs } from "vue-demi";
+import { defineAsyncComponent, reactive, toRefs } from "vue";
 import { formatDate, relativeTime } from "../../utils/common";
 import { CopyDocument } from "@element-plus/icons-vue";
 import { useMyRouter } from "@/utils/hooks";
@@ -443,24 +443,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.tags-box {
-  display: flex;
-  align-items: center;
-
-  .tag {
-    flex-shrink: 0;
-    padding: 0 3px;
-    cursor: pointer;
-    background-color: #304156;
-    color: #fff;
-    border-radius: 4px;
-
-    & + .tag {
-      margin-left: 5px;
-    }
-  }
-}
-
 .phone-email {
   word-break: keep-all;
   display: flex;

@@ -66,6 +66,7 @@ export default {
   .logo-box {
     width: 100%;
     height: 50px;
+    flex-shrink: 0;
     color: #fff;
     display: flex;
     align-items: center;

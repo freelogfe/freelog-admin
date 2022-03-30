@@ -1,53 +1,90 @@
-<!-- 国际化管理 -->
+<!-- 交易管理 -->
 <template>
   <list-template>
-    <!-- <template v-slot:title>用户管理</template>
-
-    <template v-slot:barRight>right</template> -->
-
-    <template v-slot:filterBar>filterBar</template>
+    <template v-slot:filterBar>
+      <form-item label="创建时间">
+        <el-date-picker
+          v-model="searchData.createDate"
+          type="daterange"
+          unlink-panels
+          range-separator="-"
+          format="YYYY/MM/DD"
+          start-placeholder="起始日期"
+          end-placeholder="截止日期"
+          :shortcuts="dateRangeShortcuts"
+        />
+      </form-item>
+      <form-item label="金额">
+        <el-input style="width: 80px" v-model="searchData.keywords" clearable @keyup.enter="getData(true)" />
+        -
+        <el-input style="width: 80px" v-model="searchData.keywords" clearable @keyup.enter="getData(true)" />
+      </form-item>
+      <form-item label="交易类型">
+        <el-select v-model="searchData.resourceType" placeholder="请选择交易类型" clearable>
+          <el-option v-for="item in resourceTypeList" :key="item" :value="item" />
+        </el-select>
+      </form-item>
+      <form-item label="收款方">
+        <el-input v-model="searchData.keywords" placeholder="请输入收款方" clearable @keyup.enter="getData(true)" />
+      </form-item>
+      <form-item label="付款方">
+        <el-input v-model="searchData.keywords" placeholder="请输入付款方" clearable @keyup.enter="getData(true)" />
+      </form-item>
+      <form-item label="交易状态">
+        <el-select v-model="searchData.resourceType" placeholder="请选择交易状态" clearable>
+          <el-option v-for="item in resourceTypeList" :key="item" :value="item" />
+        </el-select>
+      </form-item>
+      <form-item label="交易编号">
+        <el-input v-model="searchData.keywords" placeholder="请输入交易编号" clearable @keyup.enter="getData(true)" />
+      </form-item>
+      <form-item label="标的物">
+        <el-input v-model="searchData.keywords" placeholder="请输入标的物" clearable @keyup.enter="getData(true)" />
+      </form-item>
+      <form-item label="排序">
+        <el-select v-model="searchData.sort" placeholder="请选择排序方式" clearable>
+          <el-option v-for="item in sortTypeList" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+      </form-item>
+      <form-item>
+        <el-button type="primary" @click="getData(true)">搜索</el-button>
+        <el-button @click="clearSearch()">重置</el-button>
+      </form-item>
+    </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe style="min-width: 100%">
-        <el-table-column type="selection" />
-        <el-table-column property="yonghu" label="用户" min-width="100" show-overflow-tooltip />
-        <el-table-column property="biaoqian" min-width="200">
-          <template #default="scope">
-            <div class="tags-box">
-              <div class="tag" v-for="item in scope.row.biaoqian" :key="item">{{ item }}</div>
-            </div>
+      <el-table :data="tableData" stripe>
+        <el-table-column property="createDate" label="创建时间" width="160">
+          <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
+        </el-table-column>
+        <el-table-column property="createDate" label="交易说明" width="160">
+          <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
+        </el-table-column>
+        <el-table-column property="createDate" label="交易编号" width="160" />
+        <el-table-column property="createDate" label="收款方" width="160">
+          <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
+        </el-table-column>
+        <el-table-column property="createDate" label="付款方" width="160">
+          <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
+        </el-table-column>
+        <el-table-column property="createDate" label="交易金额（枚）" width="160">
+          <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
+        </el-table-column>
+        <el-table-column label="状态">
+          <template #default="scope">{{
+            statusMapping.find((item) => item.value === scope.row.status).label
+          }}</template>
+        </el-table-column>
+        <el-table-column fixed="right" width="40">
+          <template #header>
+            <el-icon class="operation-icon" title="操作">
+              <operation />
+            </el-icon>
           </template>
-        </el-table-column>
-        <el-table-column property="zuijindenglu" label="最近登录" width="110">
-          <template #default="scope">{{ relativeTime(scope.row.zuijindenglu) }}</template>
-        </el-table-column>
-        <el-table-column property="fabuziyuanshu" label="发布资源数" sortable width="120" />
-        <el-table-column property="xiaofeiheyueshu" label="消费合约数" sortable width="120" />
-        <el-table-column property="jiaoyicishu" label="交易次数" width="100" />
-        <el-table-column property="daibiyue" label="代币余额" width="100" />
-        <el-table-column property="zhuceshoujihaoyouxiang" label="注册手机号/邮箱" min-width="200">
           <template #default="scope">
-            <div class="phone-email">
-              {{ scope.row.zhuceshoujihao }}
-              <el-icon class="copy-btn" title="复制"><copy-document /></el-icon>
-            </div>
-            <div class="phone-email">
-              {{ scope.row.zhuceshouyouxiang }}
-              <el-icon class="copy-btn" title="复制"><copy-document /></el-icon>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column property="zhuceshijian" label="注册时间" sortable width="110">
-          <template #default="scope">{{ formatDate(scope.row.zhuceshijian, "YYYY-MM-DD") }}</template>
-        </el-table-column>
-        <el-table-column property="zhanghaozhuangtai" label="账号状态">
-          <template #default="scope">{{ statusMapping[scope.row.zhanghaozhuangtai] }}</template>
-        </el-table-column>
-        <el-table-column property="caozuo" label="操作" fixed="right">
-          <template #default="scope">
-            <div class="operate-btn freeze" v-if="scope.row.zhanghaozhuangtai === 1">冻结</div>
-            <div class="operate-btn audit" v-if="scope.row.zhanghaozhuangtai === 2">审核</div>
-            <div class="operate-btn restore" v-if="scope.row.zhanghaozhuangtai === 3">恢复</div>
+            <el-icon class="icon-btn" title="详情" @click="viewPolicy(scope.row)">
+              <document />
+            </el-icon>
           </template>
         </el-table-column>
       </el-table>
@@ -56,458 +93,124 @@
     <template v-slot:pagination>
       <el-pagination
         layout="total, prev, pager, next, jumper"
-        v-model:currentPage="currentPage"
-        :total="list.length"
+        v-model:currentPage="searchData.currentPage"
+        :total="total"
+        :page-size="searchData.limit"
         @current-change="changePage($event)"
-      >
-      </el-pagination>
+      />
     </template>
   </list-template>
 </template>
 
 <script lang="ts">
-import { defineAsyncComponent, reactive, toRefs } from "vue-demi";
-import { formatDate, relativeTime } from "../../utils/common";
-import { CopyDocument } from "@element-plus/icons-vue";
+import { reactive, toRefs } from "vue";
+import { dateRange, formatDate } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
+import { TransactionsService } from "@/api/request";
+import { dateRangeShortcuts } from "@/assets/data";
+import { Operation, Document } from "@element-plus/icons-vue";
+import { ListParams } from "@/api/interface";
+
+/** 交易数据 */
+interface Trade {
+  presentableId: string;
+  presentableName: string;
+  presentableTitle: string;
+  tags: string[];
+  intro: string;
+  onlineStatus: 0 | 1;
+  userId: number;
+  nodeId: number;
+  resolveResources: any[];
+  policies: any[];
+  resourceInfo: any;
+  version: string;
+  createDate: string;
+  resourceUserName: string;
+  resourceName: string;
+  signCount: number;
+}
 
 export default {
   components: {
-    "list-template": defineAsyncComponent(() => import("@/components/list-template.vue")),
-    CopyDocument,
+    Operation,
+    Document,
   },
 
   setup() {
-    const { switchPage } = useMyRouter();
-    const data = reactive({
-      list: [
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2", "标签3", "标签4", "标签5"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 3000,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuChenzhuchenzhuchen",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 3000,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 2,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 3000,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 3,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 3000,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 3000,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
-        {
-          yonghu: "ZhuC",
-          biaoqian: ["标签1", "标签2"],
-          zuijindenglu: 1625656179577,
-          fabuziyuanshu: 2,
-          xiaofeiheyueshu: 10,
-          jiaoyicishu: 10,
-          daibiyue: 30,
-          zhuceshoujihao: "18215465269",
-          zhuceshouyouxiang: "514254153@qq.com",
-          zhuceshijian: 1645756179577,
-          zhanghaozhuangtai: 1,
-        },
+    const { query } = useMyRouter();
+    const assetsData = {
+      resourceTypeList: ["image", "audio", "video", "markdown", "widget", "theme"],
+      statusMapping: [
+        { value: 0, label: "下线" },
+        { value: 1, label: "上线" },
       ],
-      tableData: [] as any[],
-      currentPage: 1,
-      statusMapping: {
-        1: "正常",
-        2: "待审核",
-        3: "冻结",
-      },
+      sortTypeList: [
+        { value: "createDate:1", label: "创建时间升序" },
+        { value: "createDate:-1", label: "创建时间降序" },
+        { value: "updateDate:1", label: "更新时间升序" },
+        { value: "updateDate:-1", label: "更新时间降序" },
+      ],
+    };
+    const data = reactive({
+      tableData: [] as Trade[],
+      total: 0,
+      searchData: {
+        currentPage: 1,
+        limit: 20,
+      } as ListParams,
+      policyData: [] as any[],
+      policyPopupShow: false,
     });
 
     const methods = {
-      getData() {
-        const lastIndex = data.currentPage * 10 - 1;
-        const result = data.list.slice(lastIndex - 9, lastIndex);
-        data.tableData = result;
+      /** 获取列表数据 */
+      async getData(init = false) {
+        if (init) data.searchData.currentPage = 1;
+        const { currentPage, limit, createDate } = data.searchData;
+        data.searchData.skip = (currentPage - 1) * limit;
+        [data.searchData.startCreateDate, data.searchData.endCreateDate] = dateRange(createDate);
+        const result = await TransactionsService.getContractList(data.searchData);
+        const { errcode } = result.data;
+        if (errcode === 0) {
+          const { dataList, totalItem } = result.data.data;
+
+          if (dataList.length === 0) {
+            data.tableData = [];
+            return;
+          }
+
+          data.tableData = dataList;
+          data.total = totalItem;
+        }
       },
 
-      changePage(e: number) {
-        data.currentPage = e;
+      /** 重置 */
+      clearSearch() {
+        data.searchData = {
+          currentPage: 1,
+          limit: 20,
+        };
+        this.getData(true);
+      },
+
+      /** 切换表格页码 */
+      changePage(value: number) {
+        data.searchData.currentPage = value;
         this.getData();
       },
     };
 
-    methods.getData();
+    data.searchData.keywords = query.value.keywords;
+    methods.getData(true);
 
     return {
+      dateRangeShortcuts,
+      ...assetsData,
       ...toRefs(data),
       ...methods,
       formatDate,
-      switchPage,
-      relativeTime,
     };
   },
 };
 </script>
-
-<style lang="scss" scoped>
-.tags-box {
-  display: flex;
-  align-items: center;
-
-  .tag {
-    flex-shrink: 0;
-    padding: 0 3px;
-    cursor: pointer;
-    background-color: #304156;
-    color: #fff;
-    border-radius: 4px;
-
-    & + .tag {
-      margin-left: 5px;
-    }
-  }
-}
-
-.phone-email {
-  word-break: keep-all;
-  display: flex;
-  align-items: center;
-
-  .copy-btn {
-    color: #169bd5;
-    margin-left: 5px;
-    cursor: pointer;
-    transition: all 0.2s linear;
-
-    &:hover {
-      color: #005980;
-    }
-
-    &:active {
-      color: #00b3ff;
-    }
-  }
-}
-
-.operate-btn {
-  width: fit-content;
-  padding: 3px 8px;
-  border-radius: 4px;
-  color: #fff;
-  cursor: pointer;
-  transition: all 0.2s linear;
-
-  &:hover {
-    opacity: 0.6;
-  }
-
-  &:active {
-    opacity: 0.8;
-  }
-
-  &.freeze {
-    background-color: #f56c6c;
-  }
-
-  &.audit {
-    background-color: #169bd5;
-  }
-
-  &.restore {
-    background-color: #67c23a;
-  }
-}
-</style>

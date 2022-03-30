@@ -126,13 +126,13 @@
 </template>
 
 <script lang="ts">
-import { reactive, toRefs } from "vue-demi";
+import { reactive, toRefs } from "vue";
 import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ResourceService } from "@/api/request";
-import { ElMessage } from "element-plus/lib/components";
 import { Operation, Edit } from "@element-plus/icons-vue";
 import { ListParams } from "@/api/interface";
+import { ElMessage } from 'element-plus';
 
 /** 资源标签数据 */
 export interface ResourceTag {

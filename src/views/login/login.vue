@@ -41,10 +41,9 @@
 </template>
 
 <script lang="ts">
-import { reactive, toRefs } from "vue-demi";
 import { useMyRouter } from "@/utils/hooks";
 import { UserFilled, Lock } from "@element-plus/icons-vue";
-import { ref } from "vue";
+import { ref, reactive, toRefs } from "vue";
 import { ElForm, ElMessage } from "element-plus";
 import { PassportService } from "@/api/request";
 import Cookie from "@/utils/cookie";

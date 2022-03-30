@@ -34,6 +34,7 @@ export default {
 
   .filter-value {
     margin-left: 5px;
+    line-height: 32px;
     flex: 1;
   }
 }

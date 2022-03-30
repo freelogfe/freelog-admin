@@ -103,7 +103,20 @@
           </template>
         </el-table-column>
         <el-table-column property="resourceType" label="类型" width="100" show-overflow-tooltip />
-        <el-table-column property="signCount" label="需方合约数" align="right" width="120" />
+        <el-table-column label="需方合约数" width="120" align="right">
+          <template #default="scope">
+            <el-button
+              type="text"
+              @click="
+                switchPage('/contract/contract-management', {
+                  keywordsType: 3,
+                  keywords: scope.row.resourceName,
+                })
+              "
+              >{{ scope.row.signCount }}
+            </el-button>
+          </template>
+        </el-table-column>
         <el-table-column property="collectCount" label="收藏数" align="right" width="120" />
         <el-table-column label="最新版本" width="100">
           <template #default="scope">
@@ -302,14 +315,13 @@
 </template>
 
 <script lang="ts">
-import { reactive, toRefs } from "vue-demi";
 import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { ResourceService, ContractsService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
 import { Operation, Edit, Clock, Close, Check, Document, Download } from "@element-plus/icons-vue";
-import { computed, defineAsyncComponent } from "vue";
+import { reactive, toRefs, computed, defineAsyncComponent } from "vue";
 import { ListParams, OperateParams } from "@/api/interface";
 
 /** 资源数据 */
@@ -699,24 +711,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.tags-box {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-
-  .tag {
-    flex-shrink: 0;
-    margin: 0 8px 5px 0;
-  }
-}
-
-.cover-image {
-  width: 100px;
-  border: 1px solid #eee;
-  border-radius: 4px;
-}
-
 .policy-box {
   width: 100%;
   display: flex;

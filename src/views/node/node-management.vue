@@ -106,7 +106,8 @@
             <el-button
               type="text"
               @click="
-                switchPage('/node/exhibit-management', {
+                switchPage('/contract/contract-management', {
+                  keywordsType: 3,
                   keywords: scope.row.nodeName,
                 })
               "
@@ -213,7 +214,7 @@
 </template>
 
 <script lang="ts">
-import { reactive, toRefs } from "vue-demi";
+import { reactive, toRefs } from "vue";
 import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -533,17 +534,3 @@ export default {
   },
 };
 </script>
-
-<style lang="scss" scoped>
-.tags-box {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-
-  .tag {
-    flex-shrink: 0;
-    margin: 0 8px 5px 0;
-  }
-}
-</style>

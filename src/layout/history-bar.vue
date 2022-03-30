@@ -19,11 +19,10 @@
 
 <script lang="ts">
 import { useMyRouter } from "@/utils/hooks";
-import { toRefs, watch } from "vue-demi";
 import { RouteLocationNormalizedLoaded } from "vue-router";
 import { useStore } from "vuex";
+import { nextTick, ref, toRefs, watch } from "vue";
 import { CloseBold } from "@element-plus/icons-vue";
-import { nextTick, ref } from "vue";
 
 export default {
   name: "history-bar",
@@ -161,12 +160,10 @@ export default {
 
     .delete-btn {
       margin-left: 5px;
-      width: 24px;
-      height: 24px;
       transition: all 0.2s linear;
 
       &:hover {
-        color: #626262;
+        color: #333;
       }
     }
   }

@@ -115,12 +115,11 @@
 </template>
 
 <script lang="ts">
-import { reactive, toRefs } from "vue-demi";
 import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage } from "element-plus";
 import { UserService } from "@/api/request";
-import { watch } from "vue";
+import { reactive, toRefs, watch } from "vue";
 import { Operation, Checked } from "@element-plus/icons-vue";
 import { AuditQualifications, ListParams } from "@/api/interface";
 

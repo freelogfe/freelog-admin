@@ -61,12 +61,11 @@
 </template>
 
 <script lang="ts">
-import { reactive, toRefs } from "vue-demi";
+import { reactive, toRefs } from "vue";
 import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
-import { ElMessageBox } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { UserService } from "@/api/request";
-import { ElMessage } from "element-plus/lib/components";
 import { Operation, Edit, Delete } from "@element-plus/icons-vue";
 
 /** 用户标签数据 */
