@@ -48,7 +48,7 @@
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe @selection-change="selectTable">
+      <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
         <el-table-column label="邀请码" width="200">
           <template #default="scope">
@@ -63,16 +63,17 @@
         </el-table-column>
         <el-table-column label="邀请者" width="150" show-overflow-tooltip>
           <template #default="scope">
-            <el-button
-              type="text"
+            <span
+              class="text-btn"
               @click="
                 switchPage('/user/user-management', {
                   keywords: scope.row.username,
                 })
               "
               v-if="scope.row.username"
-              >{{ scope.row.username }}
-            </el-button>
+            >
+              {{ scope.row.username }}
+            </span>
             <span v-else>-</span>
           </template>
         </el-table-column>
@@ -213,7 +214,22 @@
 
     <el-table :data="recordData.list" stripe border>
       <el-table-column label="序号" type="index" width="80" />
-      <el-table-column property="username" label="使用者(用户名)" show-overflow-tooltip />
+      <el-table-column label="使用者(用户名)" width="150">
+        <template #default="scope">
+          <span
+            class="text-btn"
+            @click="
+              switchPage('/user/user-management', {
+                keywords: scope.row.username,
+              })
+            "
+            v-if="scope.row.username"
+          >
+            {{ scope.row.username }}
+          </span>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
       <el-table-column property="loginIp" label="IP地址" show-overflow-tooltip />
       <el-table-column label="使用时间">
         <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
@@ -281,6 +297,7 @@ export default {
       ],
     };
     const data = reactive({
+      loading: false,
       tableData: [] as Code[],
       total: 0,
       selectedData: [] as Code[],
@@ -302,6 +319,8 @@ export default {
     const methods = {
       /** 获取列表数据 */
       async getData(init = false) {
+        data.tableData = [];
+        data.loading = true;
         if (init) data.searchData.currentPage = 1;
         const { currentPage, limit, createDate } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
@@ -310,8 +329,15 @@ export default {
         const { errcode } = result.data;
         if (errcode === 0) {
           const { dataList, totalItem } = result.data.data;
+
+          if (dataList.length === 0) {
+            data.loading = false;
+            return;
+          }
+          
           data.tableData = dataList;
           data.total = totalItem;
+          data.loading = false;
         }
       },
 

@@ -306,7 +306,12 @@ export class ContractsService {
 /** Transactions 类接口 */
 export class TransactionsService {
   /** 获取交易列表 */
-  static getContractList(params: ListParams): Promise<HttpResponse> {
+  static getTradeRecordList(params: ListParams): Promise<HttpResponse> {
     return Axios("/v2/transactions/admin/records", { method: "GET", params });
+  }
+
+  /** 查询交易流水 */
+  static searchTradeList(recordId: string): Promise<HttpResponse> {
+    return Axios(`/v2/transactions/admin/records/${recordId}/details`, { method: "GET" });
   }
 }

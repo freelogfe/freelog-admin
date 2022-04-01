@@ -36,19 +36,20 @@
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe @selection-change="selectTable">
+      <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
         <el-table-column label="标签" min-width="100" show-overflow-tooltip>
           <template #default="scope">
-            <el-button
-              type="text"
+            <span
+              class="text-btn"
               @click="
                 switchPage('/resource/resource-management', {
                   tag: scope.row.tagName,
                 })
               "
-              >{{ scope.row.tagName }}
-            </el-button>
+            >
+              {{ scope.row.tagName }}
+            </span>
           </template>
         </el-table-column>
         <el-table-column property="count" label="使用次数" align="right" show-overflow-tooltip />
@@ -132,7 +133,7 @@ import { useMyRouter } from "@/utils/hooks";
 import { ResourceService } from "@/api/request";
 import { Operation, Edit } from "@element-plus/icons-vue";
 import { ListParams } from "@/api/interface";
-import { ElMessage } from 'element-plus';
+import { ElMessage } from "element-plus";
 
 /** 资源标签数据 */
 export interface ResourceTag {
@@ -176,6 +177,7 @@ export default {
       ],
     };
     const data = reactive({
+      loading: false,
       tableData: [] as ResourceTag[],
       total: 0,
       selectedData: [] as ResourceTag[],
@@ -190,6 +192,8 @@ export default {
     const methods = {
       /** 获取页面数据 */
       async getData(init = false) {
+        data.tableData = [];
+        data.loading = true;
         if (init) data.searchData.currentPage = 1;
         const { currentPage, limit } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
@@ -199,7 +203,7 @@ export default {
           const { dataList, totalItem } = result.data.data;
 
           if (dataList.length === 0) {
-            data.tableData = [];
+            data.loading = false;
             return;
           }
 
@@ -218,6 +222,7 @@ export default {
 
           data.tableData = dataList;
           data.total = totalItem;
+          data.loading = false;
         }
       },
 

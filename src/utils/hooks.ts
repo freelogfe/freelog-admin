@@ -32,5 +32,10 @@ export const useMyRouter = () => {
     router.back();
   };
 
-  return { route, router, query, switchPage, replacePage, routerBack };
+  // 打开新页面
+  const openPage = (url: string) => {
+    window.open(url);
+  };
+
+  return { route, router, query, switchPage, replacePage, routerBack, openPage };
 };

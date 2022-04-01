@@ -54,23 +54,24 @@
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe @selection-change="selectTable">
+      <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
         <el-table-column label="资源" width="250" show-overflow-tooltip>
           <template #default="scope">
-            <el-button
-              type="text"
+            <span
+              class="text-btn"
               @click="
                 switchPage('/user/user-management', {
                   keywords: scope.row.username,
                 })
               "
-              >{{ scope.row.username }}
-            </el-button>
+            >
+              {{ scope.row.username }}
+            </span>
             /
-            <el-button type="text" style="margin-left: 0" @click="viewHistory(scope.row)"
-              >{{ scope.row.resourceNameAbbreviation }}
-            </el-button>
+            <span class="text-btn" @click="openResourceDetail(scope.row.resourceId)">
+              {{ scope.row.resourceNameAbbreviation }}
+            </span>
           </template>
         </el-table-column>
         <el-table-column label="标签" width="250">
@@ -105,16 +106,17 @@
         <el-table-column property="resourceType" label="类型" width="100" show-overflow-tooltip />
         <el-table-column label="需方合约数" width="120" align="right">
           <template #default="scope">
-            <el-button
-              type="text"
+            <span
+              class="text-btn"
               @click="
                 switchPage('/contract/contract-management', {
                   keywordsType: 3,
                   keywords: scope.row.resourceName,
                 })
               "
-              >{{ scope.row.signCount }}
-            </el-button>
+            >
+              {{ scope.row.signCount }}
+            </span>
           </template>
         </el-table-column>
         <el-table-column property="collectCount" label="收藏数" align="right" width="120" />
@@ -374,7 +376,7 @@ export default {
   },
 
   setup() {
-    const { query, switchPage } = useMyRouter();
+    const { query, switchPage, openPage } = useMyRouter();
     const assetsData = {
       resourceTypeList: ["image", "audio", "video", "markdown", "widget", "theme"],
       statusMapping: [
@@ -391,6 +393,7 @@ export default {
       ],
     };
     const data = reactive({
+      loading: false,
       tableData: [] as Resource[],
       total: 0,
       selectedData: [] as Resource[],
@@ -421,6 +424,8 @@ export default {
     const methods = {
       /** 获取列表数据 */
       async getData(init = false) {
+        data.tableData = [];
+        data.loading = true;
         if (init) data.searchData.currentPage = 1;
         const { currentPage, limit, sort, selectedTags = [], createDate } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
@@ -433,7 +438,7 @@ export default {
           const { dataList, totalItem } = result.data.data;
 
           if (dataList.length === 0) {
-            data.tableData = [];
+            data.loading = false;
             return;
           }
 
@@ -482,6 +487,7 @@ export default {
 
           data.tableData = dataList;
           data.total = totalItem;
+          data.loading = false;
         }
       },
 
@@ -498,6 +504,13 @@ export default {
       changePage(value: number) {
         data.searchData.currentPage = value;
         this.getData();
+      },
+
+      /** 打开资源详情 */
+      openResourceDetail(resourceId: string) {
+        const domain = (process.env.VUE_APP_BASE_API as string).replace("qi", "console");
+        const url = `${domain}/resource/details/${resourceId}`;
+        openPage(url);
       },
 
       /** 封禁操作 */

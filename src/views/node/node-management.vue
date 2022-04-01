@@ -43,18 +43,20 @@
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe @selection-change="selectTable">
+      <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
         <el-table-column label="节点" width="150" show-overflow-tooltip>
           <template #default="scope">
-            <el-button type="text" @click="openPage(scope.row.nodeDomain)">{{ scope.row.nodeName }} </el-button>
+            <span class="text-btn" @click="openNode(scope.row.nodeDomain)">
+              {{ scope.row.nodeName }}
+            </span>
           </template>
         </el-table-column>
         <el-table-column label="地址" width="300" show-overflow-tooltip>
           <template #default="scope">
-            <el-button type="text" @click="openPage(scope.row.nodeDomain)"
-              >{{ domain.replace("api", scope.row.nodeDomain) }}
-            </el-button>
+            <span class="text-btn" @click="openNode(scope.row.nodeDomain)">
+              {{ domain.replace("qi", scope.row.nodeDomain) }}
+            </span>
           </template>
         </el-table-column>
         <el-table-column label="标签" width="250">
@@ -77,42 +79,45 @@
         </el-table-column>
         <el-table-column label="用户" width="200" show-overflow-tooltip>
           <template #default="scope">
-            <el-button
-              type="text"
+            <span
+              class="text-btn"
               @click="
                 switchPage('/user/user-management', {
                   keywords: scope.row.ownerUserName,
                 })
               "
-              >{{ scope.row.ownerUserName }}
-            </el-button>
+            >
+              {{ scope.row.ownerUserName }}
+            </span>
           </template>
         </el-table-column>
         <el-table-column label="运营展品数" width="120" align="right">
           <template #default="scope">
-            <el-button
-              type="text"
+            <span
+              class="text-btn"
               @click="
                 switchPage('/node/exhibit-management', {
                   keywords: scope.row.nodeName,
                 })
               "
-              >{{ scope.row.exhibitCount }}
-            </el-button>
+            >
+              {{ scope.row.exhibitCount }}
+            </span>
           </template>
         </el-table-column>
         <el-table-column label="需方合约数" width="120" align="right">
           <template #default="scope">
-            <el-button
-              type="text"
+            <span
+              class="text-btn"
               @click="
                 switchPage('/contract/contract-management', {
                   keywordsType: 3,
                   keywords: scope.row.nodeName,
                 })
               "
-              >{{ scope.row.signCount }}
-            </el-button>
+            >
+              {{ scope.row.signCount }}
+            </span>
           </template>
         </el-table-column>
         <el-table-column property="createDate" label="创建时间" width="160">
@@ -255,7 +260,7 @@ export default {
   },
 
   setup() {
-    const { query, switchPage } = useMyRouter();
+    const { query, switchPage, openPage } = useMyRouter();
     const assetsData = {
       statusMapping: [
         { value: 1, label: "下线" },
@@ -266,6 +271,7 @@ export default {
       domain: process.env.VUE_APP_BASE_API as string,
     };
     const data = reactive({
+      loading: false,
       tableData: [] as Node[],
       total: 0,
       selectedData: [] as Node[],
@@ -283,6 +289,8 @@ export default {
     const methods = {
       /** 获取列表数据 */
       async getData(init = false) {
+        data.tableData = [];
+        data.loading = true;
         if (init) data.searchData.currentPage = 1;
         const { currentPage, limit, selectedTags = [], createDate } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
@@ -294,7 +302,7 @@ export default {
           const { dataList, totalItem } = result.data.data;
 
           if (dataList.length === 0) {
-            data.tableData = [];
+            data.loading = false;
             return;
           }
 
@@ -336,13 +344,14 @@ export default {
 
           data.tableData = dataList;
           data.total = totalItem;
+          data.loading = false;
         }
       },
 
-      /** 打开新页面 */
-      openPage(domain: string) {
-        const url = assetsData.domain.replace("api", domain);
-        window.open(url);
+      /** 打开节点 */
+      openNode(domain: string) {
+        const url = assetsData.domain.replace("qi", domain);
+        openPage(url);
       },
 
       /** 重置 */

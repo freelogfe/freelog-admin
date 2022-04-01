@@ -4,6 +4,7 @@
     <template v-slot:filterBar>
       <form-item label="关键字搜索">
         <el-input
+          style="width: 350px"
           v-model="searchData.keywords"
           :placeholder="
             searchData.keywordsType
@@ -54,7 +55,7 @@
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe>
+      <el-table :data="tableData" stripe v-loading="loading">
         <el-table-column label="标的物" width="250">
           <template #default="scope">
             <subject-name :type="scope.row.subjectType" :name="scope.row.subjectName" />
@@ -85,7 +86,7 @@
               v-if="scope.row.subjectType === 1"
             />
             <span
-              class="text-button"
+              class="text-btn"
               @click="
                 switchPage('/node/node-management', {
                   keywords: scope.row.licensorName,
@@ -105,7 +106,7 @@
               v-if="scope.row.licenseeIdentityType === 1"
             />
             <span
-              class="text-button"
+              class="text-btn"
               @click="
                 switchPage('/node/node-management', {
                   keywords: scope.row.licenseeName,
@@ -116,7 +117,7 @@
               {{ scope.row.licenseeName }}
             </span>
             <span
-              class="text-button"
+              class="text-btn"
               @click="
                 switchPage('/user/user-management', {
                   keywords: scope.row.licenseeName,
@@ -288,6 +289,7 @@ export default {
       },
     };
     const data = reactive({
+      loading: false,
       tableData: [] as Contract[],
       total: 0,
       searchData: {
@@ -300,13 +302,14 @@ export default {
     });
     const detailData = computed(() => {
       const { tableData, detailId } = data;
-      console.error(tableData.find((item) => item.contractId === detailId));
       return tableData.find((item) => item.contractId === detailId) || {};
     });
 
     const methods = {
       /** 获取列表数据 */
       async getData(init = false) {
+        data.tableData = [];
+        data.loading = true;
         if (init) data.searchData.currentPage = 1;
         const { currentPage, limit, signDate } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
@@ -317,7 +320,7 @@ export default {
           const { dataList, totalItem } = result.data.data;
 
           if (dataList.length === 0) {
-            data.tableData = [];
+            data.loading = false;
             return;
           }
 
@@ -378,6 +381,7 @@ export default {
 
           data.tableData = dataList;
           data.total = totalItem;
+          data.loading = false;
         }
       },
 
@@ -405,7 +409,6 @@ export default {
         const result = await ContractsService.getContractTransitionRecords(data.detailId);
         if (result.data.errcode === 0) {
           contract.transitionRecords = result.data.data.dataList;
-          console.error(contract.transitionRecords);
         }
       },
     };

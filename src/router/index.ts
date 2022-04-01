@@ -195,7 +195,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/trade",
     name: "trade",
-    redirect: "/trade/trade-management",
+    redirect: "/trade/trade-record-management",
     component: Layout,
     meta: {
       title: "交易",
@@ -203,11 +203,11 @@ const routes: Array<RouteRecordRaw> = [
     },
     children: [
       {
-        path: "trade-management",
-        name: "tradeManagement",
-        component: () => import("../views/trade/trade-management.vue"),
+        path: "trade-record-management",
+        name: "tradeRecordManagement",
+        component: () => import("../views/trade/trade-record-management.vue"),
         meta: {
-          title: "交易管理",
+          title: "交易记录管理",
           sideBarItem: "tradeManagement",
         },
       },

@@ -49,7 +49,7 @@
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe @selection-change="selectTable">
+      <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
         <el-table-column property="username" label="用户" width="200" />
         <el-table-column label="标签" width="250">
@@ -77,45 +77,61 @@
         </el-table-column>
         <el-table-column label="发布资源数" width="120" align="right">
           <template #default="scope">
-            <el-button
-              type="text"
+            <span
+              class="text-btn"
               @click="
                 switchPage('/resource/resource-management', {
                   keywords: scope.row.username,
                 })
               "
-              >{{ scope.row.createdResourceCount }}
-            </el-button>
+            >
+              {{ scope.row.createdResourceCount }}
+            </span>
           </template>
         </el-table-column>
         <el-table-column label="运营节点数" width="120" align="right">
           <template #default="scope">
-            <el-button
-              type="text"
+            <span
+              class="text-btn"
               @click="
                 switchPage('/node/node-management', {
                   userId: scope.row.userId,
                 })
               "
-              >{{ scope.row.createdNodeCount }}
-            </el-button>
+            >
+              {{ scope.row.createdNodeCount }}
+            </span>
           </template>
         </el-table-column>
         <el-table-column label="消费合约数" width="120" align="right">
           <template #default="scope">
-            <el-button
-              type="text"
+            <span
+              class="text-btn"
               @click="
                 switchPage('/contract/contract-management', {
                   keywordsType: 4,
                   keywords: scope.row.username,
                 })
               "
-              >{{ scope.row.signedContractCount }}
-            </el-button>
+            >
+              {{ scope.row.signedContractCount }}
+            </span>
           </template>
         </el-table-column>
-        <el-table-column property="tradeCount" label="交易次数" align="right" width="100" />
+        <el-table-column label="交易次数" width="100" align="right">
+          <template #default="scope">
+            <span
+              class="text-btn"
+              @click="
+                switchPage('/trade/trade-record-management', {
+                  relatedAccountName: scope.row.username,
+                })
+              "
+            >
+              {{ scope.row.tradeCount }}
+            </span>
+          </template>
+        </el-table-column>
         <el-table-column property="balance" label="代币余额" align="right" width="100" />
         <el-table-column label="手机号" width="150">
           <template #default="scope">
@@ -283,6 +299,7 @@ export default {
       ],
     };
     const data = reactive({
+      loading: false,
       tableData: [] as User[],
       total: 0,
       selectedData: [] as User[],
@@ -301,6 +318,8 @@ export default {
     const methods = {
       /** 获取列表数据 */
       async getData(init = false) {
+        data.tableData = [];
+        data.loading = true;
         if (init) data.searchData.currentPage = 1;
         const { currentPage, limit, tags = [], registerDate } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
@@ -312,7 +331,7 @@ export default {
           const { dataList, totalItem } = result.data.data;
 
           if (dataList.length === 0) {
-            data.tableData = [];
+            data.loading = false;
             return;
           }
 
@@ -351,6 +370,7 @@ export default {
 
           data.tableData = dataList;
           data.total = totalItem;
+          data.loading = false;
         }
       },
 

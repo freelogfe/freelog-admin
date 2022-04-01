@@ -11,19 +11,20 @@
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe @selection-change="selectTable">
+      <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
-        <el-table-column label="标签" min-width="100" show-overflow-tooltip>
+        <el-table-column label="标签" width="100">
           <template #default="scope">
-            <el-button
-              type="text"
+            <span
+              class="text-btn"
               @click="
                 switchPage('/user/user-management', {
                   tag: scope.row.tagId,
                 })
               "
-              >{{ scope.row.tag }}
-            </el-button>
+            >
+              {{ scope.row.tag }}
+            </span>
           </template>
         </el-table-column>
         <el-table-column property="totalSetCount" label="用户数" align="right" min-width="100" show-overflow-tooltip />
@@ -92,6 +93,7 @@ export default {
       ],
     };
     const data = reactive({
+      loading: false,
       tableData: [] as UserTag[],
       selectedData: [] as UserTag[],
       operateData: {} as UserTag,
@@ -101,8 +103,10 @@ export default {
     const methods = {
       /** 获取页面数据 */
       async getData() {
+        data.loading = true;
         const result = await UserService.getUserTagsList();
         data.tableData = result.data.data;
+        data.loading = false;
       },
 
       /** 打开标签弹窗（有参数为编辑，反之为创建） */

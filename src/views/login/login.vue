@@ -57,7 +57,7 @@ export default {
   },
 
   setup() {
-    const { query, replacePage } = useMyRouter();
+    const { query, replacePage, openPage } = useMyRouter();
     const ruleFormRef = ref<FormInstance>();
     const assetsData = {
       rules: {
@@ -85,11 +85,6 @@ export default {
     });
 
     const methods = {
-      /** 打开新页面 */
-      openPage(url: string) {
-        window.open(url);
-      },
-
       /** 登录 */
       login() {
         if (!ruleFormRef.value) return;
@@ -120,6 +115,7 @@ export default {
 
     return {
       ruleFormRef,
+      openPage,
       ...assetsData,
       ...toRefs(data),
       ...methods,

@@ -31,7 +31,7 @@
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe @selection-change="selectTable">
+      <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" :selectable="(row) => row.status === 0" />
         <el-table-column label="申请日期" width="160">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
@@ -154,6 +154,7 @@ export default {
       ],
     };
     const data = reactive({
+      loading: false,
       tableData: [] as Qualifications[],
       total: 0,
       selectedData: [] as Qualifications[],
@@ -168,6 +169,8 @@ export default {
     const methods = {
       /** 获取列表数据 */
       async getData(init = false) {
+        data.tableData = [];
+        data.loading = true;
         if (init) data.searchData.currentPage = 1;
         const { currentPage, limit } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
@@ -175,8 +178,15 @@ export default {
         const { errcode } = result.data;
         if (errcode === 0) {
           const { dataList, totalItem } = result.data.data;
+
+          if (dataList.length === 0) {
+            data.loading = false;
+            return;
+          }
+
           data.tableData = dataList;
           data.total = totalItem;
+          data.loading = false;
         }
       },
 

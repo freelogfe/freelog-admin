@@ -40,7 +40,7 @@
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe>
+      <el-table :data="tableData" stripe v-loading="loading">
         <el-table-column property="presentableName" label="展品" width="250" />
         <el-table-column label="封面" width="120">
           <template #default="scope">
@@ -55,39 +55,21 @@
         </el-table-column>
         <el-table-column label="所属节点" width="150" show-overflow-tooltip>
           <template #default="scope">
-            <el-button
-              type="text"
+            <span
+              class="text-btn"
               @click="
                 switchPage('/node/node-management', {
                   keywords: scope.row.nodeName,
                 })
               "
-              >{{ scope.row.nodeName }}
-            </el-button>
+            >
+              {{ scope.row.nodeName }}
+            </span>
           </template>
         </el-table-column>
         <el-table-column label="关联资源" width="250" show-overflow-tooltip>
           <template #default="scope">
-            <el-button
-              type="text"
-              @click="
-                switchPage('/user/user-management', {
-                  keywords: scope.row.username,
-                })
-              "
-              >{{ scope.row.resourceUserName }}
-            </el-button>
-            /
-            <el-button
-              type="text"
-              style="margin-left: 0"
-              @click="
-                switchPage('/resource/resource-management', {
-                  keywords: scope.row.resourceInfo.resourceName,
-                })
-              "
-              >{{ scope.row.resourceName }}
-            </el-button>
+            <subject-name :type="1" :name="scope.row.resourceInfo.resourceName" />
           </template>
         </el-table-column>
         <el-table-column label="资源类型" width="100" show-overflow-tooltip>
@@ -95,19 +77,20 @@
         </el-table-column>
         <el-table-column label="需方合约数" width="120" align="right">
           <template #default="scope">
-            <el-button
-              type="text"
+            <span
+              class="text-btn"
               @click="
                 switchPage('/contract/contract-management', {
                   keywordsType: 3,
                   keywords: scope.row.presentableName,
                 })
               "
-              >{{ scope.row.signCount }}
-            </el-button>
+            >
+              {{ scope.row.signCount }}
+            </span>
           </template>
         </el-table-column>
-        <el-table-column property="collectCount" label="策略授权次数" align="right" width="120" />
+        <!-- <el-table-column property="collectCount" label="策略授权次数" align="right" width="120" /> -->
         <el-table-column property="createDate" label="创建时间" width="160">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
@@ -166,7 +149,7 @@
 </template>
 
 <script lang="ts">
-import { reactive, toRefs } from "vue";
+import { defineAsyncComponent, reactive, toRefs } from "vue";
 import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ContractsService, NodeService } from "@/api/request";
@@ -196,6 +179,7 @@ interface Exhibit {
 
 export default {
   components: {
+    "subject-name": defineAsyncComponent(() => import("@/components/subject-name.vue")),
     Operation,
     Document,
   },
@@ -216,6 +200,7 @@ export default {
       ],
     };
     const data = reactive({
+      loading: false,
       tableData: [] as Exhibit[],
       total: 0,
       searchData: {
@@ -229,6 +214,8 @@ export default {
     const methods = {
       /** 获取列表数据 */
       async getData(init = false) {
+        data.tableData = [];
+        data.loading = true;
         if (init) data.searchData.currentPage = 1;
         const { currentPage, limit, sort, createDate } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
@@ -240,7 +227,7 @@ export default {
           const { dataList, totalItem } = result.data.data;
 
           if (dataList.length === 0) {
-            data.tableData = [];
+            data.loading = false;
             return;
           }
 
@@ -270,6 +257,7 @@ export default {
 
           data.tableData = dataList;
           data.total = totalItem;
+          data.loading = false;
         }
       },
 

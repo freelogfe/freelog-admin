@@ -1,11 +1,11 @@
 <!-- 标的物名称（资源、展品） -->
 <template>
   <div class="subject-name-wrapper">
-    <span class="text-button" @click="toOtherPage(0)" v-if="type === 1">
+    <span class="text-btn" @click="toOtherPage(0)" v-if="type === 1">
       {{ userName }}
     </span>
     <span class="divider" v-if="type === 1">/</span>
-    <span class="text-button" @click="toOtherPage(type)">{{ subjectName }}</span>
+    <span class="text-btn" @click="toOtherPage(type)">{{ subjectName }}</span>
   </div>
 </template>
 

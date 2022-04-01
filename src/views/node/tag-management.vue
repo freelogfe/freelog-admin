@@ -21,19 +21,20 @@
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe @selection-change="selectTable">
+      <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
         <el-table-column label="标签" min-width="100" show-overflow-tooltip>
           <template #default="scope">
-            <el-button
-              type="text"
+            <span
+              class="text-btn"
               @click="
                 switchPage('/node/node-management', {
                   tag: scope.row.tagName,
                 })
               "
-              >{{ scope.row.tagName }}
-            </el-button>
+            >
+              {{ scope.row.tagName }}
+            </span>
           </template>
         </el-table-column>
         <el-table-column property="count" label="节点数" align="right" />
@@ -90,9 +91,10 @@ export default {
   setup() {
     const { switchPage } = useMyRouter();
     const data = reactive({
+      loading: false,
       tableData: [] as NodeTag[],
       selectedData: [] as NodeTag[],
-      searchData: {},
+      searchData: { keywords: "" } as { keywords: string },
       operateData: {} as NodeTag,
       tagPopupShow: false,
     });
@@ -100,11 +102,13 @@ export default {
     const methods = {
       /** 获取页面数据 */
       async getData() {
+        data.tableData = [];
+        data.loading = true;
         const result = await NodeService.getNodeTagsList();
         const { errcode, data: dataList } = result.data;
         if (errcode === 0) {
           if (dataList.length === 0) {
-            data.tableData = [];
+            data.loading = false;
             return;
           }
 
@@ -121,8 +125,20 @@ export default {
             tag.count = results.data.data.find((item: { tagId: string; count: number }) => item.tagId === tagId).count;
           });
 
-          data.tableData = dataList;
+          const { keywords } = data.searchData;
+          if (keywords) {
+            data.tableData = dataList.filter((item: NodeTag) => item.tagName === keywords);
+          } else {
+            data.tableData = dataList;
+          }
+          data.loading = false;
         }
+      },
+
+      /** 重置 */
+      clearSearch() {
+        data.searchData = { keywords: "" };
+        this.getData();
       },
 
       /** 打开标签弹窗（有参数为编辑，反之为创建） */
