@@ -12,6 +12,7 @@ import {
   OperateParams,
   OperateResourceTag,
   UserIdsParams,
+  CreateOrEditActivity,
 } from "./interface";
 
 /** Passport 类接口 */
@@ -313,5 +314,36 @@ export class TransactionsService {
   /** 查询交易流水 */
   static searchTradeList(recordId: string): Promise<HttpResponse> {
     return Axios(`/v2/transactions/admin/records/${recordId}/details`, { method: "GET" });
+  }
+}
+
+/** Activities 类接口 */
+export class ActivitiesService {
+  /** 获取活动列表 */
+  static getActivityList(params: ListParams): Promise<HttpResponse> {
+    return Axios("/v2/activities/list", {
+      method: "GET",
+      params: {
+        skipSize: params.skip,
+        pageSize: params.limit,
+        flag: params.status || 0,
+        title: params.keywords || "",
+      },
+    });
+  }
+
+  /** 查询活动数据 */
+  static getActivityData(id: number): Promise<HttpResponse> {
+    return Axios("/v2/activities/find", { method: "GET", params: { _id: id } });
+  }
+
+  /** 创建活动 */
+  static createActivity(data: CreateOrEditActivity): Promise<HttpResponse> {
+    return Axios("/v2/activities/create", { method: "POST", data });
+  }
+
+  /** 编辑活动 */
+  static editActivity(data: CreateOrEditActivity): Promise<HttpResponse> {
+    return Axios("/v2/activities/update", { method: "PUT", data });
   }
 }

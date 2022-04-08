@@ -9,7 +9,11 @@ const app = createApp(App);
 app.use(store).use(router).use(ElementPlus);
 app.component(
   "list-template",
-  defineAsyncComponent(() => import("@/components/list-template.vue"))
+  defineAsyncComponent(() => import("@/layout/list-template.vue"))
+);
+app.component(
+  "edit-template",
+  defineAsyncComponent(() => import("@/layout/edit-template.vue"))
 );
 app.component(
   "form-item",

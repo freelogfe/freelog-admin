@@ -68,3 +68,16 @@ export interface OperateResourceTag {
   resourceRangeType?: number;
   authority?: number;
 }
+
+/** 创建/编辑活动参数 */
+export interface CreateOrEditActivity {
+  _id?: number;
+  title: string;
+  startTime?: string;
+  limitTime?: string;
+  persist: boolean;
+  cover?: string;
+  link?: string;
+  publishDate: string;
+  status?: 1 | 2;
+}

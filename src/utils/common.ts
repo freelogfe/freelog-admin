@@ -7,7 +7,7 @@
  * @param time 时间戳、字符串日期等等
  * @param format 自定义输出结果格式（YYYY:年，MM:月，DD:日，hh:时，mm:分，ss:秒）
  */
-export const formatDate = (time: string | undefined, format = "YYYY-MM-DD hh:mm:ss") => {
+export const formatDate = (time: Date | string | number | undefined, format = "YYYY-MM-DD hh:mm:ss") => {
   if (!time) return "";
 
   const date = new Date(time);
@@ -33,7 +33,7 @@ export const formatDate = (time: string | undefined, format = "YYYY-MM-DD hh:mm:
  * 相对时间
  * @param time 时间戳、字符串日期等等
  */
-export const relativeTime = (time: string | undefined) => {
+export const relativeTime = (time: Date | string | undefined) => {
   if (!time) return;
 
   const timeStamp = new Date(time).getTime();
@@ -65,6 +65,43 @@ export const relativeTime = (time: string | undefined) => {
     result = `${days}天前`;
   } else {
     result = formatDate(time);
+  }
+
+  return result;
+};
+
+/**
+ * 相差时间
+ * @param time 时间戳、字符串日期等等
+ */
+export const differenceTime = (time: Date | string | undefined) => {
+  if (!time) return;
+
+  const timeStamp = new Date(time).getTime();
+  const now = new Date();
+  const current = now.getTime();
+  let timeDifference = timeStamp - current;
+  const MINUTE = 60 * 1000;
+  const days = Math.floor(timeDifference / (MINUTE * 60 * 24));
+  timeDifference -= days * MINUTE * 60 * 24;
+  const hours = Math.floor(timeDifference / (MINUTE * 60));
+  timeDifference -= hours * MINUTE * 60;
+  const minutes = Math.floor(timeDifference / MINUTE);
+  timeDifference -= minutes * MINUTE;
+  const seconds = Math.floor(timeDifference / 1000);
+  let result = "";
+
+  if (days) {
+    result = `${days}天`;
+  }
+  if (hours) {
+    result += `${hours}小时`;
+  }
+  if (minutes) {
+    result += `${minutes}分钟`;
+  }
+  if (seconds) {
+    result += `${seconds}秒`;
   }
 
   return result;

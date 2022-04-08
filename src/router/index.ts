@@ -233,6 +233,16 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
+        path: "edit-activity",
+        name: "editActivity",
+        component: () => import("../views/operating/edit-activity.vue"),
+        meta: {
+          title: "活动管理",
+          sideBarItem: "activityManagement",
+          hidden: true,
+        },
+      },
+      {
         path: "advertisements-management",
         name: "advertisementsManagement",
         component: () => import("../views/operating/advertisements-management.vue"),

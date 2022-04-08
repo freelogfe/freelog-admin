@@ -73,7 +73,7 @@ import { useMyRouter } from "@/utils/hooks";
 
 export default {
   components: {
-    "list-template": defineAsyncComponent(() => import("@/components/list-template.vue")),
+    "list-template": defineAsyncComponent(() => import("@/layout/list-template.vue")),
     CopyDocument,
   },
 
