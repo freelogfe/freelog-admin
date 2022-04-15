@@ -81,3 +81,18 @@ export interface CreateOrEditActivity {
   publishDate: string;
   status?: 1 | 2;
 }
+
+/** 创建/编辑广告参数 */
+export interface CreateOrEditAds {
+  _id?: number;
+  place: number;
+  title: string;
+  startTime?: string;
+  limitTime?: string;
+  persist: boolean;
+  cover?: string;
+  linkActivityId?: string;
+  link?: string;
+  priority: number;
+  status?: 1 | 2 | 3 | 4;
+}

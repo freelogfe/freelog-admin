@@ -254,22 +254,32 @@ const routes: Array<RouteRecordRaw> = [
     ],
   },
   {
-    path: "/utils",
-    name: "utils",
-    redirect: "/utils/i18n-management",
+    path: "/i18n",
+    name: "i18n",
+    redirect: "/i18n/translation-management",
     component: Layout,
     meta: {
-      title: "工具",
-      icon: "brush",
+      title: "国际化",
+      icon: "orange",
     },
     children: [
       {
-        path: "i18n-management",
-        name: "i18nManagement",
-        component: () => import("../views/utils/i18n-management.vue"),
+        path: "translation-management",
+        name: "translationManagement",
+        component: () => import("../views/i18n/translation-management.vue"),
         meta: {
-          title: "国际化管理",
-          sideBarItem: "i18nManagement",
+          title: "翻译管理",
+          sideBarItem: "translationManagement",
+        },
+      },
+      {
+        path: "tag-management",
+        name: "translationTagManagement",
+        component: () => import("../views/i18n/tag-management.vue"),
+        meta: {
+          title: "翻译标签管理",
+          sideBarItem: "translationManagement",
+          hidden: true,
         },
       },
     ],

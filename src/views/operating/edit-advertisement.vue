@@ -1,4 +1,4 @@
-<!-- 编辑活动 -->
+<!-- 编辑广告 -->
 <template>
   <edit-template>
     <template v-slot:title>{{ query.id ? "编辑活动" : "发布活动" }}</template>

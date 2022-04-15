@@ -104,7 +104,7 @@ export const differenceTime = (time: Date | string | undefined) => {
     result += `${seconds}秒`;
   }
 
-  return result;
+  return result || "0秒";
 };
 
 /**

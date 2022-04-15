@@ -13,6 +13,7 @@ import {
   OperateResourceTag,
   UserIdsParams,
   CreateOrEditActivity,
+  CreateOrEditAds,
 } from "./interface";
 
 /** Passport 类接口 */
@@ -345,5 +346,41 @@ export class ActivitiesService {
   /** 编辑活动 */
   static editActivity(data: CreateOrEditActivity): Promise<HttpResponse> {
     return Axios("/v2/activities/update", { method: "PUT", data });
+  }
+}
+
+/** Ads 类接口 */
+export class AdsService {
+  /** 获取广告列表 */
+  static getAdsList(params: ListParams): Promise<HttpResponse> {
+    return Axios("/v2/ads/list", {
+      method: "GET",
+      params: {
+        skipSize: params.skip,
+        pageSize: params.limit,
+        flag: params.status || 0,
+        title: params.keywords || "",
+      },
+    });
+  }
+
+  /** 修改广告排序 */
+  static editAdsSort(data: { _id: number; priority: number }): Promise<HttpResponse> {
+    return Axios("/v2/ads/updatePriority", { method: "PUT", data });
+  }
+
+  /** 查询广告数据 */
+  static getAdsData(id: number): Promise<HttpResponse> {
+    return Axios("/v2/ads/find", { method: "GET", params: { _id: id } });
+  }
+
+  /** 创建广告 */
+  static createAds(data: CreateOrEditAds): Promise<HttpResponse> {
+    return Axios("/v2/ads/create", { method: "POST", data });
+  }
+
+  /** 编辑广告 */
+  static editAds(data: CreateOrEditAds): Promise<HttpResponse> {
+    return Axios("/v2/ads/update", { method: "PUT", data });
   }
 }
