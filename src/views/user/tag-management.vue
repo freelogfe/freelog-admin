@@ -1,12 +1,12 @@
 <!-- 用户标签管理 -->
 <template>
   <list-template>
-    <template v-slot:barLeft>
-      <span class="selected-tip" v-show="selectedData.length">已选中{{ selectedData.length }}条</span>
+    <template v-slot:barLeft v-if="selectedData.length">
+      <el-button type="primary" @click="deleteTag(selectedData)">删除</el-button>
+      <span class="selected-tip">已选中{{ selectedData.length }}条</span>
     </template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="batchDelete()">批量删除</el-button>
       <el-button type="primary" @click="openTagPopup()">创建标签</el-button>
     </template>
 
@@ -68,13 +68,12 @@ import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { UserService } from "@/api/request";
 import { Operation, Edit, Delete } from "@element-plus/icons-vue";
+import { UserTag } from "@/typings/object";
 
-/** 用户标签数据 */
-export interface UserTag {
+/** 编辑标签参数 */
+interface EditTag {
   tagId: number;
   tag: string;
-  totalSetCount: number;
-  type: 1 | 2;
 }
 
 export default {
@@ -96,7 +95,7 @@ export default {
       loading: false,
       tableData: [] as UserTag[],
       selectedData: [] as UserTag[],
-      operateData: {} as UserTag,
+      operateData: {} as EditTag,
       tagPopupShow: false,
     });
 
@@ -152,16 +151,6 @@ export default {
       /** 选择表格项 */
       selectTable(selected: UserTag[]) {
         data.selectedData = selected;
-      },
-
-      /** 批量编辑标签 */
-      batchDelete() {
-        if (data.selectedData.length === 0) {
-          ElMessage.info("请选择需要删除的标签");
-          return;
-        }
-
-        this.deleteTag(data.selectedData);
       },
     };
 

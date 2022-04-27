@@ -5,12 +5,12 @@
       <input id="copyInput" v-model="copyValue" />
     </template>
 
-    <template v-slot:barLeft>
-      <span class="selected-tip" v-show="selectedData.length">已选中{{ selectedData.length }}条</span>
+    <template v-slot:barLeft v-if="selectedData.length">
+      <el-button type="primary" @click="setTag()">添加标签</el-button>
+      <span class="selected-tip">已选中{{ selectedData.length }}条</span>
     </template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="setTag()">批量添加标签</el-button>
       <el-button type="primary" @click="switchPage('/user/tag-management')">管理标签</el-button>
     </template>
 
@@ -204,15 +204,17 @@
   </list-template>
 
   <el-dialog v-model="setTagPopupShow" title="管理用户标签">
-    <el-select style="width: 100%" v-model="setTagData.tags" multiple clearable placeholder="请选择标签">
-      <el-option v-for="item in userTagsList" :key="item.tagId" :label="item.tag" :value="item.tagId" />
-    </el-select>
-    <el-input
-      style="margin-top: 10px"
-      v-model="setTagData.newTag"
-      placeholder="输入标签按回车键确认"
-      @keyup.enter="newTag()"
-    />
+    <div class="tag-area">
+      <el-select style="width: 100%" v-model="setTagData.tags" multiple clearable placeholder="请选择标签">
+        <el-option v-for="item in userTagsList" :key="item.tagId" :label="item.tag" :value="item.tagId" />
+      </el-select>
+      <el-input
+        style="margin-top: 10px"
+        v-model="setTagData.newTag"
+        placeholder="输入标签按回车键确认"
+        @keyup.enter="newTag()"
+      />
+    </div>
     <template #footer>
       <el-button @click="setTagPopupShow = false">取消</el-button>
       <el-button type="primary" @click="setTagConfirm()">确认</el-button>
@@ -253,29 +255,20 @@ import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { ContractsService, NodeService, ResourceService, UserService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
-import { ListParams, OperateParams } from "@/api/interface";
+import { User, UserTag } from "@/typings/object";
+import { UserListParams, OperateUserParams } from "@/typings/params";
 
-/** 用户数据 */
-export interface User {
-  userId: number;
-  username: string;
-  tags: any[];
-  latestLoginDate: string;
-  createdResourceCount: number;
-  createdNodeCount: number;
-  signedContractCount: number;
-  tradeCount: number;
-  balance: string;
-  mobile: string;
-  email: string;
-  createDate: string;
-  status: 0 | 1 | 2 | 3;
+/** 用户列表参数 */
+interface MyUserListParams extends UserListParams {
+  registerDate?: string[];
+  tags?: number[];
 }
 
-/** 用户标签数据 */
-export interface UserTag {
-  tagId: string;
-  tag: string;
+/** 设置标签数据 */
+interface SetTagData {
+  users: User[];
+  tags: number[];
+  newTag: string;
 }
 
 export default {
@@ -304,12 +297,9 @@ export default {
       total: 0,
       selectedData: [] as User[],
       userTagsList: [] as UserTag[],
-      searchData: {
-        currentPage: 1,
-        limit: 20,
-      } as ListParams,
-      setTagData: {} as any,
-      operateData: {} as OperateParams,
+      searchData: { currentPage: 1, limit: 20 } as MyUserListParams,
+      setTagData: {} as SetTagData,
+      operateData: {} as OperateUserParams,
       copyValue: "",
       setTagPopupShow: false,
       freezePopupShow: false,
@@ -402,7 +392,7 @@ export default {
 
       /** 冻结操作 */
       freeze(userId: string) {
-        data.operateData = { userId };
+        data.operateData = { userId } as OperateUserParams;
         data.freezePopupShow = true;
       },
 
@@ -449,10 +439,6 @@ export default {
           data.setTagData.users = [item];
           data.setTagData.tags = item.tags.map((item) => item.tagId);
         } else {
-          if (data.selectedData.length === 0) {
-            ElMessage.info("请选择需要管理用户标签的条目");
-            return;
-          }
           data.setTagData.users = data.selectedData;
           data.setTagData.tags = [];
         }
@@ -493,7 +479,7 @@ export default {
       /** 设置用户标签 */
       async setTagConfirm() {
         const { users, tags } = data.setTagData;
-        let addTags = [];
+        let addTags: number[] = [];
         if (users.length === 1) {
           // 非批量操作，统计删除标签与添加标签
           const user = users[0];
@@ -572,3 +558,16 @@ export default {
   },
 };
 </script>
+
+<style lang="scss" scoped>
+.tag-area {
+  width: 100%;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px #dcdfe6;
+
+  :deep .el-input__inner,
+  :deep .el-select .el-input.is-focus .el-input__inner {
+    box-shadow: none !important;
+  }
+}
+</style>

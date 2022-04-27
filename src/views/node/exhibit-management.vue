@@ -155,26 +155,11 @@ import { useMyRouter } from "@/utils/hooks";
 import { ContractsService, NodeService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
 import { Operation, Document } from "@element-plus/icons-vue";
-import { ListParams } from "@/api/interface";
+import { Exhibit, Policy } from "@/typings/object";
+import { ExhibitListParams } from "@/typings/params";
 
-/** 展品数据 */
-interface Exhibit {
-  presentableId: string;
-  presentableName: string;
-  presentableTitle: string;
-  tags: string[];
-  intro: string;
-  onlineStatus: 0 | 1;
-  userId: number;
-  nodeId: number;
-  resolveResources: any[];
-  policies: any[];
-  resourceInfo: any;
-  version: string;
-  createDate: string;
-  resourceUserName: string;
-  resourceName: string;
-  signCount: number;
+interface MyExhibitListParams extends ExhibitListParams {
+  createDate?: string[];
 }
 
 export default {
@@ -203,11 +188,8 @@ export default {
       loading: false,
       tableData: [] as Exhibit[],
       total: 0,
-      searchData: {
-        currentPage: 1,
-        limit: 20,
-      } as ListParams,
-      policyData: [] as any[],
+      searchData: { currentPage: 1, limit: 20 } as MyExhibitListParams,
+      policyData: [] as Policy[],
       policyPopupShow: false,
     });
 
@@ -302,6 +284,9 @@ export default {
 <style lang="scss" scoped>
 .policy-box {
   width: 100%;
+  max-height: 600px;
+  overflow-y: auto;
+  padding: 10px;
   display: flex;
   flex-wrap: wrap;
 

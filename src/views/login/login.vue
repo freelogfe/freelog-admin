@@ -1,10 +1,6 @@
 <!-- 登录 -->
 <template>
   <div class="login-wrapper">
-    <div class="logo">
-      <div>freelog</div>
-      <div>后台管理系统</div>
-    </div>
     <div class="login-box">
       <div class="title">登录</div>
       <el-form ref="ruleFormRef" :model="loginData" :rules="rules">
@@ -47,6 +43,7 @@ import { ref, reactive, toRefs } from "vue";
 import { ElForm, ElMessage } from "element-plus";
 import { PassportService } from "@/api/request";
 import Cookie from "@/utils/cookie";
+import { LoginParams } from "@/typings/params";
 
 type FormInstance = InstanceType<typeof ElForm>;
 
@@ -81,7 +78,7 @@ export default {
       loginData: {
         loginName: "support@freelog.com",
         password: "f233109!",
-      },
+      } as LoginParams,
     });
 
     const methods = {
@@ -100,6 +97,7 @@ export default {
           const result = await PassportService.login(data.loginData);
           const { errcode } = result.data;
           if (errcode === 0) {
+            /* 本地登录人为添加 cookie */
             if (process.env.NODE_ENV === "development") {
               Cookie.set("uid", 50031);
               Cookie.set(
@@ -132,18 +130,6 @@ export default {
   background: url(../../assets/images/login-bg.jpg) no-repeat 50%;
   display: flex;
   justify-content: flex-end;
-
-  .logo {
-    width: 70%;
-    padding-top: 10%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: #fff;
-    font-size: 100px;
-    font-style: italic;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-  }
 
   .login-box {
     width: 30%;

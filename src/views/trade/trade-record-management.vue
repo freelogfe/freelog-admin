@@ -126,7 +126,7 @@
   </list-template>
 
   <el-dialog v-model="tradeDetailPopupShow" title="交易明细" width="1120px">
-    <el-table :data="tradeDetailData.tradeDetail" stripe border>
+    <el-table max-height="600" :data="tradeDetailData.tradeDetail" stripe border>
       <el-table-column property="createDate" label="创建时间" width="160">
         <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
       </el-table-column>
@@ -158,25 +158,12 @@ import { useMyRouter } from "@/utils/hooks";
 import { TransactionsService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
 import { Operation, Document } from "@element-plus/icons-vue";
-import { ListParams } from "@/api/interface";
+import { TradeRecord } from "@/typings/object";
+import { TradeListParams } from "@/typings/params";
 
-/** 交易记录数据 */
-interface TradeRecord {
-  recordId: string;
-  accountId: string;
-  accountName: string;
-  accountType: number;
-  reciprocalAccountId: string;
-  reciprocalAccountName: string;
-  reciprocalAccountType: number;
-  transactionAmount: string;
-  transactionType: number;
-  digest: string;
-  attachInfo: any;
-  status: number;
-  createDate: string;
-  updateDate: string;
-  tradeDetail: any[];
+/** 交易列表参数 */
+interface MyTradeListParams extends TradeListParams {
+  createDate?: string[];
 }
 
 export default {
@@ -202,10 +189,7 @@ export default {
       loading: false,
       tableData: [] as TradeRecord[],
       total: 0,
-      searchData: {
-        currentPage: 1,
-        limit: 20,
-      } as ListParams,
+      searchData: { currentPage: 1, limit: 20 } as MyTradeListParams,
       tradeDetailId: "",
       tradeDetailPopupShow: false,
     });

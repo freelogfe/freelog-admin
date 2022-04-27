@@ -2,19 +2,39 @@
  * 服务器接口
  */
 
-import Axios from "./http";
 import {
-  AuditQualifications,
-  CreateCodeParams,
-  HttpResponse,
   ListParams,
+  ActivityListParams,
+  AdsListParams,
+  AuditQualificationsParams,
+  CodeListParams,
+  CodeRecordParams,
+  ContractListParams,
+  CreateCodeParams,
+  CreateOrEditActivityParams,
+  CreateOrEditAdsParams,
+  ExhibitListParams,
+  HttpResponse,
   LoginParams,
-  OperateParams,
-  OperateResourceTag,
+  NodeListParams,
+  NodeRecordParams,
+  OperateNodeParams,
+  OperateResourceParams,
+  OperateResourceTagParams,
+  OperateUserParams,
+  QualificationsListParams,
+  ResourceListParams,
+  ResourceRecordParams,
+  ResourceTagListParams,
+  SetNodeTagParams,
+  SetResourceTagParams,
+  TradeListParams,
+  TranslationListParams,
   UserIdsParams,
-  CreateOrEditActivity,
-  CreateOrEditAds,
-} from "./interface";
+  UserListParams,
+  CreateOrEditTranslationParams,
+} from "@/typings/params";
+import Axios from "./http";
 
 /** Passport 类接口 */
 export class PassportService {
@@ -37,7 +57,7 @@ export class PassportService {
 /** User 类接口 */
 export class UserService {
   /** 获取用户列表 */
-  static getUserList(params: ListParams): Promise<HttpResponse> {
+  static getUserList(params: UserListParams): Promise<HttpResponse> {
     return Axios("/v2/users", { method: "GET", params });
   }
 
@@ -57,7 +77,7 @@ export class UserService {
   }
 
   /** 冻结/恢复用户 */
-  static freeOrRecoverUser(data: OperateParams): Promise<HttpResponse> {
+  static freeOrRecoverUser(data: OperateUserParams): Promise<HttpResponse> {
     return Axios(`/v2/users/${data.userId}/freeOrRecoverUserStatus`, { method: "PUT", data });
   }
 
@@ -87,17 +107,17 @@ export class UserService {
   }
 
   /** 获取内测资格审核列表 */
-  static getQualificationsList(params: ListParams): Promise<HttpResponse> {
+  static getQualificationsList(params: QualificationsListParams): Promise<HttpResponse> {
     return Axios("/v2/testQualifications/beta/apply", { method: "GET", params });
   }
 
   /** 批量审核内测申请 */
-  static auditQualifications(data: AuditQualifications): Promise<HttpResponse> {
+  static auditQualifications(data: AuditQualificationsParams): Promise<HttpResponse> {
     return Axios("/v2/testQualifications/beta/apply/batch", { method: "PUT", data });
   }
 
   /** 获取邀请码列表 */
-  static getCodeList(params: ListParams): Promise<HttpResponse> {
+  static getCodeList(params: CodeListParams): Promise<HttpResponse> {
     return Axios("/v2/testQualifications/beta/codes", { method: "GET", params });
   }
 
@@ -112,7 +132,7 @@ export class UserService {
   }
 
   /** 查看邀请码使用记录 */
-  static getCodeRecordList(params: ListParams): Promise<HttpResponse> {
+  static getCodeRecordList(params: CodeRecordParams): Promise<HttpResponse> {
     return Axios("/v2/testQualifications/beta/codes/usedRecords", { method: "GET", params });
   }
 }
@@ -120,7 +140,7 @@ export class UserService {
 /** Resource 类接口 */
 export class ResourceService {
   /** 获取资源列表 */
-  static getResourceList(params: ListParams): Promise<HttpResponse> {
+  static getResourceList(params: ResourceListParams): Promise<HttpResponse> {
     return Axios("/v2/resources/search", { method: "GET", params: { ...params, isLoadPolicyInfo: 1 } });
   }
 
@@ -145,12 +165,12 @@ export class ResourceService {
   }
 
   /** 获取资源依赖树 */
-  static getResourceDeps(resourceId: string, params: { version: string }): Promise<any> {
+  static getResourceDeps(resourceId: string, params: { version: string }): Promise<HttpResponse> {
     return Axios(`/v2/resources/${resourceId}/dependencyTree`, { method: "GET", params });
   }
 
   /** 获取资源标签列表 */
-  static getResourcesTagsList(params: ListParams): Promise<HttpResponse> {
+  static getResourcesTagsList(params: ResourceTagListParams): Promise<HttpResponse> {
     return Axios("/v2/resources/tags/admin", { method: "GET", params });
   }
 
@@ -160,36 +180,27 @@ export class ResourceService {
   }
 
   /** 设置或移除资源标签 */
-  static setResourceTag(data: { tagNames: string[]; resourceIds: string[]; setType: number }): Promise<HttpResponse> {
+  static setResourceTag(data: SetResourceTagParams): Promise<HttpResponse> {
     return Axios("/v2/resources/tags/batchSetOrRemoveResourceTag", { method: "PUT", data });
   }
 
   /** 创建资源标签 */
-  static createResourceTag(data: OperateResourceTag): Promise<HttpResponse> {
+  static createResourceTag(data: OperateResourceTagParams): Promise<HttpResponse> {
     return Axios("/v2/resources/tags", { method: "POST", data });
   }
 
   /** 编辑资源标签 */
-  static updateResourceTag(data: OperateResourceTag): Promise<HttpResponse> {
+  static updateResourceTag(data: OperateResourceTagParams): Promise<HttpResponse> {
     return Axios("/v2/resources/tags", { method: "PUT", data });
   }
 
   /** 禁用/解禁资源 */
-  static updateResources(data: {
-    resourceIds: string[];
-    operationType: 1 | 2;
-    reason?: string;
-    remark?: string;
-  }): Promise<HttpResponse> {
+  static updateResources(data: OperateResourceParams): Promise<HttpResponse> {
     return Axios("/v2/resources/freeOrRecover/batch", { method: "PUT", data });
   }
 
   /** 查看资源禁用记录 */
-  static getResourceRecordList(params: {
-    resourceIds: string;
-    recordDesc?: 0 | 1;
-    recordLimit?: number;
-  }): Promise<HttpResponse> {
+  static getResourceRecordList(params: ResourceRecordParams): Promise<HttpResponse> {
     return Axios("/v2/resources/freeOrRecover/records", { method: "GET", params });
   }
 }
@@ -197,7 +208,7 @@ export class ResourceService {
 /** Node 类接口 */
 export class NodeService {
   /** 获取节点列表 */
-  static getNodeList(params: ListParams): Promise<HttpResponse> {
+  static getNodeList(params: NodeListParams): Promise<HttpResponse> {
     return Axios("/v2/nodes/search", { method: "GET", params: { ...params, sort: "createDate:-1" } });
   }
 
@@ -242,19 +253,13 @@ export class NodeService {
   }
 
   /** 设置或移除节点标签 */
-  static setNodeTag(data: { tagNames: string[]; nodeIds: number[]; setType: 1 | 2 }): Promise<HttpResponse> {
+  static setNodeTag(data: SetNodeTagParams): Promise<HttpResponse> {
     return Axios("/v2/nodes/batchSetOrRemoveNodeTag", { method: "PUT", data });
   }
 
   /** 禁用节点 */
-  static banNode(
-    nodeId: number,
-    data: {
-      reason: string;
-      remark?: string;
-    }
-  ): Promise<HttpResponse> {
-    return Axios(`/v2/nodes/${nodeId}/freeze`, { method: "PUT", data });
+  static banNode(data: OperateNodeParams): Promise<HttpResponse> {
+    return Axios(`/v2/nodes/${data.nodeId}/freeze`, { method: "PUT", data });
   }
 
   /** 解禁节点 */
@@ -263,16 +268,12 @@ export class NodeService {
   }
 
   /** 查看节点禁用记录 */
-  static getNodeRecordList(params: {
-    nodeIds: string;
-    recordDesc?: 0 | 1;
-    recordLimit?: number;
-  }): Promise<HttpResponse> {
+  static getNodeRecordList(params: NodeRecordParams): Promise<HttpResponse> {
     return Axios("/v2/nodes/freeOrRecover/records", { method: "GET", params });
   }
 
   /** 获取展品列表 */
-  static getExhibitList(params: ListParams): Promise<HttpResponse> {
+  static getExhibitList(params: ExhibitListParams): Promise<HttpResponse> {
     return Axios("/v2/presentables/search", { method: "GET", params });
   }
 
@@ -285,7 +286,7 @@ export class NodeService {
 /** Contracts 类接口 */
 export class ContractsService {
   /** 获取合约列表 */
-  static getContractList(params: ListParams): Promise<HttpResponse> {
+  static getContractList(params: ContractListParams): Promise<HttpResponse> {
     return Axios("/v2/contracts/search", { method: "GET", params: { ...params, isLoadPolicyInfo: 1, isTranslate: 1 } });
   }
 
@@ -308,7 +309,7 @@ export class ContractsService {
 /** Transactions 类接口 */
 export class TransactionsService {
   /** 获取交易列表 */
-  static getTradeRecordList(params: ListParams): Promise<HttpResponse> {
+  static getTradeRecordList(params: TradeListParams): Promise<HttpResponse> {
     return Axios("/v2/transactions/admin/records", { method: "GET", params });
   }
 
@@ -321,7 +322,7 @@ export class TransactionsService {
 /** Activities 类接口 */
 export class ActivitiesService {
   /** 获取活动列表 */
-  static getActivityList(params: ListParams): Promise<HttpResponse> {
+  static getActivityList(params: ActivityListParams): Promise<HttpResponse> {
     return Axios("/v2/activities/list", {
       method: "GET",
       params: {
@@ -339,48 +340,128 @@ export class ActivitiesService {
   }
 
   /** 创建活动 */
-  static createActivity(data: CreateOrEditActivity): Promise<HttpResponse> {
+  static createActivity(data: CreateOrEditActivityParams): Promise<HttpResponse> {
     return Axios("/v2/activities/create", { method: "POST", data });
   }
 
   /** 编辑活动 */
-  static editActivity(data: CreateOrEditActivity): Promise<HttpResponse> {
+  static editActivity(data: CreateOrEditActivityParams): Promise<HttpResponse> {
     return Axios("/v2/activities/update", { method: "PUT", data });
   }
-}
 
-/** Ads 类接口 */
-export class AdsService {
+  /** 操作活动 */
+  static operateActivity(data: { _id: number; status: 1 | 2 }): Promise<HttpResponse> {
+    return Axios("/v2/activities/updateStatus", { method: "PUT", data });
+  }
+
   /** 获取广告列表 */
-  static getAdsList(params: ListParams): Promise<HttpResponse> {
-    return Axios("/v2/ads/list", {
+  static getAdsList(params: AdsListParams): Promise<HttpResponse> {
+    return Axios("/v2/activities/ads/list", {
       method: "GET",
       params: {
         skipSize: params.skip,
         pageSize: params.limit,
         flag: params.status || 0,
         title: params.keywords || "",
+        place: params.place,
       },
     });
   }
 
   /** 修改广告排序 */
-  static editAdsSort(data: { _id: number; priority: number }): Promise<HttpResponse> {
-    return Axios("/v2/ads/updatePriority", { method: "PUT", data });
+  static editAdsSort(data: { _id: string; priority: number }): Promise<HttpResponse> {
+    return Axios("/v2/activities/ads/updatePriority", { method: "PUT", data });
   }
 
   /** 查询广告数据 */
   static getAdsData(id: number): Promise<HttpResponse> {
-    return Axios("/v2/ads/find", { method: "GET", params: { _id: id } });
+    return Axios("/v2/activities/ads/find", { method: "GET", params: { _id: id } });
+  }
+
+  /** 获取活动列表（排除草稿与已结束活动） */
+  static getValidActivityList(): Promise<HttpResponse> {
+    return Axios("/v2/activities/list2", {
+      method: "GET",
+      params: {
+        title: "",
+      },
+    });
   }
 
   /** 创建广告 */
-  static createAds(data: CreateOrEditAds): Promise<HttpResponse> {
-    return Axios("/v2/ads/create", { method: "POST", data });
+  static createAds(data: CreateOrEditAdsParams): Promise<HttpResponse> {
+    return Axios("/v2/activities/ads/create", { method: "POST", data });
   }
 
   /** 编辑广告 */
-  static editAds(data: CreateOrEditAds): Promise<HttpResponse> {
-    return Axios("/v2/ads/update", { method: "PUT", data });
+  static editAds(data: CreateOrEditAdsParams): Promise<HttpResponse> {
+    return Axios("/v2/activities/ads/update", { method: "PUT", data });
+  }
+
+  /** 操作广告 */
+  static operateAds(data: { _id: number; status: 0 | 4 }): Promise<HttpResponse> {
+    return Axios("/v2/activities/ads/updateStatus", { method: "PUT", data });
+  }
+}
+
+/** i18n 类接口 */
+export class InternationalizationService {
+  /** 获取翻译列表 */
+  static getTranslationList(data: TranslationListParams): Promise<HttpResponse> {
+    const { key = "", content = "", tagIds = [], status = 0 } = data;
+    const searchData = { key, content, tagIds, status };
+    return Axios("/v2/i18n/configs/list", { method: "POST", data: searchData });
+  }
+
+  /** 创建翻译 */
+  static createTranslation(data: CreateOrEditTranslationParams): Promise<HttpResponse> {
+    return Axios("/v2/i18n/configs/create", { method: "POST", data });
+  }
+
+  /** 批量创建翻译（用于导入） */
+  static batchCreateTranslation(data: CreateOrEditTranslationParams): Promise<HttpResponse> {
+    return Axios("/v2/i18n/configs/createMulti", { method: "POST", data });
+  }
+
+  /** 设置标签 */
+  static setTranslationTag(data: {_ids: string[], tagIds: string[]}): Promise<HttpResponse> {
+    return Axios("/v2/i18n/configs/batchBindI18nTags", { method: "PUT", data });
+  }
+
+  /** 编辑翻译 */
+  static editTranslation(data: CreateOrEditTranslationParams): Promise<HttpResponse> {
+    return Axios("/v2/i18n/configs/update", { method: "PUT", data });
+  }
+
+  /** 获取翻译标签列表（不分页） */
+  static getAllTranslationTagList(): Promise<HttpResponse> {
+    return Axios("/v2/i18n/tags/listSimple", { method: "GET" });
+  }
+
+  /** 获取翻译标签列表（分页） */
+  static getTranslationTagList(params: ListParams): Promise<HttpResponse> {
+    return Axios("/v2/i18n/tags/list", {
+      method: "GET",
+      params: {
+        skipSize: params.skip,
+        pageSize: params.limit,
+        tagName: params.keywords || "",
+      },
+    });
+  }
+
+  /** 创建翻译标签 */
+  static createTranslationTag(data: { tagName: string }): Promise<HttpResponse> {
+    return Axios("/v2/i18n/tags/create", { method: "POST", data });
+  }
+
+  /** 编辑翻译标签 */
+  static editTranslationTag(data: { _id: string; tagName: string }): Promise<HttpResponse> {
+    return Axios("/v2/i18n/tags/update", { method: "PUT", data });
+  }
+
+  /** 删除翻译标签 */
+  static deleteTranslationTag(data: { _ids: string[] }): Promise<HttpResponse> {
+    return Axios("/v2/i18n/tags/deleteMulti", { method: "PUT", data });
   }
 }

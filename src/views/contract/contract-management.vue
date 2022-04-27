@@ -219,36 +219,13 @@ import { useMyRouter } from "@/utils/hooks";
 import { ContractsService, NodeService, ResourceService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
 import { Operation, Document } from "@element-plus/icons-vue";
-import { HttpResponse, ListParams } from "@/api/interface";
 import { computed, defineAsyncComponent, reactive, toRefs } from "vue";
+import { Contract } from "@/typings/object";
+import { HttpResponse, ContractListParams } from "@/typings/params";
 
-/** 合约数据 */
-interface Contract {
-  contractId: string;
-  contractName: string;
-  subjectId: string;
-  subjectName: string;
-  subjectType: number;
-  licensorId: string;
-  licensorName: string;
-  licensorOwnerId: number;
-  licensorOwnerName: string;
-  licenseeId: string;
-  licenseeName: string;
-  licenseeOwnerId: number;
-  licenseeOwnerName: string;
-  licenseeIdentityType: number;
-  policyId: string;
-  policyInfo: any[];
-  isDefault: number;
-  fsmCurrentState: string;
-  fsmRunningStatus: 1 | 2 | 4 | 8 | 16;
-  authStatus: 1 | 2 | 3 | 4 | 128;
-  status: 0 | 1 | 2;
-  myStatus: number;
-  createDate: string;
-  coverImages: string[];
-  transitionRecords: any[];
+/** 合约列表参数 */
+interface MyContractListParams extends ContractListParams {
+  signDate?: string[];
 }
 
 export default {
@@ -292,10 +269,7 @@ export default {
       loading: false,
       tableData: [] as Contract[],
       total: 0,
-      searchData: {
-        currentPage: 1,
-        limit: 20,
-      } as ListParams,
+      searchData: { currentPage: 1, limit: 20 } as MyContractListParams,
       detailId: "",
       detailPopupShow: false,
       detailTabActive: "tab1",
@@ -413,7 +387,7 @@ export default {
       },
     };
 
-    if (query.value.keywordsType) data.searchData.keywordsType = Number(query.value.keywordsType);
+    if (query.value.keywordsType) data.searchData.keywordsType = Number(query.value.keywordsType) as 1 | 2 | 3 | 4;
     data.searchData.keywords = query.value.keywords;
     methods.getData(true);
 

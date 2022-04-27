@@ -6,16 +6,16 @@
     <template v-slot:status v-if="query.id">{{ statusTip }}</template>
 
     <template v-slot:barRight>
-      <el-button @click="save(1)" v-if="!query.id || formData.isDraft">保存</el-button>
-      <el-button type="success" @click="save(2)">
-        <span v-if="!query.id || formData.isDraft">保存并发布</span>
-        <span v-else>保存</span>
+      <el-button type="danger" @click="operate(2)" v-if="query.id && !formData.isDraft && formData.status === 1">
+        暂停
       </el-button>
       <el-button type="success" @click="operate(1)" v-if="query.id && !formData.isDraft && formData.status === 2">
         恢复
       </el-button>
-      <el-button type="danger" @click="operate(2)" v-if="query.id && !formData.isDraft && formData.status === 1">
-        暂停
+      <el-button @click="save(1)" v-if="!query.id || formData.isDraft">保存</el-button>
+      <el-button type="primary" @click="save(2)">
+        <span v-if="!query.id || formData.isDraft">保存并发布</span>
+        <span v-else>保存</span>
       </el-button>
     </template>
 
@@ -24,8 +24,16 @@
         <el-input style="width: 400px" v-model="formData.myTitle" placeholder="请输入活动名称" clearable />
       </form-item>
       <form-item label="活动时间">
-        <el-radio-group v-model="formData.persist" @change="formData.validityDate = null">
-          <el-radio :label="true" :disabled="!formData.isDraft && statusTip !== '未发布'">长期活动</el-radio>
+        <el-radio-group
+          v-model="formData.persist"
+          @change="
+            formData.startTime = null;
+            formData.limitTime = null;
+          "
+        >
+          <el-radio :label="true" :disabled="query.id && !formData.isDraft && statusTip !== '未发布'"
+            >长期活动</el-radio
+          >
           <el-radio :label="false">限期活动</el-radio>
         </el-radio-group>
         <template v-if="!formData.persist">
@@ -78,22 +86,13 @@ import { useMyRouter } from "@/utils/hooks";
 import { ElMessage } from "element-plus";
 import { formatDate, differenceTime } from "@/utils/common";
 import { Plus } from "@element-plus/icons-vue";
+import { CreateOrEditActivityParams } from "@/typings/params";
 
-/** 活动数据 */
-interface Activity {
-  _id?: number;
-  myTitle: string;
-  title: string;
-  startTime: string;
-  limitTime: string;
-  persist: boolean;
-  cover: string;
-  link: string;
-  myPublishDate: string | null;
-  publishDate: string;
-  status: 1 | 2;
-  isDraft: boolean;
-  publishType: 1 | 2;
+/** 活动编辑数据 */
+export interface MyCreateOrEditActivity extends CreateOrEditActivityParams {
+  myTitle?: string;
+  myPublishDate?: string | null;
+  publishType?: 1 | 2;
 }
 
 export default {
@@ -106,7 +105,7 @@ export default {
     const assetsData = {};
     const data = reactive({
       loading: false,
-      formData: {} as Activity,
+      formData: {} as MyCreateOrEditActivity,
       statusTip: "",
       timeout: null as any,
     });
@@ -120,10 +119,9 @@ export default {
           const result = await ActivitiesService.getActivityData(id);
           const { errcode } = result.data;
           if (errcode === 0) {
-            const formData = result.data.data;
-            const { title, startTime, limitTime, publishDate } = formData;
+            const formData: MyCreateOrEditActivity = result.data.data;
+            const { title, publishDate } = formData;
             formData.myTitle = title;
-            if (startTime && limitTime) formData.validityDate = [startTime, limitTime];
             if (publishDate) {
               formData.publishType = 2;
               formData.myPublishDate = publishDate;
@@ -167,10 +165,10 @@ export default {
        * @params type 操作类型 1-恢复 2-暂停
        */
       async operate(type: 1 | 2) {
-        const res = await ActivitiesService.getActivityData(query.value.id);
-        const formData = res.data.data;
-        formData.status = type;
-        const result = await ActivitiesService.editActivity(formData);
+        const { _id } = data.formData;
+        if (!_id) return;
+
+        const result = await ActivitiesService.operateActivity({ _id, status: type });
         const { errcode } = result.data;
         if (errcode === 0) {
           const msg = type === 2 ? "暂停活动成功" : "恢复活动成功";
@@ -202,9 +200,9 @@ export default {
     };
 
     /** 获取活动状态提示 */
-    const getStatus = (formData: Activity) => {
+    const getStatus = (formData: MyCreateOrEditActivity) => {
       const now = new Date().getTime();
-      const { status, isDraft, persist, publishDate, startTime, limitTime } = formData;
+      const { status, isDraft, persist, publishDate, startTime = "", limitTime = "" } = formData;
       const publishTimestamp = new Date(publishDate).getTime();
       const startTimestamp = new Date(startTime).getTime();
       const limitTimestamp = new Date(limitTime).getTime();
@@ -227,7 +225,7 @@ export default {
     };
 
     /** 一秒后更新活动状态提示 */
-    const getStatusOneSecond = (formData: Activity) => {
+    const getStatusOneSecond = (formData: MyCreateOrEditActivity) => {
       data.timeout = setTimeout(() => {
         getStatus(formData);
       }, 1000);

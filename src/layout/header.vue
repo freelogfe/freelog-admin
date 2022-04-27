@@ -48,6 +48,7 @@ export default {
       },
     };
 
+    // 跳转登录页面
     const toLogin = (redirect = "") => {
       if (process.env.NODE_ENV === "development") Cookie.clear(["uid", "authInfo"]);
       store.commit("setData", { key: "userData", value: null });
@@ -85,15 +86,10 @@ export default {
 
     // 获取当前登录的用户信息
     const getUserData = async () => {
-      const authInfo = Cookie.get("authInfo");
-      const uid = Cookie.get("uid");
-      if (authInfo && uid) {
-        const result = await PassportService.getUserData();
-        const { data, errcode } = result.data;
-        if (errcode === 0) store.commit("setData", { key: "userData", value: data });
-      } else {
-        toLogin(router.currentRoute.value.fullPath);
-      }
+      const result = await PassportService.getUserData();
+      const { data, errcode } = result.data;
+      if (errcode === 0) store.commit("setData", { key: "userData", value: data });
+      else toLogin(router.currentRoute.value.fullPath);
     };
 
     watch(
@@ -127,7 +123,7 @@ export default {
   box-sizing: border-box;
   background: #fff;
   box-shadow: 0 1px 4px rgb(0 21 41 / 8%);
-  z-index: 2;
+  z-index: 3;
 
   .page-title {
     font-size: 20px;

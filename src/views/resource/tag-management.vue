@@ -1,12 +1,12 @@
 <!-- 资源标签管理 -->
 <template>
   <list-template>
-    <template v-slot:barLeft>
-      <span class="selected-tip" v-show="selectedData.length">已选中{{ selectedData.length }}条</span>
+    <template v-slot:barLeft v-if="selectedData.length">
+      <el-button type="primary" @click="batchEditTags()">编辑</el-button>
+      <span class="selected-tip">已选中{{ selectedData.length }}条</span>
     </template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="batchEditTags()">批量编辑</el-button>
       <el-button type="primary" @click="openTagPopup()">创建标签</el-button>
     </template>
 
@@ -85,6 +85,16 @@
         </el-table-column>
       </el-table>
     </template>
+
+    <template v-slot:pagination>
+      <el-pagination
+        layout="total, prev, pager, next, jumper"
+        v-model:currentPage="searchData.currentPage"
+        :total="total"
+        :page-size="searchData.limit"
+        @current-change="changePage($event)"
+      />
+    </template>
   </list-template>
 
   <el-dialog v-model="tagPopupShow" :title="operateData.tagId || operateData.tagIds ? '编辑标签' : '创建标签'">
@@ -132,19 +142,14 @@ import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ResourceService } from "@/api/request";
 import { Operation, Edit } from "@element-plus/icons-vue";
-import { ListParams } from "@/api/interface";
 import { ElMessage } from "element-plus";
+import { ResourceTag } from "@/typings/object";
+import { OperateResourceTagParams, ResourceTagListParams } from "@/typings/params";
 
-/** 资源标签数据 */
-export interface ResourceTag {
-  tagId: string;
-  tagName: string;
-  tagType: number;
-  resourceRange: string[];
-  resourceRangeType: number;
-  authority: number;
-  createDate: string;
-  count: number;
+/** 创建/编辑资源标签参数 */
+export interface MyOperateResourceTag extends OperateResourceTagParams {
+  checkAll?: boolean;
+  isIndeterminate?: boolean;
 }
 
 export default {
@@ -181,11 +186,8 @@ export default {
       tableData: [] as ResourceTag[],
       total: 0,
       selectedData: [] as ResourceTag[],
-      searchData: {
-        currentPage: 1,
-        limit: 20,
-      } as ListParams,
-      operateData: {} as any,
+      searchData: { currentPage: 1, limit: 20 } as ResourceTagListParams,
+      operateData: {} as MyOperateResourceTag,
       tagPopupShow: false,
     });
 
@@ -235,6 +237,12 @@ export default {
         this.getData(true);
       },
 
+      /** 切换表格页码 */
+      changePage(value: number) {
+        data.searchData.currentPage = value;
+        this.getData();
+      },
+
       /** 选择表格项 */
       selectTable(selected: ResourceTag[]) {
         data.selectedData = selected;
@@ -268,11 +276,6 @@ export default {
 
       /** 批量编辑标签 */
       batchEditTags() {
-        if (data.selectedData.length === 0) {
-          ElMessage.info("请选择需要编辑的标签");
-          return;
-        }
-
         data.operateData = {
           tagIds: data.selectedData.map((item) => item.tagId),
           tagName: data.selectedData.map((item) => item.tagName).join("、"),

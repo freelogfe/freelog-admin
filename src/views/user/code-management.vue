@@ -5,13 +5,13 @@
       <input id="copyInput" v-model="copyValue" />
     </template>
 
-    <template v-slot:barLeft>
-      <span class="selected-tip" v-show="selectedData.length">已选中{{ selectedData.length }}条</span>
+    <template v-slot:barLeft v-if="selectedData.length">
+      <el-button type="primary" @click="operate(1)">禁用</el-button>
+      <el-button type="primary" @click="operate(0)">解禁</el-button>
+      <span class="selected-tip">已选中{{ selectedData.length }}条</span>
     </template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="operate(1)">批量禁用</el-button>
-      <el-button type="primary" @click="operate(0)">批量解禁</el-button>
       <el-button type="primary" @click="createInviteCode()">批量生成</el-button>
     </template>
 
@@ -255,28 +255,15 @@ import { Operation, CopyDocument, Document, Close, Check } from "@element-plus/i
 import { reactive, toRefs, nextTick } from "vue";
 import { dateRangeShortcuts } from "@/assets/data";
 import { UserService } from "@/api/request";
-import { CreateCodeParams, ListParams } from "@/api/interface";
+import { Code, CodeRecord } from "@/typings/object";
+import { CreateCodeParams, CodeListParams, CodeRecordParams } from "@/typings/params";
 
-/** 邀请码数据 */
-export interface Code {
-  userId: string;
-  code: string;
-  createDate: string;
-  username: string;
-  usedCount: number;
-  limitCount: number;
-  startEffectiveDate: string;
-  endEffectiveDate: string;
-  status: 0 | 1;
-}
-
-/** 邀请码使用记录数据 */
-export interface CodeRecord {
-  userId: string;
-  username: string;
-  loginIp: string;
-  code: string;
-  createDate: string;
+/** 生成邀请码参数 */
+interface MyCreateCodeParams extends CreateCodeParams {
+  effectiveDate?: string[];
+  limitCountType?: 1 | 2;
+  limitCountText?: string;
+  effectiveDateType?: 1 | 2;
 }
 
 export default {
@@ -301,15 +288,9 @@ export default {
       tableData: [] as Code[],
       total: 0,
       selectedData: [] as Code[],
-      searchData: {
-        currentPage: 1,
-        limit: 20,
-      } as ListParams,
-      operateData: {} as CreateCodeParams,
-      recordSearchData: {
-        currentPage: 1,
-        limit: 20,
-      } as ListParams,
+      searchData: { currentPage: 1, limit: 20 } as CodeListParams,
+      operateData: {} as MyCreateCodeParams,
+      recordSearchData: { currentPage: 1, limit: 20 } as CodeRecordParams,
       recordData: { code: "", list: [] as CodeRecord[], total: 0 },
       copyValue: "",
       createCodePopupShow: false,
@@ -334,7 +315,7 @@ export default {
             data.loading = false;
             return;
           }
-          
+
           data.tableData = dataList;
           data.total = totalItem;
           data.loading = false;
@@ -369,7 +350,7 @@ export default {
 
       /** 批量生成邀请码 */
       createInviteCode() {
-        data.operateData = {} as CreateCodeParams;
+        data.operateData = {} as MyCreateCodeParams;
         data.createCodePopupShow = true;
       },
 
@@ -381,9 +362,9 @@ export default {
         if (limitCountType === 1) {
           data.operateData.limitCount = 0;
         } else if (limitCountType === 2) {
-          data.operateData.limitCount = limitCountText;
+          data.operateData.limitCount = Number(limitCountText);
         }
-        if (effectiveDateType === 2) {
+        if (effectiveDateType === 2 && data.operateData.effectiveDate) {
           data.operateData.startEffectiveDate = data.operateData.effectiveDate[0];
           data.operateData.endEffectiveDate = data.operateData.effectiveDate[1];
         }
@@ -421,11 +402,6 @@ export default {
 
       /** 操作（禁用/解禁） */
       operate(type: 0 | 1, code?: string) {
-        if (!code && data.selectedData.length === 0) {
-          ElMessage(`请选择需要${type === 1 ? "禁用" : "解禁"}的条目`);
-          return;
-        }
-
         ElMessageBox.confirm(`确认${type === 1 ? "禁用" : "解禁"}${code ? "当前" : "所有已选"}条目？`, "", {
           confirmButtonText: type === 1 ? "禁用" : "解禁",
           cancelButtonText: "取消",

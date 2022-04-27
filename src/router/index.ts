@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import Layout from "../layout/index.vue";
-// 引入在axios暴露出的clearPending函数
 import { clearPending } from "@/api/http";
 
 const routes: Array<RouteRecordRaw> = [
@@ -16,7 +15,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: "404",
         name: "404",
-        component: () => import("../views/error-page/404.vue"),
+        component: () => import("../views/error/404.vue"),
         meta: {
           title: "404",
           noHistory: true,
@@ -237,18 +236,28 @@ const routes: Array<RouteRecordRaw> = [
         name: "editActivity",
         component: () => import("../views/operating/edit-activity.vue"),
         meta: {
-          title: "活动管理",
+          title: "编辑活动",
           sideBarItem: "activityManagement",
           hidden: true,
         },
       },
       {
-        path: "advertisements-management",
-        name: "advertisementsManagement",
-        component: () => import("../views/operating/advertisements-management.vue"),
+        path: "advertisement-management",
+        name: "advertisementManagement",
+        component: () => import("../views/operating/advertisement-management.vue"),
         meta: {
           title: "站内广告管理",
           sideBarItem: "advertisementsManagement",
+        },
+      },
+      {
+        path: "edit-advertisement",
+        name: "editAdvertisement",
+        component: () => import("../views/operating/edit-advertisement.vue"),
+        meta: {
+          title: "编辑广告",
+          sideBarItem: "advertisementsManagement",
+          hidden: true,
         },
       },
     ],
@@ -292,9 +301,8 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  //在跳转路由之前，先清除所有的请求
+  // 在跳转路由之前，清除所有未处理的请求
   clearPending();
-  // ...
   next();
 });
 

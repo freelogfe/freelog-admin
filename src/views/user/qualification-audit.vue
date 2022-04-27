@@ -1,13 +1,12 @@
 <!-- 内测资格审核 -->
 <template>
   <list-template>
-    <template v-slot:barLeft>
-      <span class="selected-tip" v-show="selectedData.length">已选中{{ selectedData.length }}条</span>
+    <template v-slot:barLeft v-if="selectedData.length">
+      <el-button type="primary" @click="audit()">审核</el-button>
+      <span class="selected-tip">已选中{{ selectedData.length }}条</span>
     </template>
 
-    <template v-slot:barRight>
-      <el-button type="primary" @click="audit()">批量审核</el-button>
-    </template>
+    <template v-slot:barRight> </template>
 
     <template v-slot:filterBar>
       <form-item label="关键字搜索">
@@ -121,21 +120,13 @@ import { ElMessage } from "element-plus";
 import { UserService } from "@/api/request";
 import { reactive, toRefs, watch } from "vue";
 import { Operation, Checked } from "@element-plus/icons-vue";
-import { AuditQualifications, ListParams } from "@/api/interface";
+import { Qualifications } from "@/typings/object";
+import { AuditQualificationsParams, QualificationsListParams } from "@/typings/params";
 
-/** 内测资格审核数据 */
-export interface Qualifications {
-  recordId: string;
-  createDate: string;
-  occupation: string;
-  city: string;
-  description: string;
-  username: string;
-  mobile: string;
-  email: string;
-  latestLoginData: string;
-  auditMsg: string;
-  status: 0 | 1 | 2;
+/** 审核内测资格参数 */
+interface MyAuditQualificationsParams extends AuditQualificationsParams {
+  items?: Qualifications[];
+  auditResult?: string;
 }
 
 export default {
@@ -158,11 +149,8 @@ export default {
       tableData: [] as Qualifications[],
       total: 0,
       selectedData: [] as Qualifications[],
-      searchData: {
-        currentPage: 1,
-        limit: 20,
-      } as ListParams,
-      operateData: {} as AuditQualifications,
+      searchData: { currentPage: 1, limit: 20 } as QualificationsListParams,
+      operateData: {} as MyAuditQualificationsParams,
       auditPopupShow: false,
     });
 
@@ -207,15 +195,10 @@ export default {
 
       /** 审核操作 */
       async audit(item?: Qualifications) {
-        data.operateData = {} as AuditQualifications;
+        data.operateData = {} as MyAuditQualificationsParams;
         if (item) {
           data.operateData.items = [item];
         } else {
-          if (data.selectedData.length === 0) {
-            ElMessage("请选择需要审核的条目");
-            return;
-          }
-
           data.operateData.items = data.selectedData;
         }
         data.auditPopupShow = true;
@@ -223,9 +206,9 @@ export default {
 
       /** 审核 */
       async auditConfirm() {
-        if (!validate()) return;
-
         const { items } = data.operateData;
+        if (!validate() || !items) return;
+
         data.operateData.recordIds = items.map((item: Qualifications) => {
           return item.recordId;
         });

@@ -3,39 +3,47 @@
   <list-template>
     <template v-slot:hidden>
       <input id="copyInput" v-model="copyValue" />
-      <input ref="uploader" type="file" accept=".xlsx, .xls" @change="uploadFile" />
     </template>
 
-    <template v-slot:barLeft>
-      <span class="selected-tip" v-show="selectedData.length">已选中{{ selectedData.length }}条</span>
+    <template v-slot:barLeft v-if="selectedData.length">
+      <el-button type="primary" @click="batchAddTag()">添加标签</el-button>
+      <span class="selected-tip">已选中{{ selectedData.length }}条</span>
     </template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="setTag()">新建翻译</el-button>
-      <el-button type="primary" @click="importData()" :loading="importLoading">批量导入</el-button>
-      <el-button type="primary" @click="exportData()" :loading="exportLoading">批量导出</el-button>
-      <el-button type="primary" @click="setTag()">批量添加标签</el-button>
       <el-button type="primary" @click="switchPage('/i18n/tag-management')">管理标签</el-button>
+      <el-button type="primary" @click="importPopupShow = true">导入</el-button>
+      <el-button type="primary" @click="exportData()" :loading="exportLoading">导出</el-button>
+      <el-button type="primary" @click="createTranslation()">新建翻译</el-button>
     </template>
 
     <template v-slot:filterBar>
-      <form-item label="关键字搜索">
+      <form-item label="key">
         <el-input
           style="width: 250px"
-          v-model="searchData.keywords"
-          placeholder="请输入key、翻译内容"
+          v-model="searchData.key"
+          placeholder="请输入key"
+          clearable
+          @keyup.enter="getData()"
+        />
+      </form-item>
+      <form-item label="译文">
+        <el-input
+          style="width: 250px"
+          v-model="searchData.content"
+          placeholder="请输入译文"
           clearable
           @keyup.enter="getData()"
         />
       </form-item>
       <form-item label="标签">
-        <el-select v-model="searchData.tags" multiple placeholder="请选择标签" clearable>
-          <el-option v-for="item in translationTagsList" :key="item.tagId" :label="item.tag" :value="item.tagId" />
+        <el-select v-model="searchData.tagIds" multiple placeholder="请选择标签" clearable>
+          <el-option v-for="item in translationTagsList" :key="item._id" :label="item.tagName" :value="item._id" />
         </el-select>
       </form-item>
       <form-item label="状态">
         <el-select v-model="searchData.status" placeholder="请选择状态" clearable>
-          <el-option v-for="item in translationTagsList" :key="item.tagId" :label="item.tag" :value="item.tagId" />
+          <el-option v-for="item in statusMapping" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </form-item>
       <form-item>
@@ -48,7 +56,7 @@
       <div class="main-area">
         <el-table
           ref="tableRef"
-          :style="{ width: activeItem ? '400px' : '100%' }"
+          :style="{ width: editData ? '400px' : '100%' }"
           :data="tableData"
           stripe
           @selection-change="selectTable"
@@ -57,44 +65,105 @@
           v-loading="loading"
         >
           <el-table-column type="selection" />
-          <el-table-column property="username" label="key" width="200" />
-          <el-table-column property="username" label="zh-CN" width="200" v-if="!activeItem" />
-          <el-table-column property="username" label="en-US" width="200" v-if="!activeItem" />
-          <el-table-column property="username" label="描述" width="200" v-if="!activeItem" />
-          <el-table-column label="标签" width="250" v-if="!activeItem">
+          <el-table-column property="key" label="key" width="200" />
+          <el-table-column label="zh-CN" min-width="200" v-if="!editData">
             <template #default="scope">
-              <div class="tags-box">
-                <el-tag class="tag" v-for="item in scope.row.tags" :key="item.tagId">
-                  {{ item.tag }}
+              {{ scope.row.value.zh ? scope.row.value.zh.content || "-" : "-" }}
+            </template>
+          </el-table-column>
+          <el-table-column label="en-US" min-width="200" v-if="!editData">
+            <template #default="scope">
+              {{ scope.row.value.en ? scope.row.value.en.content || "-" : "-" }}
+            </template>
+          </el-table-column>
+          <el-table-column label="标签" width="250" v-if="!editData">
+            <template #default="scope">
+              <div class="tags-box" v-if="scope.row.i18nTags.length">
+                <el-tag class="tag" v-for="item in scope.row.i18nTags" :key="item._id">
+                  {{ item.tagName }}
                 </el-tag>
               </div>
+              <span v-else>-</span>
+            </template>
+          </el-table-column>
+          <el-table-column property="comment" label="描述" min-width="200" v-if="!editData">
+            <template #default="scope">
+              {{ scope.row.comment || "-" }}
             </template>
           </el-table-column>
           <el-table-column label="状态">
             <template #default="scope">
-              {{ statusMapping.find((item) => item.value === scope.row.status).label }}
+              <span v-if="scope.row.status !== 3">
+                {{ statusMapping.find((item) => item.value === scope.row.status).label }}
+              </span>
             </template>
           </el-table-column>
         </el-table>
 
-        <div class="edit-area" v-if="activeItem">
+        <div class="edit-area" v-if="newTranslationShow">
+          <div class="edit-content">
+            <div class="top-bar">
+              <div class="title">新建翻译</div>
+              <div class="btns">
+                <el-button @click="cancel()">取消</el-button>
+                <el-button type="primary" @click="save()">保存</el-button>
+              </div>
+            </div>
+
+            <div class="item-form">
+              <div class="form-item">
+                <div class="item-label">key</div>
+                <el-input v-model="editData.key" placeholder="请输入key" />
+              </div>
+              <div class="form-item">
+                <div class="item-label">默认译文 Chinese, China(zh-CN)</div>
+                <el-input v-model="editData.value.zh.content" :rows="6" type="textarea" placeholder="请输入中文译文" />
+              </div>
+              <div class="form-item">
+                <div class="item-label">备注</div>
+                <el-input v-model="editData.comment" placeholder="请输入备注" :rows="4" type="textarea" />
+              </div>
+              <div class="form-item">
+                <div class="item-label">标签</div>
+                <div class="tag-area">
+                  <el-select style="width: 100%" v-model="editData.tagIds" placeholder="请选择标签" multiple clearable>
+                    <el-option
+                      v-for="item in translationTagsList"
+                      :key="item._id"
+                      :label="item.tagName"
+                      :value="item._id"
+                    />
+                  </el-select>
+                  <el-input
+                    style="margin-top: 10px"
+                    v-model="setTagData.newTag"
+                    placeholder="输入标签按回车键确认"
+                    @keyup.enter="newTag('editData')"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="edit-area" v-if="editTranslationShow">
           <div class="edit-content">
             <div class="top-bar">
               <div class="item-info">
                 <div class="item-key">
-                  <span>{{ activeItem.username }}</span>
-                  <el-icon class="icon-btn" title="复制" @click="copy(activeItem.username)">
+                  <span>{{ editData.key }}</span>
+                  <el-icon class="icon-btn" title="复制" @click="copy(editData.key)">
                     <copy-document />
                   </el-icon>
                 </div>
                 <div class="item-status">
-                  {{ statusMapping.find((item) => item.value === activeItem.status).label }}
+                  {{ statusMapping.find((item) => item.value === editData.status).label }}
                 </div>
               </div>
-              <div class="item-btns">
+              <div class="btns">
                 <el-button @click="cancel()">取消</el-button>
-                <el-button type="primary" @click="save(1)">保存</el-button>
-                <el-button type="success" @click="save(2)">保存并提交</el-button>
+                <el-button type="primary" @click="save()">保存</el-button>
+                <el-button type="success" @click="save(true)" v-if="editData.status !== 3">保存并提交</el-button>
               </div>
             </div>
 
@@ -102,28 +171,52 @@
               <div class="form-row">
                 <div class="form-item">
                   <div class="item-label">Chinese, China(zh-CN) 默认语言</div>
-                  <el-input v-model="activeItem.username" :rows="6" type="textarea" />
+                  <el-input
+                    v-model="editData.value.zh.content"
+                    :rows="6"
+                    type="textarea"
+                    placeholder="请输入中文译文"
+                  />
                 </div>
                 <div class="form-item">
                   <div class="item-label">English, United States(en-US)</div>
-                  <el-input v-model="activeItem.username" :rows="6" type="textarea" />
+                  <el-input
+                    v-model="editData.value.en.content"
+                    :rows="6"
+                    type="textarea"
+                    placeholder="请输入英文译文"
+                  />
                 </div>
               </div>
               <div class="form-row">
                 <div class="form-item">
                   <div class="item-label">备注</div>
-                  <el-input v-model="activeItem.remark" :rows="4" type="textarea" />
+                  <el-input v-model="editData.comment" placeholder="请输入备注" :rows="4" type="textarea" />
                 </div>
                 <div class="form-item">
                   <div class="item-label">标签</div>
-                  <el-select style="width: 100%" v-model="activeItem.tags" multiple clearable>
-                    <el-option
-                      v-for="item in translationTagsList"
-                      :key="item.tagId"
-                      :label="item.tag"
-                      :value="item.tagId"
+                  <div class="tag-area">
+                    <el-select
+                      style="width: 100%"
+                      v-model="editData.tagIds"
+                      placeholder="请选择标签"
+                      multiple
+                      clearable
+                    >
+                      <el-option
+                        v-for="item in translationTagsList"
+                        :key="item._id"
+                        :label="item.tagName"
+                        :value="item._id"
+                      />
+                    </el-select>
+                    <el-input
+                      style="margin-top: 10px"
+                      v-model="setTagData.newTag"
+                      placeholder="输入标签按回车键确认"
+                      @keyup.enter="newTag('editData')"
                     />
-                  </el-select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -133,19 +226,72 @@
     </template>
   </list-template>
 
-  <el-dialog v-model="setTagPopupShow" title="管理翻译标签">
-    <el-select style="width: 100%" v-model="setTagData.tags" multiple clearable placeholder="请选择标签">
-      <el-option v-for="item in translationTagsList" :key="item.tagId" :label="item.tag" :value="item.tagId" />
-    </el-select>
-    <el-input
-      style="margin-top: 10px"
-      v-model="setTagData.newTag"
-      placeholder="输入标签按回车键确认"
-      @keyup.enter="newTag()"
-    />
+  <el-dialog v-model="addTagPopupShow" title="添加标签">
+    <div class="tag-area">
+      <el-select style="width: 100%" v-model="setTagData.tagIds" multiple clearable placeholder="请选择标签">
+        <el-option v-for="item in translationTagsList" :key="item._id" :label="item.tagName" :value="item._id" />
+      </el-select>
+      <el-input
+        style="margin-top: 10px"
+        v-model="setTagData.newTag"
+        placeholder="输入标签按回车键确认"
+        @keyup.enter="newTag('setTagData')"
+      />
+    </div>
     <template #footer>
-      <el-button @click="setTagPopupShow = false">取消</el-button>
-      <el-button type="primary" @click="setTagConfirm()">确认</el-button>
+      <el-button @click="addTagPopupShow = false">取消</el-button>
+      <el-button type="primary" @click="batchAddTagConfirm()">确认</el-button>
+    </template>
+  </el-dialog>
+
+  <el-dialog v-model="importPopupShow" title="导入翻译">
+    <el-upload
+      ref="upload"
+      action=""
+      :limit="1"
+      multiple
+      drag
+      accept=".xlsx,.xls"
+      :show-file-list="false"
+      :before-upload="beforeUpload"
+      @change="uploadFile"
+    >
+      <template v-if="importData.file">
+        <el-icon class="el-icon--upload"><document /></el-icon>
+        <div class="el-upload__text">
+          <em>{{ importData.file.name }}</em>
+        </div>
+      </template>
+      <template v-else>
+        <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+        <div class="el-upload__text">支持格式：XLSX(.xlsx)、XLS(.xls)</div>
+      </template>
+    </el-upload>
+    <div class="form-item">
+      <div class="item-label">标签</div>
+      <div class="tag-area">
+        <el-select style="width: 100%" v-model="importData.tagIds" placeholder="请选择标签" multiple clearable>
+          <el-option v-for="item in translationTagsList" :key="item._id" :label="item.tagName" :value="item._id" />
+        </el-select>
+        <el-input
+          style="margin-top: 10px"
+          v-model="setTagData.newTag"
+          placeholder="输入标签按回车键确认"
+          @keyup.enter="newTag('importData')"
+        />
+      </div>
+    </div>
+    <div class="form-item">
+      <div class="item-label">如果需要通过文档覆盖更新已存在的翻译条目，请勾选以下选项：</div>
+      <el-checkbox-group v-model="importData.type">
+        <el-checkbox label="更新译文" />
+        <el-checkbox label="更新描述" />
+        <el-checkbox label="更新标签" />
+      </el-checkbox-group>
+    </div>
+    <template #footer>
+      <el-button @click="importPopupShow = false">取消</el-button>
+      <el-button type="primary" @click="dealImportData()" :loading="importLoading">导入</el-button>
     </template>
   </el-dialog>
 </template>
@@ -155,48 +301,55 @@ import { nextTick, reactive, ref, toRefs } from "vue";
 import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElTable } from "element-plus";
-import { UserService } from "@/api/request";
+import { InternationalizationService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
-import { ListParams } from "@/api/interface";
-import { CopyDocument } from "@element-plus/icons-vue";
+import { CopyDocument, UploadFilled, Document } from "@element-plus/icons-vue";
 import XLSX from "xlsx";
+import { Translation, TranslationTag } from "@/typings/object";
+import { CreateOrEditTranslationParams, TranslationListParams } from "@/typings/params";
 
-/** 翻译数据 */
-export interface Translation {
-  userId: number;
-  username: string;
-  tags: any[];
-  latestLoginDate: string;
-  createdResourceCount: number;
-  createdNodeCount: number;
-  signedContractCount: number;
-  tradeCount: number;
-  balance: string;
-  mobile: string;
-  email: string;
-  createDate: string;
-  status: 0 | 1 | 2 | 3;
+/** 添加/编辑翻译参数 */
+export interface MyCreateOrEditTranslationParams extends CreateOrEditTranslationParams {
+  status?: 1 | 2 | 3;
 }
 
-/** 翻译标签数据 */
-export interface TranslationTag {
-  tagId: string;
-  tag: string;
+/** 添加翻译标签参数 */
+export interface MySetTranslationTagParams {
+  translations: Translation[];
+  tagIds: string[];
+  newTag: "";
+}
+
+/** 导入参数 */
+export interface ImportParams {
+  file: File | null;
+  tagIds: string[];
+  type: number[];
+}
+
+/** 导入数据 */
+export interface ImportData {
+  "key*"?: string;
+  "zh-CN*"?: string;
+  "en-US"?: string;
+  description?: string;
+  tag?: string | number;
 }
 
 export default {
   components: {
     CopyDocument,
+    UploadFilled,
+    Document,
   },
 
   setup() {
     const { switchPage } = useMyRouter();
     const assetsData = {
       statusMapping: [
-        { value: 0, label: "正常" },
-        { value: 1, label: "冻结" },
-        { value: 2, label: "待审核" },
-        { value: 3, label: "未通过" },
+        { value: 1, label: "待翻译" },
+        { value: 2, label: "待提交" },
+        { value: 3, label: "已提交" },
       ],
     };
     const data = reactive({
@@ -206,45 +359,37 @@ export default {
       tableData: [] as Translation[],
       selectedData: [] as Translation[],
       translationTagsList: [] as TranslationTag[],
-      searchData: {
-        limit: 100,
-      } as ListParams,
-      setTagData: {} as any,
+      searchData: {} as TranslationListParams,
       copyValue: "",
-      activeItem: null as Translation | null,
-      setTagPopupShow: false,
+      editData: null as MyCreateOrEditTranslationParams | null,
+      setTagData: {} as MySetTranslationTagParams,
+      importData: {} as ImportParams,
+      newTranslationShow: false,
+      editTranslationShow: false,
+      addTagPopupShow: false,
+      importPopupShow: false,
     });
     const tableRef = ref<InstanceType<typeof ElTable>>();
-    const uploader = ref<InstanceType<any>>();
 
     const methods = {
       /** 获取列表数据 */
       async getData() {
-        data.activeItem = null;
+        data.newTranslationShow = false;
+        data.editTranslationShow = false;
+        data.editData = null;
         data.tableData = [];
         data.loading = true;
-        const { tags = [] } = data.searchData;
-        data.searchData.tagIds = tags.join(",");
-        const result = await UserService.getUserList(data.searchData);
+        const result = await InternationalizationService.getTranslationList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
-          const { dataList } = result.data.data;
-
-          if (dataList.length === 0) {
-            data.loading = false;
-            return;
-          }
-
-          data.tableData = dataList;
+          data.tableData = result.data.data;
           data.loading = false;
         }
       },
 
       /** 重置 */
       clearSearch() {
-        data.searchData = {
-          limit: 100,
-        };
+        data.searchData = {} as TranslationListParams;
         this.getData();
       },
 
@@ -261,7 +406,9 @@ export default {
 
       /** 取消编辑 */
       cancel() {
-        data.activeItem = null;
+        data.editData = null;
+        data.newTranslationShow = false;
+        data.editTranslationShow = false;
         // eslint-disable-next-line
         tableRef.value!.setCurrentRow(null);
       },
@@ -273,36 +420,153 @@ export default {
 
       /** 选择列表单项 */
       clickRow(item: Translation) {
-        data.activeItem = { ...item };
+        const { _id, key, value, comment, i18nTags, status } = item;
+        data.editData = {
+          _id,
+          key,
+          value: {
+            zh: value.zh || { isDefault: true, content: "" },
+            en: value.en || { isDefault: false, content: "" },
+          },
+          comment,
+          tagIds: i18nTags.map((item) => item._id),
+          needPublish: false,
+          status,
+        };
+        data.newTranslationShow = false;
+        data.editTranslationShow = true;
       },
 
-      /** 导入 */
-      importData() {
-        uploader.value.click();
+      /** 上传文件前验证类型 */
+      beforeUpload(rawFile: File) {
+        if (
+          !["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"].includes(
+            rawFile.type
+          )
+        ) {
+          ElMessage.error("请上传.xlsx或.xls文件");
+          return false;
+        }
+        return true;
       },
 
       /** 上传文件 */
-      uploadFile(e: { target: { files: FileList } }) {
-        const { files } = e.target;
-        const rawFile = files[0];
-        if (!rawFile) return;
-        this.readerData(rawFile);
+      uploadFile(file: { raw: File }) {
+        data.importData.file = file.raw;
       },
 
-      /** 读取数据 */
-      readerData(rawFile: Blob) {
+      /** 处理导入数据 */
+      dealImportData() {
+        const { file } = data.importData;
+        if (!file) {
+          ElMessage("请上传文件");
+          return;
+        }
+
         data.importLoading = true;
         const reader = new FileReader();
-        reader.readAsArrayBuffer(rawFile);
+        reader.readAsArrayBuffer(file);
         reader.onload = (e: any) => {
-          const data = e.target.result;
-          const workbook = XLSX.read(data, { type: "array" });
+          const readerData = e.target.result;
+          const workbook = XLSX.read(readerData, { type: "array" });
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
-          const results = XLSX.utils.sheet_to_json(worksheet);
+          const results: ImportData[] = XLSX.utils.sheet_to_json(worksheet);
           data.importLoading = false;
-          console.log(results);
+          this.importOperate(results);
         };
+      },
+
+      /** 导入数据 */
+      importOperate(results: ImportData[]) {
+        const validResults = results.filter((item) => item["key*"]);
+        if (validResults.length === 0) {
+          if (results.length === 0) {
+            ElMessage("文件无内容");
+          } else {
+            ElMessage.error("导入失败，原因：所有数据key缺失");
+          }
+          return;
+        }
+
+        const listData: MyCreateOrEditTranslationParams[] = [];
+        const errors = {
+          noKey: [] as number[],
+        };
+        const newTags: string[] = [];
+        let tagMappings: any = {};
+        let tags = [];
+        let tagsStr = "";
+        results.forEach((item, index) => {
+          if (!item["key*"]) {
+            errors.noKey.push(index);
+            return;
+          }
+          tagsStr += item.tag + ",";
+        });
+        // 整理出所有文件中绑定的标签
+        tags = tagsStr.split(",");
+        // 去重
+        tags = [...new Set(tags.filter((tag) => tag))];
+        // 到已有翻译标签数据中查找
+        tags.forEach((item) => {
+          const tag = data.translationTagsList.find((tag) => tag.tagName === item);
+          if (tag) {
+            // 已存在的记下 id
+            tagMappings[item] = tag._id;
+          } else {
+            // 未存在的记下标签名以便之后添加
+            newTags.push(item);
+          }
+        });
+        if (newTags.length) {
+          // 将未存在的所有标签创建
+          const newTagsResult = [
+            { _id: "tag111", tagName: "111" },
+            { _id: "tag222", tagName: "222" },
+            { _id: "tag333", tagName: "333" },
+            { _id: "tag444", tagName: "444" },
+            { _id: "tag555", tagName: "555" },
+            { _id: "tag666", tagName: "666" },
+          ];
+          newTagsResult.forEach((item) => {
+            const { tagName, _id } = item;
+            tagMappings[tagName] = _id;
+          });
+          // 刷新翻译标签数据
+          getTranslationTags();
+        }
+
+        // 最后整理数据
+        validResults.forEach((item) => {
+          const { description = "", tag = "" } = item;
+          // 默认加上已选中的标签
+          const tagIds: string[] = [...data.importData.tagIds];
+          String(tag)
+            .split(",")
+            .forEach((tag) => {
+              if (tag) tagIds.push(tagMappings[tag]);
+            });
+          const translation: CreateOrEditTranslationParams = {
+            key: item["key*"],
+            value: {
+              zh: { isDefault: true, content: item["zh-CN*"] || "" },
+              en: { isDefault: false, content: item["en-US"] || "" },
+            },
+            comment: description,
+            tagIds: [...new Set(tagIds)],
+            needPublish: false,
+          };
+          listData.push(translation);
+        });
+        console.log(listData);
+        console.log(errors);
+        // ElMessage({
+        //   type: "error",
+        //   message: `${errors.noKey.map((item) => `第${item + 1}行`).join("、")}数据导入失败，原因：key缺失`,
+        //   duration: 3000,
+        // });
+        ElMessage("导入功能开发中...");
       },
 
       /** 导出 */
@@ -310,7 +574,7 @@ export default {
         data.exportLoading = true;
         import("./Export2Excel").then((excel) => {
           const header = ["key*", "zh-CN*", "en-US", "description", "tag"];
-          const keys = ["userId", "username", "mobile", "email", "tags"];
+          const keys = ["key", "zh", "en", "comment", "tag"];
           const result = this.filterKeys(keys);
           excel.export_json_to_excel({
             header,
@@ -325,130 +589,139 @@ export default {
 
       /** 筛选需要的字段 */
       filterKeys(keys: string[]) {
-        return data.tableData.map((item: any) => keys.map((key) => item[key]));
+        return data.tableData.map((item: any) =>
+          keys.map((key) => {
+            if (key === "zh") {
+              return item.value.zh?.content;
+            } else if (key === "en") {
+              return item.value.en?.content;
+            } else if (key === "tag") {
+              return item.i18nTags.map((tag: TranslationTag) => tag.tagName);
+            } else {
+              return item[key];
+            }
+          })
+        );
       },
 
-      /** 设置翻译标签 */
-      setTag(item?: Translation) {
-        if (item) {
-          data.setTagData.translations = [item];
-          data.setTagData.tags = item.tags.map((item) => item.tagId);
+      /** 创建翻译 */
+      createTranslation() {
+        data.editData = {
+          key: "",
+          value: {
+            zh: { isDefault: true, content: "" },
+            en: { isDefault: false, content: "" },
+          },
+          comment: "",
+          tagIds: [],
+          needPublish: false,
+        };
+        data.newTranslationShow = true;
+        data.editTranslationShow = false;
+      },
+
+      /** 保存 */
+      async save(needPublish: boolean) {
+        if (!data.editData || !validate()) return;
+
+        if (needPublish || data.editData.status === 3) data.editData.needPublish = true;
+        let result;
+        if (data.editData._id) {
+          // 编辑
+          result = await InternationalizationService.editTranslation(data.editData);
         } else {
-          if (data.selectedData.length === 0) {
-            ElMessage.info("请选择需要管理翻译标签的条目");
-            return;
-          }
-          data.setTagData.translations = data.selectedData;
-          data.setTagData.tags = [];
+          // 创建
+          result = await InternationalizationService.createTranslation(data.editData);
         }
-        data.setTagPopupShow = true;
+        const { errcode } = result.data;
+        if (errcode === 0) {
+          data.newTranslationShow = false;
+          data.editTranslationShow = false;
+          ElMessage.success("保存成功");
+          this.getData();
+        }
+      },
+
+      /** 批量添加翻译标签 */
+      batchAddTag() {
+        data.setTagData.translations = data.selectedData;
+        data.setTagData.tagIds = [];
+        data.addTagPopupShow = true;
       },
 
       /** 添加新标签 */
-      async newTag() {
+      async newTag(type: "editData" | "setTagData") {
         const { newTag } = data.setTagData;
         if (!newTag) return;
 
-        const existTag = data.translationTagsList.find((item) => item.tag === newTag);
-
+        const existTag = data.translationTagsList.find((item) => item.tagName === newTag);
         if (existTag) {
-          if (data.setTagData.tags.includes(existTag.tagId)) {
+          if (data[type]?.tagIds.includes(existTag._id)) {
             // 输入的标签已选择
             return;
           }
 
           // 输入的标签已存在且未选择，直接选择该标签
-          data.setTagData.tags.push(existTag.tagId);
+          data[type]?.tagIds.push(existTag._id);
           data.setTagData.newTag = "";
           return;
         }
 
-        const result = await UserService.createUserTag({
-          tags: [data.setTagData.newTag],
+        const result = await InternationalizationService.createTranslationTag({
+          tagName: data.setTagData.newTag,
         });
         const { errcode } = result.data;
         if (errcode === 0) {
-          const newTag = result.data.data[0];
-          data.translationTagsList.push(newTag);
-          data.setTagData.tags.push(newTag.tagId);
+          const tag = result.data.data;
+          data.translationTagsList.push(tag);
+          data[type]?.tagIds.push(tag._id);
           data.setTagData.newTag = "";
         }
       },
 
       /** 设置翻译标签 */
-      async setTagConfirm() {
-        const { translations, tags } = data.setTagData;
-        let addTags = [];
-        if (translations.length === 1) {
-          // 非批量操作，统计删除标签与添加标签
-          const translation = translations[0];
-          const deleteTags = [] as number[];
-          translation.tags.forEach((item: { tagId: number }) => {
-            const { tagId } = item;
-            if (!tags.includes(tagId)) deleteTags.push(tagId);
-          });
-          tags.forEach((id: number) => {
-            if (!translation.tags.find((item: { tagId: number }) => item.tagId === id)) {
-              addTags.push(id);
-            }
-          });
-          if (deleteTags.length !== 0) {
-            // 存在删除标签，执行删除
-            const result = await UserService.unsetTag(translation.userId, {
-              tagIds: deleteTags,
-            });
-            const { errcode } = result.data;
-            if (errcode !== 0) return;
-            if (addTags.length === 0) {
-              data.setTagPopupShow = false;
-              this.getData();
-            }
-          }
-        } else {
-          // 批量操作，无删除标签，所有所选标签为添加标签
-          addTags = tags;
-        }
-        if (addTags.length !== 0) {
+      async batchAddTagConfirm() {
+        const { translations, tagIds } = data.setTagData;
+        if (tagIds.length !== 0) {
           // 存在添加标签，执行添加
-          const userIds = translations.map((item: Translation) => item.userId);
-          const result = await UserService.setTag({ userIds, tagIds: addTags });
+          const _ids = translations.map((item: Translation) => item._id);
+          const result = await InternationalizationService.setTranslationTag({
+            _ids,
+            tagIds,
+          });
           const { errcode } = result.data;
           if (errcode === 0) {
-            data.setTagPopupShow = false;
+            data.addTagPopupShow = false;
             this.getData();
           }
-        }
-      },
-
-      /** 删除翻译标签 */
-      async removeTag(userId: number, tagId: number) {
-        const result = await UserService.unsetTag(userId, {
-          tagIds: [tagId],
-        });
-        const { errcode } = result.data;
-        if (errcode === 0) {
-          const item = data.tableData.find((translation) => translation.userId === userId);
-          if (!item) return;
-          item.tags = item.tags.filter((tag) => tag.tagId !== tagId);
         }
       },
     };
 
     /** 获取翻译标签 */
-    const getUserTags = async () => {
-      const result = await UserService.getUserTagsList();
+    const getTranslationTags = async () => {
+      const result = await InternationalizationService.getAllTranslationTagList();
       data.translationTagsList = result.data.data;
     };
 
+    /** 表单验证 */
+    const validate = () => {
+      const { _id, key } = data.editData as MyCreateOrEditTranslationParams;
+      if (!_id && !key) {
+        ElMessage("请输入key");
+        return false;
+      }
+      return true;
+    };
+
     methods.getData();
-    getUserTags();
+    getTranslationTags();
 
     return {
       dateRangeShortcuts,
       ...assetsData,
       ...toRefs(data),
       tableRef,
-      uploader,
       ...methods,
       formatDate,
       switchPage,
@@ -500,6 +773,11 @@ export default {
             font-size: 14px;
           }
         }
+
+        .title {
+          font-size: 20px;
+          font-weight: bold;
+        }
       }
 
       .item-form {
@@ -509,25 +787,36 @@ export default {
           display: flex;
 
           & + .form-row {
-            margin-top: 40px;
+            margin-top: 20px;
           }
 
-          .form-item {
-            flex: 1;
-
-            & + .form-item {
-              margin-left: 20px;
-            }
-
-            .item-label {
-              font-size: 14px;
-              color: #666;
-              margin-bottom: 10px;
-            }
+          .form-item + .form-item {
+            margin-left: 20px;
           }
         }
       }
     }
+  }
+}
+
+.tag-area {
+  width: 100%;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px #dcdfe6;
+
+  :deep .el-input__inner {
+    box-shadow: none !important;
+  }
+}
+
+.form-item {
+  flex: 1;
+
+  .item-label {
+    font-size: 14px;
+    color: #666;
+    margin-top: 20px;
+    margin-bottom: 10px;
   }
 }
 </style>

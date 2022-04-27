@@ -12,8 +12,8 @@ import showdown from "showdown";
 import { reactive, ref, toRefs } from "@vue/reactivity";
 import { watch } from "@vue/runtime-core";
 import { ResourceService } from "@/api/request";
-import { ResourceVersion } from "@/views/resource/resource-management.vue";
 import { SetupContext } from "vue";
+import { ResourceVersion } from "@/typings/object";
 
 export default {
   name: "my-markdown",

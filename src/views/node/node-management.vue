@@ -1,12 +1,12 @@
 <!-- 节点管理 -->
 <template>
   <list-template>
-    <template v-slot:barLeft>
-      <span class="selected-tip" v-show="selectedData.length">已选中{{ selectedData.length }}条</span>
+    <template v-slot:barLeft v-if="selectedData.length">
+      <el-button type="primary" @click="setTag()">添加标签</el-button>
+      <span class="selected-tip">已选中{{ selectedData.length }}条</span>
     </template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="setTag()">批量添加节点标签</el-button>
       <el-button type="primary" @click="switchPage('/node/tag-management')">管理标签</el-button>
     </template>
 
@@ -176,15 +176,17 @@
   </list-template>
 
   <el-dialog v-model="setTagPopupShow" title="管理节点标签">
-    <el-select style="width: 100%" v-model="setTagData.tags" multiple placeholder="请选择标签">
-      <el-option v-for="item in nodeTagsList" :key="item" :value="item" />
-    </el-select>
-    <el-input
-      style="margin-top: 10px"
-      v-model="setTagData.newTag"
-      placeholder="输入标签按回车键确认"
-      @keyup.enter="newTag()"
-    />
+    <div class="tag-area">
+      <el-select style="width: 100%" v-model="setTagData.tags" multiple placeholder="请选择标签">
+        <el-option v-for="item in nodeTagsList" :key="item" :value="item" />
+      </el-select>
+      <el-input
+        style="margin-top: 10px"
+        v-model="setTagData.newTag"
+        placeholder="输入标签按回车键确认"
+        @keyup.enter="newTag()"
+      />
+    </div>
     <template #footer>
       <el-button @click="setTagPopupShow = false">取消</el-button>
       <el-button type="primary" @click="setTagConfirm()">确认</el-button>
@@ -226,29 +228,20 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { NodeService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
 import { Operation, Edit, Close, Check } from "@element-plus/icons-vue";
-import { ListParams, OperateParams } from "@/api/interface";
+import { Node, NodeTag } from "@/typings/object";
+import { NodeListParams, OperateNodeParams, SetNodeTagParams } from "@/typings/params";
 
-/** 节点数据 */
-interface Node {
-  nodeId: number;
-  nodeName: string;
-  nodeDomain: string;
-  nodeThemeId: string;
-  ownerUserId: number;
-  ownerUserName: string;
-  status: number;
-  createDate: string;
-  tags: string[];
-  exhibitCount: number;
-  signCount: number;
-  reason: string;
-  remark: string;
+/** 节点列表参数 */
+export interface MyNodeListParams extends NodeListParams {
+  selectedTags?: string[];
+  createDate?: string[];
 }
 
-/** 节点标签数据 */
-interface NodeTag {
-  tagId: string;
-  tag: string;
+/** 设置节点标签参数 */
+export interface MySetNodeTagParams extends SetNodeTagParams {
+  nodes: Node[];
+  tags: string[];
+  newTag?: "";
 }
 
 export default {
@@ -276,12 +269,9 @@ export default {
       total: 0,
       selectedData: [] as Node[],
       nodeTagsList: [] as NodeTag[],
-      searchData: {
-        currentPage: 1,
-        limit: 20,
-      } as ListParams,
-      setTagData: {} as any,
-      operateData: {} as OperateParams,
+      searchData: { currentPage: 1, limit: 20 } as MyNodeListParams,
+      setTagData: {} as MySetNodeTagParams,
+      operateData: {} as OperateNodeParams,
       setTagPopupShow: false,
       banPopupShow: false,
     });
@@ -370,13 +360,13 @@ export default {
       },
 
       /** 封禁操作 */
-      banNode(nodeId: string) {
-        data.operateData = { nodeId };
+      banNode(nodeId: number) {
+        data.operateData = { nodeId } as OperateNodeParams;
         data.banPopupShow = true;
       },
 
       /** 解封操作 */
-      restore(nodeId: string) {
+      restore(nodeId: number) {
         ElMessageBox.confirm("确认要解除该节点的封禁吗？", "解封封禁", {
           confirmButtonText: "解封",
           cancelButtonText: "取消",
@@ -388,12 +378,11 @@ export default {
 
       /** 操作（封禁/解封） */
       async operateConfirm(type: 1 | 2) {
-        const { nodeId, reason, remark } = data.operateData;
         let result = null;
         if (type === 1) {
-          result = await NodeService.banNode(nodeId, { reason, remark });
+          result = await NodeService.banNode(data.operateData);
         } else {
-          result = await NodeService.restoreNode(nodeId);
+          result = await NodeService.restoreNode(data.operateData.nodeId);
         }
         const { errcode } = result.data;
         if (errcode === 0) {
@@ -413,10 +402,6 @@ export default {
           data.setTagData.nodes = [item];
           data.setTagData.tags = [...item.tags];
         } else {
-          if (data.selectedData.length === 0) {
-            ElMessage.info("请选择需要管理节点标签的条目");
-            return;
-          }
           data.setTagData.nodes = data.selectedData;
           data.setTagData.tags = [];
         }
@@ -431,13 +416,13 @@ export default {
         const existTag = data.nodeTagsList.find((item) => item === newTag);
 
         if (existTag) {
-          if (data.setTagData.tags.includes(existTag)) {
+          if (data.setTagData.tags.includes(existTag.tagId)) {
             // 输入的标签已选择
             return;
           }
 
           // 输入的标签已存在且未选择，直接选择该标签
-          data.setTagData.tags.push(existTag);
+          data.setTagData.tags.push(existTag.tagId);
           data.setTagData.newTag = "";
           return;
         }
@@ -456,7 +441,7 @@ export default {
       /** 设置节点标签 */
       async setTagConfirm() {
         const { nodes, tags } = data.setTagData;
-        let addTags = [];
+        let addTags: string[] = [];
         if (nodes.length === 1) {
           // 非批量操作，统计删除标签与添加标签
           const node = nodes[0];
@@ -543,3 +528,16 @@ export default {
   },
 };
 </script>
+
+<style lang="scss" scoped>
+.tag-area {
+  width: 100%;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px #dcdfe6;
+
+  :deep .el-input__inner,
+  :deep .el-select .el-input.is-focus .el-input__inner {
+    box-shadow: none !important;
+  }
+}
+</style>

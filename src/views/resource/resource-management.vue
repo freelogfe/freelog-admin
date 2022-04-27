@@ -1,13 +1,13 @@
 <!-- 资源管理 -->
 <template>
   <list-template>
-    <template v-slot:barLeft>
-      <span class="selected-tip" v-show="selectedData.length">已选中{{ selectedData.length }}条</span>
+    <template v-slot:barLeft v-if="selectedData.length">
+      <el-button type="primary" @click="setTag()">添加标签</el-button>
+      <el-button type="primary" @click="banResources()">封禁</el-button>
+      <span class="selected-tip">已选中{{ selectedData.length }}条</span>
     </template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="banResources()">批量封禁</el-button>
-      <el-button type="primary" @click="setTag()">批量添加标签</el-button>
       <el-button type="primary" @click="switchPage('/resource/tag-management')">管理标签</el-button>
     </template>
 
@@ -202,15 +202,17 @@
   </list-template>
 
   <el-dialog v-model="setTagPopupShow" title="管理资源标签">
-    <el-select style="width: 100%" v-model="setTagData.tags" multiple placeholder="请选择标签">
-      <el-option v-for="item in resourceTagsList" :key="item" :value="item" />
-    </el-select>
-    <el-input
-      style="margin-top: 10px"
-      v-model="setTagData.newTag"
-      placeholder="输入标签按回车键确认"
-      @keyup.enter="newTag()"
-    />
+    <div class="tag-area">
+      <el-select style="width: 100%" v-model="setTagData.tags" multiple placeholder="请选择标签">
+        <el-option v-for="item in resourceTagsList" :key="item" :value="item" />
+      </el-select>
+      <el-input
+        style="margin-top: 10px"
+        v-model="setTagData.newTag"
+        placeholder="输入标签按回车键确认"
+        @keyup.enter="newTag()"
+      />
+    </div>
     <template #footer>
       <el-button @click="setTagPopupShow = false">取消</el-button>
       <el-button type="primary" @click="setTagConfirm()">确认</el-button>
@@ -324,43 +326,25 @@ import { ResourceService, ContractsService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
 import { Operation, Edit, Clock, Close, Check, Document, Download } from "@element-plus/icons-vue";
 import { reactive, toRefs, computed, defineAsyncComponent } from "vue";
-import { ListParams, OperateParams } from "@/api/interface";
+import { Policy, Resource, ResourceTag, ResourceVersion } from "@/typings/object";
+import {
+  ResourceListParams,
+  OperateResourceParams,
+  ResourceTagListParams,
+  SetResourceTagParams,
+} from "@/typings/params";
 
-/** 资源数据 */
-interface Resource {
-  resourceId: string;
-  resourceType: string;
-  resourceName: string;
-  userId: number;
-  username: string;
-  resourceNameAbbreviation: string;
-  coverImages: string[];
-  intro: string;
+/** 资源列表参数 */
+export interface MyResourceListParams extends ResourceListParams {
+  createDate?: string[];
+  selectedTags?: string[];
+}
+
+/** 设置资源标签参数 */
+export interface MySetResourceTagParams extends SetResourceTagParams {
+  resources: Resource[];
   tags: string[];
-  latestVersion: string;
-  resourceVersions: any[];
-  policies: any[];
-  baseUpcastResources: any[];
-  signCount: number;
-  collectCount: number;
-  status: 0 | 1 | 2 | 3;
-  reason: string;
-  remark: string;
-}
-
-/** 资源标签数据 */
-interface ResourceTag {
-  tagId: string;
-  tag: string;
-}
-
-/** 资源版本数据 */
-export interface ResourceVersion {
-  versionId: string;
-  version: string;
-  createDate: string;
-  content: string;
-  mime: string;
+  newTag?: "";
 }
 
 export default {
@@ -398,10 +382,7 @@ export default {
       total: 0,
       selectedData: [] as Resource[],
       resourceTagsList: [] as ResourceTag[],
-      searchData: {
-        currentPage: 1,
-        limit: 20,
-      } as ListParams,
+      searchData: { currentPage: 1, limit: 20 } as MyResourceListParams,
       versionData: {
         resourceId: "",
         activeIndex: 0,
@@ -409,9 +390,9 @@ export default {
         versionPopupShow: false,
         loading: false,
       },
-      setTagData: {} as any,
-      policyData: [] as any[],
-      operateData: {} as OperateParams,
+      setTagData: {} as MySetResourceTagParams,
+      policyData: [] as Policy[],
+      operateData: {} as OperateResourceParams,
       setTagPopupShow: false,
       policyPopupShow: false,
       banPopupShow: false,
@@ -517,6 +498,7 @@ export default {
       banResources(resourceId?: string) {
         data.operateData = {
           resourceIds: resourceId ? [resourceId] : data.selectedData.map((item) => item.resourceId),
+          operationType: 2,
         };
         data.banPopupShow = true;
       },
@@ -555,10 +537,6 @@ export default {
           data.setTagData.resources = [item];
           data.setTagData.tags = [...item.tags];
         } else {
-          if (data.selectedData.length === 0) {
-            ElMessage.info("请选择需要管理资源标签的条目");
-            return;
-          }
           data.setTagData.resources = data.selectedData;
           data.setTagData.tags = [];
         }
@@ -573,13 +551,13 @@ export default {
         const existTag = data.resourceTagsList.find((item) => item === newTag);
 
         if (existTag) {
-          if (data.setTagData.tags.includes(existTag)) {
+          if (data.setTagData.tags.includes(existTag.tagId)) {
             // 输入的标签已选择
             return;
           }
 
           // 输入的标签已存在且未选择，直接选择该标签
-          data.setTagData.tags.push(existTag);
+          data.setTagData.tags.push(existTag.tagId);
           data.setTagData.newTag = "";
           return;
         }
@@ -602,7 +580,7 @@ export default {
       /** 设置资源标签 */
       async setTagConfirm() {
         const { resources, tags } = data.setTagData;
-        let addTags = [];
+        let addTags: string[] = [];
         if (resources.length === 1) {
           // 非批量操作，统计删除标签与添加标签
           const resource = resources[0];
@@ -700,7 +678,7 @@ export default {
 
     /** 获取资源标签 */
     const getResourceTags = async () => {
-      const result = await ResourceService.getResourcesTagsList({ limit: 100 });
+      const result = await ResourceService.getResourcesTagsList({ limit: 1000 } as ResourceTagListParams);
       data.resourceTagsList = result.data.data.dataList.map((item: { tagName: string }) => item.tagName);
     };
 
@@ -724,8 +702,22 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.tag-area {
+  width: 100%;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px #dcdfe6;
+
+  :deep .el-input__inner,
+  :deep .el-select .el-input.is-focus .el-input__inner {
+    box-shadow: none !important;
+  }
+}
+
 .policy-box {
   width: 100%;
+  max-height: 600px;
+  overflow-y: auto;
+  padding: 10px;
   display: flex;
   flex-wrap: wrap;
 

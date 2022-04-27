@@ -95,22 +95,9 @@ import { formatDate } from "../../utils/common";
 import { ActivitiesService } from "@/api/request";
 import { Operation, Edit, Connection } from "@element-plus/icons-vue";
 import { reactive, toRefs } from "vue";
-import { ListParams } from "@/api/interface";
 import { useMyRouter } from "@/utils/hooks";
-
-/** 活动数据 */
-interface Activity {
-  _id: number;
-  title: string;
-  startTime: string;
-  limitTime: string;
-  persist: boolean;
-  cover: string;
-  link: string;
-  publishDate: string;
-  status: 1 | 2;
-  isDraft: boolean;
-}
+import { Activity } from "@/typings/object";
+import { ActivityListParams } from "@/typings/params";
 
 export default {
   components: {
@@ -139,10 +126,7 @@ export default {
       loading: false,
       tableData: [] as Activity[],
       total: 0,
-      searchData: {
-        currentPage: 1,
-        limit: 20,
-      } as ListParams,
+      searchData: { currentPage: 1, limit: 20 } as ActivityListParams,
     });
 
     const methods = {

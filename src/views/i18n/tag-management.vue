@@ -1,12 +1,12 @@
 <!-- 翻译标签管理 -->
 <template>
   <list-template>
-    <template v-slot:barLeft>
-      <span class="selected-tip" v-show="selectedData.length">已选中{{ selectedData.length }}条</span>
+    <template v-slot:barLeft v-if="selectedData.length">
+      <el-button type="primary" @click="deleteTag(selectedData)">删除</el-button>
+      <span class="selected-tip">已选中{{ selectedData.length }}条</span>
     </template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="batchDelete()">批量删除</el-button>
       <el-button type="primary" @click="openTagPopup()">创建标签</el-button>
     </template>
 
@@ -23,21 +23,23 @@
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
-        <el-table-column label="标签" width="100">
+        <el-table-column label="标签" min-width="100" show-overflow-tooltip>
           <template #default="scope">
             <span
               class="text-btn"
               @click="
-                switchPage('/user/user-management', {
-                  tag: scope.row.tagId,
+                switchPage('/i18n/translation-management', {
+                  tag: scope.row.tagName,
                 })
               "
             >
-              {{ scope.row.tag }}
+              {{ scope.row.tagName }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column property="totalSetCount" label="用户数" align="right" min-width="100" show-overflow-tooltip />
+        <el-table-column label="" align="right">
+          <template #default="scope">{{ scope.row.num }} keys</template>
+        </el-table-column>
         <el-table-column fixed="right" width="70">
           <template #header>
             <el-icon class="operation-icon" title="操作">
@@ -55,10 +57,20 @@
         </el-table-column>
       </el-table>
     </template>
+
+    <template v-slot:pagination>
+      <el-pagination
+        layout="total, prev, pager, next, jumper"
+        v-model:currentPage="searchData.currentPage"
+        :total="total"
+        :page-size="searchData.limit"
+        @current-change="changePage($event)"
+      />
+    </template>
   </list-template>
 
-  <el-dialog v-model="tagPopupShow" :title="operateData.tagId ? '编辑标签' : '创建标签'">
-    <el-input v-model="operateData.tag" placeholder="请输入标签" @keyup.enter="save()" />
+  <el-dialog v-model="tagPopupShow" :title="operateData._id ? '编辑标签' : '创建标签'">
+    <el-input v-model="operateData.tagName" placeholder="请输入标签" @keyup.enter="save()" />
     <template #footer>
       <el-button @click="tagPopupShow = false">取消</el-button>
       <el-button type="primary" @click="save()">保存</el-button>
@@ -71,17 +83,10 @@ import { reactive, toRefs } from "vue";
 import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { UserService } from "@/api/request";
+import { InternationalizationService, NodeService } from "@/api/request";
 import { Operation, Edit, Delete } from "@element-plus/icons-vue";
-import { ListParams } from "@/api/interface";
-
-/** 用户标签数据 */
-export interface UserTag {
-  tagId: number;
-  tag: string;
-  totalSetCount: number;
-  type: 1 | 2;
-}
+import { TranslationTag } from "@/typings/object";
+import { ListParams } from "@/typings/params";
 
 export default {
   components: {
@@ -92,21 +97,13 @@ export default {
 
   setup() {
     const { switchPage } = useMyRouter();
-    const assetsData = {
-      typeMapping: [
-        { value: 1, label: "手动" },
-        { value: 2, label: "自动" },
-      ],
-    };
     const data = reactive({
       loading: false,
-      tableData: [] as UserTag[],
-      selectedData: [] as UserTag[],
-      searchData: {
-        currentPage: 1,
-        limit: 20,
-      } as ListParams,
-      operateData: {} as UserTag,
+      tableData: [] as TranslationTag[],
+      total: 0,
+      selectedData: [] as TranslationTag[],
+      searchData: { currentPage: 1, limit: 20 } as ListParams,
+      operateData: {} as TranslationTag,
       tagPopupShow: false,
     });
 
@@ -118,29 +115,50 @@ export default {
         if (init) data.searchData.currentPage = 1;
         const { currentPage, limit } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
-        const result = await UserService.getUserTagsList();
-        const { errcode } = result.data;
+        const result = await InternationalizationService.getTranslationTagList(data.searchData);
+        const {
+          errcode,
+          data: { i18nTags, num },
+        } = result.data;
         if (errcode === 0) {
-          data.tableData = result.data.data;
+          if (i18nTags.length === 0) {
+            data.loading = false;
+            return;
+          }
+
+          data.tableData = i18nTags;
+          data.total = num;
           data.loading = false;
         }
       },
 
+      /** 重置 */
+      clearSearch() {
+        data.searchData = { currentPage: 1, limit: 20 };
+        this.getData(true);
+      },
+
+      /** 切换表格页码 */
+      changePage(value: number) {
+        data.searchData.currentPage = value;
+        this.getData();
+      },
+
       /** 打开标签弹窗（有参数为编辑，反之为创建） */
-      openTagPopup(item?: UserTag) {
-        data.operateData = { ...(item || ({} as UserTag)) };
+      openTagPopup(item?: TranslationTag) {
+        data.operateData = { ...(item || ({} as TranslationTag)) };
         data.tagPopupShow = true;
       },
 
       /** 删除操作 */
-      deleteTag(tags: UserTag[]) {
-        const tagName = tags.map((item) => "【" + item.tag + "】").join("、");
+      deleteTag(tags: TranslationTag[]) {
+        const tagName = tags.map((item) => "【" + item.tagName + "】").join("、");
         ElMessageBox.confirm(`确认删除${tagName}？`, "删除标签", {
           confirmButtonText: "删除",
           cancelButtonText: "取消",
         }).then(async () => {
-          const ids = tags.map((item) => item.tagId);
-          const result = await UserService.deleteUserTag({ tagIds: ids });
+          const _ids = tags.map((item) => item._id);
+          const result = await InternationalizationService.deleteTranslationTag({ _ids });
           const { errcode } = result.data;
           if (errcode === 0) {
             this.getData();
@@ -152,12 +170,12 @@ export default {
       async save() {
         if (!validate()) return;
 
-        const { tagId, tag } = data.operateData;
+        const { _id, tagName } = data.operateData;
         let result;
-        if (tagId) {
-          result = await UserService.editUserTag(tagId, { tag });
+        if (_id) {
+          result = await InternationalizationService.editTranslationTag({ _id, tagName });
         } else {
-          result = await UserService.createUserTag({ tags: [tag] });
+          result = await InternationalizationService.createTranslationTag({ tagName });
         }
         const { errcode } = result.data;
         if (errcode === 0) {
@@ -166,45 +184,25 @@ export default {
         }
       },
 
-      /** 重置 */
-      clearSearch() {
-        data.searchData = {
-          currentPage: 1,
-          limit: 20,
-        };
-        this.getData(true);
-      },
-
       /** 选择表格项 */
-      selectTable(selected: UserTag[]) {
+      selectTable(selected: TranslationTag[]) {
         data.selectedData = selected;
-      },
-
-      /** 批量编辑标签 */
-      batchDelete() {
-        if (data.selectedData.length === 0) {
-          ElMessage.info("请选择需要删除的标签");
-          return;
-        }
-
-        this.deleteTag(data.selectedData);
       },
     };
 
     /** 表单验证 */
     const validate = () => {
-      const { tag } = data.operateData;
-      if (!tag) {
+      const { tagName } = data.operateData;
+      if (!tagName) {
         ElMessage("请输入标签");
         return false;
       }
       return true;
     };
 
-    methods.getData();
+    methods.getData(true);
 
     return {
-      ...assetsData,
       ...toRefs(data),
       ...methods,
       formatDate,

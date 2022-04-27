@@ -1,45 +1,51 @@
 <!-- 编辑广告 -->
 <template>
   <edit-template>
-    <template v-slot:title>{{ query.id ? "编辑活动" : "发布活动" }}</template>
+    <template v-slot:title>{{ query.id ? "编辑广告" : "创建广告" }}</template>
 
     <template v-slot:status v-if="query.id">{{ statusTip }}</template>
 
     <template v-slot:barRight>
-      <el-button @click="save(1)" v-if="!query.id || formData.isDraft">保存</el-button>
-      <el-button type="success" @click="save(2)">
-        <span v-if="!query.id || formData.isDraft">保存并发布</span>
-        <span v-else>保存</span>
-      </el-button>
-      <el-button type="success" @click="operate(1)" v-if="query.id && !formData.isDraft && formData.status === 2">
-        恢复
-      </el-button>
-      <el-button type="danger" @click="operate(2)" v-if="query.id && !formData.isDraft && formData.status === 1">
-        暂停
-      </el-button>
+      <el-button type="danger" @click="operate(4)" v-if="query.id && [1, 2].includes(formData.status)">停用</el-button>
+      <el-button type="success" @click="operate(0)" v-if="query.id && formData.status === 4">启用</el-button>
+      <el-button type="primary" @click="save()">{{ query.id ? "保存" : "创建" }}</el-button>
     </template>
 
     <template v-slot:main>
-      <form-item label="活动名称">
-        <el-input style="width: 400px" v-model="formData.myTitle" placeholder="请输入活动名称" clearable />
+      <form-item label="投放位置">
+        <el-radio-group v-model="formData.place">
+          <el-radio :label="1">首页，顶部公告栏</el-radio>
+          <el-radio :label="2">首页，右侧浮窗</el-radio>
+          <el-radio :label="3">浏览页，右侧Banner</el-radio>
+          <el-radio :label="4">发现页，顶部Banner</el-radio>
+        </el-radio-group>
       </form-item>
-      <form-item label="活动时间">
-        <el-radio-group v-model="formData.persist" @change="formData.validityDate = null">
-          <el-radio :label="true" :disabled="!formData.isDraft && statusTip !== '未发布'">长期活动</el-radio>
-          <el-radio :label="false">限期活动</el-radio>
+      <form-item label="广告名称">
+        <el-input style="width: 400px" v-model="formData.title" placeholder="请输入广告名称" clearable />
+      </form-item>
+      <form-item label="广告时间">
+        <el-radio-group
+          v-model="formData.persist"
+          @change="
+            formData.startTime = null;
+            formData.limitTime = null;
+          "
+        >
+          <el-radio :label="true">长期投放</el-radio>
+          <el-radio :label="false">指定时间投放</el-radio>
         </el-radio-group>
         <template v-if="!formData.persist">
           <el-date-picker
             style="margin-left: 20px"
             v-model="formData.startTime"
             type="datetime"
-            placeholder="请选择活动开始时间"
+            placeholder="请选择投放开始时间"
           />
           <span style="margin: 0 20px">-</span>
-          <el-date-picker v-model="formData.limitTime" type="datetime" placeholder="请选择活动结束时间" />
+          <el-date-picker v-model="formData.limitTime" type="datetime" placeholder="请选择投放结束时间" />
         </template>
       </form-item>
-      <form-item label="活动海报">
+      <form-item label="素材">
         <el-upload
           class="cover-uploader"
           action="/api/v2/storages/files/uploadImage"
@@ -51,20 +57,43 @@
           <el-icon class="plus-icon" v-else><Plus /></el-icon>
         </el-upload>
       </form-item>
-      <form-item label="活动页链接">
-        <el-input style="width: 500px" v-model="formData.link" placeholder="请输入活动页链接" clearable />
-      </form-item>
-      <form-item label="发布时间" v-if="!query.id || formData.isDraft || statusTip === '未发布'">
-        <el-radio-group v-model="formData.publishType" @change="formData.myPublishDate = null">
-          <el-radio :label="1">马上发布</el-radio>
-          <el-radio :label="2">定时发布</el-radio>
+      <form-item label="点击跳转至">
+        <el-radio-group v-model="formData.linkType" @change="changeLinkType($event)">
+          <el-radio :label="1">
+            站内活动页
+            <el-select
+              style="width: 500px; margin-left: 10px"
+              placeholder="请选择站内活动页"
+              v-model="formData.linkActivityId"
+              clearable
+              filterable
+              @change="changeLinkActivity($event)"
+            >
+              <el-option v-for="item in activityList" :key="item._id" :value="item._id" :label="item.title">
+                <span style="float: left">{{ item.title }}</span>
+                <span style="float: right; color: #999; font-size: 13px">{{ getActivityStatus(item) }}</span>
+              </el-option>
+            </el-select>
+          </el-radio>
+          <el-radio style="margin-top: 10px" :label="2">
+            其他推广页
+            <el-input
+              style="width: 500px; margin-left: 10px"
+              v-model="formData.link"
+              placeholder="请输入广告页链接"
+              clearable
+              @input="inputLink($event)"
+            />
+          </el-radio>
         </el-radio-group>
-        <el-date-picker
-          style="margin-left: 20px"
-          v-model="formData.myPublishDate"
-          type="datetime"
-          placeholder="请选择发布时间"
-          v-if="formData.publishType === 2"
+      </form-item>
+      <form-item label="展示序号">
+        <el-input-number
+          style="width: 200px"
+          v-model="formData.priority"
+          placeholder="序号越小，展示优先级越高"
+          :min="1"
+          :controls="false"
         />
       </form-item>
     </template>
@@ -76,24 +105,14 @@ import { onUnmounted, reactive, toRefs } from "vue";
 import { ActivitiesService } from "@/api/request";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage } from "element-plus";
-import { formatDate, differenceTime } from "@/utils/common";
+import { differenceTime } from "@/utils/common";
 import { Plus } from "@element-plus/icons-vue";
+import { CreateOrEditAdsParams } from "@/typings/params";
+import { Activity } from "@/typings/object";
 
-/** 活动数据 */
-interface Activity {
-  _id?: number;
-  myTitle: string;
-  title: string;
-  startTime: string;
-  limitTime: string;
-  persist: boolean;
-  cover: string;
-  link: string;
-  myPublishDate: string | null;
-  publishDate: string;
-  status: 1 | 2;
-  isDraft: boolean;
-  publishType: 1 | 2;
+/** 广告编辑数据 */
+export interface MyCreateOrEditAds extends CreateOrEditAdsParams {
+  linkType?: 1 | 2;
 }
 
 export default {
@@ -103,30 +122,31 @@ export default {
 
   setup() {
     const { query, switchPage } = useMyRouter();
-    const assetsData = {};
+    const assetsData = {
+      statusMappings: { 1: "已排期", 2: "投放中", 3: "已结束", 4: "已停用" },
+    };
     const data = reactive({
       loading: false,
-      formData: {} as Activity,
+      formData: {} as MyCreateOrEditAds,
+      activityList: [] as Activity[],
       statusTip: "",
       timeout: null as any,
     });
 
     const methods = {
-      /** 获取活动数据 */
+      /** 获取广告数据 */
       async getData() {
         const { id } = query.value;
         if (id) {
           // 编辑
-          const result = await ActivitiesService.getActivityData(id);
+          const result = await ActivitiesService.getAdsData(id);
           const { errcode } = result.data;
           if (errcode === 0) {
-            const formData = result.data.data;
-            const { title, startTime, limitTime, publishDate } = formData;
-            formData.myTitle = title;
-            if (startTime && limitTime) formData.validityDate = [startTime, limitTime];
-            if (publishDate) {
-              formData.publishType = 2;
-              formData.myPublishDate = publishDate;
+            const formData: MyCreateOrEditAds = result.data.data;
+            if (formData.linkActivityId) {
+              formData.linkType = 1;
+            } else if (formData.link) {
+              formData.linkType = 2;
             }
             data.formData = { ...formData };
             getStatus(result.data.data);
@@ -137,45 +157,34 @@ export default {
         }
       },
 
-      /**
-       * 保存
-       * @params type 保存类型 1-保存 2-保存并发布
-       */
-      async save(type: 1 | 2) {
-        if (type === 2 && !validate()) return;
+      /** 保存 */
+      async save() {
+        if (!validate()) return;
 
-        const { myTitle, publishType, myPublishDate } = data.formData;
-        data.formData.isDraft = type === 1;
-        data.formData.title = myTitle || "未命名活动";
-        if (publishType === 1) {
-          data.formData.publishDate = formatDate(new Date());
-        } else if (publishType === 2 && myPublishDate) {
-          data.formData.publishDate = formatDate(myPublishDate);
-        }
-        const func = query.value.id ? "editActivity" : "createActivity";
+        const func = query.value.id ? "editAds" : "createAds";
         const result = await ActivitiesService[func](data.formData);
         const { errcode } = result.data;
         if (errcode === 0) {
-          const msg = type === 1 ? "保存成功" : "保存并发布成功";
-          ElMessage.success(msg);
-          switchPage("/operating/activity-management");
+          ElMessage.success("保存成功");
+          switchPage("/operating/advertisement-management");
         }
       },
 
       /**
        * 操作
-       * @params type 操作类型 1-恢复 2-暂停
+       * @params type 操作类型 0-启用 4-停用
        */
-      async operate(type: 1 | 2) {
-        const res = await ActivitiesService.getActivityData(query.value.id);
-        const formData = res.data.data;
-        formData.status = type;
-        const result = await ActivitiesService.editActivity(formData);
+      async operate(type: 0 | 4) {
+        const { _id } = data.formData;
+        if (!_id) return;
+
+        const result = await ActivitiesService.operateAds({_id, status: type});
         const { errcode } = result.data;
         if (errcode === 0) {
-          const msg = type === 2 ? "暂停活动成功" : "恢复活动成功";
+          const msg = type === 4 ? "停用广告成功" : "启用广告成功";
           ElMessage.success(msg);
-          data.formData.status = type;
+          const newData = await ActivitiesService.getAdsData(query.value.id);
+          data.formData.status = newData.data.data.status;
           clearTimeout(data.timeout);
           getStatus(data.formData);
         }
@@ -199,35 +208,68 @@ export default {
         }
         return true;
       },
+
+      /** 切换链接类型 */
+      changeLinkType(value: 1 | 2) {
+        if (value === 1) {
+          data.formData.link = "";
+        } else if (value === 2) {
+          data.formData.linkActivityId = "";
+        }
+      },
+
+      /** 切换链接活动 */
+      changeLinkActivity(value: string) {
+        if (!value) return;
+        data.formData.linkType = 1;
+        data.formData.link = "";
+      },
+
+      /** 输入推广页链接 */
+      inputLink(value: string) {
+        if (!value) return;
+        data.formData.linkType = 2;
+        data.formData.linkActivityId = "";
+      },
+
+      /** 获取活动状态 */
+      getActivityStatus(item: Activity) {
+        const now = new Date().getTime();
+        const { status, isDraft, persist, publishDate, startTime, limitTime } = item;
+        const publishTimestamp = new Date(publishDate).getTime();
+        const startTimestamp = new Date(startTime).getTime();
+        const limitTimestamp = new Date(limitTime).getTime();
+        if (status === 2) {
+          return "已暂停";
+        } else if (isDraft) {
+          return "草稿";
+        } else if (now < publishTimestamp) {
+          return "未发布";
+        } else if (now <= startTimestamp) {
+          return "未开始";
+        } else if (now < limitTimestamp || persist) {
+          return "进行中";
+        } else if (limitTimestamp <= now) {
+          return "已结束";
+        }
+      },
     };
 
-    /** 获取活动状态提示 */
-    const getStatus = (formData: Activity) => {
-      const now = new Date().getTime();
-      const { status, isDraft, persist, publishDate, startTime, limitTime } = formData;
-      const publishTimestamp = new Date(publishDate).getTime();
-      const startTimestamp = new Date(startTime).getTime();
-      const limitTimestamp = new Date(limitTime).getTime();
-      if (status === 2) {
-        data.statusTip = `已暂停`;
-      } else if (isDraft) {
-        data.statusTip = "草稿";
-      } else if (now < publishTimestamp) {
-        data.statusTip = "未发布";
+    /** 获取广告状态提示 */
+    const getStatus = (formData: MyCreateOrEditAds) => {
+      const { status, persist, startTime = "", limitTime = "" } = formData;
+      data.statusTip = assetsData.statusMappings[status as 1 | 2 | 3 | 4];
+      if (status === 1) {
+        data.statusTip += persist ? "" : `（距离结束还有${differenceTime(startTime)}）`;
         getStatusOneSecond(formData);
-      } else if (now <= startTimestamp) {
-        data.statusTip = `即将开始（距离开始还有${differenceTime(startTime)}）`;
+      } else if (status === 2) {
+        data.statusTip += persist ? "" : `（距离结束还有${differenceTime(limitTime)}）`;
         getStatusOneSecond(formData);
-      } else if (now < limitTimestamp || persist) {
-        data.statusTip = "进行中" + (persist ? "" : `（距离结束还有${differenceTime(limitTime)}）`);
-        getStatusOneSecond(formData);
-      } else if (limitTimestamp <= now) {
-        data.statusTip = "已结束";
       }
     };
 
-    /** 一秒后更新活动状态提示 */
-    const getStatusOneSecond = (formData: Activity) => {
+    /** 一秒后更新广告状态提示 */
+    const getStatusOneSecond = (formData: MyCreateOrEditAds) => {
       data.timeout = setTimeout(() => {
         getStatus(formData);
       }, 1000);
@@ -235,24 +277,43 @@ export default {
 
     /** 表单验证 */
     const validate = () => {
-      const { myTitle, persist, startTime, limitTime, cover, link, publishType, myPublishDate } = data.formData;
-      if (!myTitle) {
-        ElMessage("请输入活动名称");
+      const { place, title, persist, startTime, limitTime, cover, linkType, linkActivityId, link, priority } =
+        data.formData;
+      if (!place) {
+        ElMessage("请选择投放位置");
+        return false;
+      } else if (!title) {
+        ElMessage("请输入广告名称");
         return false;
       } else if (!persist && (!startTime || !limitTime)) {
-        ElMessage("请选择活动时间");
+        ElMessage("请选择投放时间");
         return false;
       } else if (!cover) {
-        ElMessage("请上传活动海报");
+        ElMessage("请上传素材");
         return false;
-      } else if (!link) {
-        ElMessage("请输入活动页链接");
+      } else if (!linkType) {
+        ElMessage("请选择跳转类型");
         return false;
-      } else if (!publishType || (publishType === 2 && !myPublishDate)) {
-        ElMessage("请选择发布时间");
+      } else if (linkType === 1 && !linkActivityId) {
+        ElMessage("请选择站内活动页");
+        return false;
+      } else if (linkType === 2 && !link) {
+        ElMessage("请填写推广页链接");
+        return false;
+      } else if (!priority) {
+        ElMessage("请填写展示序号");
         return false;
       }
       return true;
+    };
+
+    /** 获取活动列表 */
+    const getActivityList = async () => {
+      const result = await ActivitiesService.getValidActivityList();
+      const { errcode } = result.data;
+      if (errcode === 0) {
+        data.activityList = result.data.data;
+      }
     };
 
     onUnmounted(() => {
@@ -260,6 +321,7 @@ export default {
     });
 
     methods.getData();
+    getActivityList();
 
     return {
       query,
