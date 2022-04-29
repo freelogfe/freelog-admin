@@ -321,7 +321,7 @@
 <script lang="ts">
 import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessageBox } from "element-plus";
 import { ResourceService, ContractsService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
 import { Operation, Edit, Clock, Close, Check, Document, Download } from "@element-plus/icons-vue";

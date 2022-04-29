@@ -29,7 +29,7 @@
               class="text-btn"
               @click="
                 switchPage('/i18n/translation-management', {
-                  tag: scope.row.tagName,
+                  tag: scope.row._id,
                 })
               "
             >
@@ -83,7 +83,7 @@ import { reactive, toRefs } from "vue";
 import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { InternationalizationService, NodeService } from "@/api/request";
+import { InternationalizationService } from "@/api/request";
 import { Operation, Edit, Delete } from "@element-plus/icons-vue";
 import { TranslationTag } from "@/typings/object";
 import { ListParams } from "@/typings/params";

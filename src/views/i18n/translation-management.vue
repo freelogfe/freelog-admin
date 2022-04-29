@@ -12,7 +12,7 @@
 
     <template v-slot:barRight>
       <el-button type="primary" @click="switchPage('/i18n/tag-management')">管理标签</el-button>
-      <el-button type="primary" @click="importPopupShow = true">导入</el-button>
+      <el-button type="primary" @click="importFile()">导入</el-button>
       <el-button type="primary" @click="exportData()" :loading="exportLoading">导出</el-button>
       <el-button type="primary" @click="createTranslation()">新建翻译</el-button>
     </template>
@@ -284,9 +284,9 @@
     <div class="form-item">
       <div class="item-label">如果需要通过文档覆盖更新已存在的翻译条目，请勾选以下选项：</div>
       <el-checkbox-group v-model="importData.type">
-        <el-checkbox label="更新译文" />
-        <el-checkbox label="更新描述" />
-        <el-checkbox label="更新标签" />
+        <el-checkbox :label="1">更新译文</el-checkbox>
+        <el-checkbox :label="10">更新描述</el-checkbox>
+        <el-checkbox :label="100">更新标签</el-checkbox>
       </el-checkbox-group>
     </div>
     <template #footer>
@@ -300,7 +300,7 @@
 import { nextTick, reactive, ref, toRefs } from "vue";
 import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
-import { ElMessage, ElTable } from "element-plus";
+import { ElMessage, ElMessageBox, ElTable } from "element-plus";
 import { InternationalizationService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
 import { CopyDocument, UploadFilled, Document } from "@element-plus/icons-vue";
@@ -344,7 +344,7 @@ export default {
   },
 
   setup() {
-    const { switchPage } = useMyRouter();
+    const { query, switchPage } = useMyRouter();
     const assetsData = {
       statusMapping: [
         { value: 1, label: "待翻译" },
@@ -437,6 +437,12 @@ export default {
         data.editTranslationShow = true;
       },
 
+      /** 导入 */
+      importFile() {
+        data.importData = { file: null, type: [], tagIds: [] };
+        data.importPopupShow = true;
+      },
+
       /** 上传文件前验证类型 */
       beforeUpload(rawFile: File) {
         if (
@@ -472,13 +478,12 @@ export default {
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
           const results: ImportData[] = XLSX.utils.sheet_to_json(worksheet);
-          data.importLoading = false;
           this.importOperate(results);
         };
       },
 
       /** 导入数据 */
-      importOperate(results: ImportData[]) {
+      async importOperate(results: ImportData[]) {
         const validResults = results.filter((item) => item["key*"]);
         if (validResults.length === 0) {
           if (results.length === 0) {
@@ -490,16 +495,14 @@ export default {
         }
 
         const listData: MyCreateOrEditTranslationParams[] = [];
-        const errors = {
-          noKey: [] as number[],
-        };
+        const noKeyErrors: number[] = [];
         const newTags: string[] = [];
         let tagMappings: any = {};
         let tags = [];
         let tagsStr = "";
         results.forEach((item, index) => {
           if (!item["key*"]) {
-            errors.noKey.push(index);
+            noKeyErrors.push(index);
             return;
           }
           tagsStr += item.tag + ",";
@@ -521,20 +524,15 @@ export default {
         });
         if (newTags.length) {
           // 将未存在的所有标签创建
-          const newTagsResult = [
-            { _id: "tag111", tagName: "111" },
-            { _id: "tag222", tagName: "222" },
-            { _id: "tag333", tagName: "333" },
-            { _id: "tag444", tagName: "444" },
-            { _id: "tag555", tagName: "555" },
-            { _id: "tag666", tagName: "666" },
-          ];
-          newTagsResult.forEach((item) => {
+          const newTagsResult = await InternationalizationService.batchCreateTranslationTag({ tagNames: newTags });
+          const { errcode } = newTagsResult.data;
+          if (errcode !== 0) return;
+
+          newTagsResult.data.data.forEach((item: TranslationTag) => {
             const { tagName, _id } = item;
             tagMappings[tagName] = _id;
+            data.translationTagsList.push(item);
           });
-          // 刷新翻译标签数据
-          getTranslationTags();
         }
 
         // 最后整理数据
@@ -548,25 +546,52 @@ export default {
               if (tag) tagIds.push(tagMappings[tag]);
             });
           const translation: CreateOrEditTranslationParams = {
-            key: item["key*"],
+            key: String(item["key*"]),
             value: {
-              zh: { isDefault: true, content: item["zh-CN*"] || "" },
-              en: { isDefault: false, content: item["en-US"] || "" },
+              zh: { isDefault: true, content: String(item["zh-CN*"]) || "" },
+              en: { isDefault: false, content: String(item["en-US"]) || "" },
             },
-            comment: description,
+            comment: String(description),
             tagIds: [...new Set(tagIds)],
             needPublish: false,
           };
           listData.push(translation);
         });
-        console.log(listData);
-        console.log(errors);
-        // ElMessage({
-        //   type: "error",
-        //   message: `${errors.noKey.map((item) => `第${item + 1}行`).join("、")}数据导入失败，原因：key缺失`,
-        //   duration: 3000,
-        // });
-        ElMessage("导入功能开发中...");
+        const { type } = data.importData;
+        let flag = 0;
+        if (type && type.length) {
+          flag = parseInt(String(type.reduce((a, b) => a + b)), 2);
+        }
+        const newTagsResult = await InternationalizationService.batchCreateTranslation({ flag, i18nConfigs: listData });
+        const { errcode, data: keyRepeatErrors } = newTagsResult.data;
+        if (errcode !== 0) return;
+
+        let errMsg = "";
+        if (noKeyErrors.length) {
+          errMsg = `${noKeyErrors
+            .map((item) => `<strong><i>第${item + 1}行</i></strong>`)
+            .join("、")}数据导入失败，原因：key缺失。<br>`;
+        }
+        if (keyRepeatErrors.length) {
+          errMsg += `key为<strong><i>${keyRepeatErrors
+            .map((item: MyCreateOrEditTranslationParams) => `${item.key}`)
+            .join("、")}</i></strong>的数据导入失败，原因：key已存在。`;
+        }
+        if (errMsg) {
+          ElMessageBox.alert(errMsg, "导入出错", {
+            confirmButtonText: "知道了",
+            showClose: false,
+            dangerouslyUseHTMLString: true,
+            callback: () => {
+              this.getData();
+            },
+          });
+        } else {
+          ElMessage.success("导入成功");
+          this.getData();
+        }
+        data.importLoading = false;
+        data.importPopupShow = false;
       },
 
       /** 导出 */
@@ -579,7 +604,7 @@ export default {
           excel.export_json_to_excel({
             header,
             data: result,
-            filename: `freelog_keys_${formatDate(new Date())}`,
+            filename: `freelog_keys_${formatDate(new Date(), "YYYYMMDDhhmm")}`,
             autoWidth: true,
             bookType: "xlsx",
           });
@@ -591,10 +616,8 @@ export default {
       filterKeys(keys: string[]) {
         return data.tableData.map((item: any) =>
           keys.map((key) => {
-            if (key === "zh") {
-              return item.value.zh?.content;
-            } else if (key === "en") {
-              return item.value.en?.content;
+            if (["zh", "en"].includes(key)) {
+              return item.value[key] ? item.value[key].content : "";
             } else if (key === "tag") {
               return item.i18nTags.map((tag: TranslationTag) => tag.tagName);
             } else {
@@ -654,15 +677,16 @@ export default {
         const { newTag } = data.setTagData;
         if (!newTag) return;
 
+        const object = data[type] as MyCreateOrEditTranslationParams | MySetTranslationTagParams;
         const existTag = data.translationTagsList.find((item) => item.tagName === newTag);
         if (existTag) {
-          if (data[type]?.tagIds.includes(existTag._id)) {
+          if (object.tagIds.includes(existTag._id)) {
             // 输入的标签已选择
             return;
           }
 
           // 输入的标签已存在且未选择，直接选择该标签
-          data[type]?.tagIds.push(existTag._id);
+          object.tagIds.push(existTag._id);
           data.setTagData.newTag = "";
           return;
         }
@@ -674,7 +698,7 @@ export default {
         if (errcode === 0) {
           const tag = result.data.data;
           data.translationTagsList.push(tag);
-          data[type]?.tagIds.push(tag._id);
+          object.tagIds.push(tag._id);
           data.setTagData.newTag = "";
         }
       },
@@ -714,6 +738,7 @@ export default {
       return true;
     };
 
+    data.searchData.tagIds = query.value.tag ? [query.value.tag] : [];
     methods.getData();
     getTranslationTags();
 

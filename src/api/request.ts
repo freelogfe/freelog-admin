@@ -419,12 +419,15 @@ export class InternationalizationService {
   }
 
   /** 批量创建翻译（用于导入） */
-  static batchCreateTranslation(data: CreateOrEditTranslationParams): Promise<HttpResponse> {
+  static batchCreateTranslation(data: {
+    flag: number;
+    i18nConfigs: CreateOrEditTranslationParams[];
+  }): Promise<HttpResponse> {
     return Axios("/v2/i18n/configs/createMulti", { method: "POST", data });
   }
 
   /** 设置标签 */
-  static setTranslationTag(data: {_ids: string[], tagIds: string[]}): Promise<HttpResponse> {
+  static setTranslationTag(data: { _ids: string[]; tagIds: string[] }): Promise<HttpResponse> {
     return Axios("/v2/i18n/configs/batchBindI18nTags", { method: "PUT", data });
   }
 
@@ -453,6 +456,11 @@ export class InternationalizationService {
   /** 创建翻译标签 */
   static createTranslationTag(data: { tagName: string }): Promise<HttpResponse> {
     return Axios("/v2/i18n/tags/create", { method: "POST", data });
+  }
+
+  /** 批量创建翻译标签 */
+  static batchCreateTranslationTag(data: { tagNames: string[] }): Promise<HttpResponse> {
+    return Axios("/v2/i18n/tags/createMulti", { method: "POST", data });
   }
 
   /** 编辑翻译标签 */
