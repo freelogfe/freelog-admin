@@ -10,19 +10,30 @@
       <el-button type="primary" @click="openTagPopup()">创建标签</el-button>
     </template>
 
+    <template v-slot:filterBar>
+      <div class="filter-controls">
+        <form-item label="关键字搜索">
+          <el-input
+            style="width: 250px"
+            v-model="keywords"
+            placeholder="请输入标签名称"
+            clearable
+            @keyup.enter="getData(false)"
+          />
+        </form-item>
+      </div>
+      <div class="filter-btns">
+        <el-button type="primary" @click="getData(false)">搜索</el-button>
+        <el-button @click="clearSearch()">重置</el-button>
+      </div>
+    </template>
+
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
         <el-table-column label="标签" width="100">
           <template #default="scope">
-            <span
-              class="text-btn"
-              @click="
-                switchPage('/user/user-management', {
-                  tag: scope.row.tagId,
-                })
-              "
-            >
+            <span class="text-btn" @click="switchPage('/user/user-management', { tag: scope.row.tagId })">
               {{ scope.row.tag }}
             </span>
           </template>
@@ -93,6 +104,7 @@ export default {
     };
     const data = reactive({
       loading: false,
+      keywords: "",
       tableData: [] as UserTag[],
       selectedData: [] as UserTag[],
       operateData: {} as EditTag,
@@ -101,11 +113,22 @@ export default {
 
     const methods = {
       /** 获取页面数据 */
-      async getData() {
+      async getData(init = true) {
         data.loading = true;
         const result = await UserService.getUserTagsList();
-        data.tableData = result.data.data;
+        const listData = result.data.data;
+        if (init) {
+          data.tableData = listData;
+        } else {
+          data.tableData = data.keywords ? listData.filter((item: UserTag) => item.tag === data.keywords) : listData;
+        }
         data.loading = false;
+      },
+
+      /** 重置搜索 */
+      clearSearch() {
+        data.keywords = "";
+        this.getData();
       },
 
       /** 打开标签弹窗（有参数为编辑，反之为创建） */

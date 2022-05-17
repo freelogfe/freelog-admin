@@ -39,6 +39,7 @@ export interface LoginParams {
 
 /** 用户列表参数 */
 export interface UserListParams extends ListParams {
+  userId?: number;
   tagIds?: string;
   startRegisteredDate?: string | null;
   endRegisteredDate?: string | null;
@@ -89,6 +90,8 @@ export interface CodeRecordParams extends ListParams {
 
 /** 资源列表参数 */
 export interface ResourceListParams extends ListParams {
+  userId?: number;
+  resourceId?: string;
   resourceType?: string;
   omitResourceType?: string;
   isSelf?: 0 | 1;
@@ -142,6 +145,7 @@ export interface OperateResourceTagParams {
 
 /** 节点列表参数 */
 export interface NodeListParams extends ListParams {
+  nodeId?: number;
   status?: 0 | 1;
   tags?: string;
   ownerUserId?: number;
@@ -173,6 +177,8 @@ export interface OperateNodeParams {
 
 /** 展品列表参数 */
 export interface ExhibitListParams extends ListParams {
+  nodeId?: number;
+  presentableId?: string;
   resourceType?: string;
   tags?: string;
   startCreatedDate?: string | null;

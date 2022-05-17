@@ -12,66 +12,63 @@
     </template>
 
     <template v-slot:filterBar>
-      <form-item label="关键字搜索">
-        <el-input
-          v-model="searchData.keywords"
-          placeholder="请输入用户名、资源名"
-          clearable
-          @keyup.enter="getData(true)"
-        />
-      </form-item>
-      <form-item label="标签">
-        <el-select v-model="searchData.selectedTags" multiple placeholder="请选择标签" clearable>
-          <el-option v-for="item in resourceTagsList" :key="item" :value="item" />
-        </el-select>
-      </form-item>
-      <form-item label="类型">
-        <el-select v-model="searchData.resourceType" placeholder="请选择类型" clearable>
-          <el-option v-for="item in resourceTypeList" :key="item" :value="item" />
-        </el-select>
-      </form-item>
-      <form-item label="创建时间">
-        <el-date-picker
-          v-model="searchData.createDate"
-          type="daterange"
-          unlink-panels
-          range-separator="-"
-          format="YYYY/MM/DD"
-          start-placeholder="起始日期"
-          end-placeholder="截止日期"
-          :shortcuts="dateRangeShortcuts"
-        />
-      </form-item>
-      <form-item label="排序">
-        <el-select v-model="searchData.sort" placeholder="请选择排序方式" clearable>
-          <el-option v-for="item in sortTypeList" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </form-item>
-      <form-item>
+      <div class="filter-controls">
+        <form-item label="关键字搜索">
+          <el-input
+            v-model="searchData.keywords"
+            placeholder="请输入用户名、资源名"
+            clearable
+            @keyup.enter="getData(true)"
+          />
+        </form-item>
+        <form-item label="标签">
+          <el-select v-model="searchData.selectedTags" multiple placeholder="请选择标签" clearable>
+            <el-option v-for="item in resourceTagsList" :key="item" :value="item" />
+          </el-select>
+        </form-item>
+        <form-item label="类型">
+          <el-select v-model="searchData.resourceType" placeholder="请选择类型" clearable>
+            <el-option v-for="item in resourceTypeList" :key="item" :value="item" />
+          </el-select>
+        </form-item>
+        <form-item label="创建时间">
+          <el-date-picker
+            v-model="searchData.createDate"
+            type="daterange"
+            unlink-panels
+            range-separator="-"
+            format="YYYY/MM/DD"
+            start-placeholder="起始日期"
+            end-placeholder="截止日期"
+            :shortcuts="dateRangeShortcuts"
+          />
+        </form-item>
+        <form-item label="排序">
+          <el-select v-model="searchData.sort" placeholder="请选择排序方式" clearable>
+            <el-option v-for="item in sortTypeList" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </form-item>
+      </div>
+      <div class="filter-btns">
         <el-button type="primary" @click="getData(true)">搜索</el-button>
         <el-button @click="clearSearch()">重置</el-button>
-      </form-item>
+      </div>
     </template>
 
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
-        <el-table-column label="资源" width="250" show-overflow-tooltip>
+        <el-table-column label="资源" width="250">
           <template #default="scope">
-            <span
-              class="text-btn"
-              @click="
-                switchPage('/user/user-management', {
-                  keywords: scope.row.username,
-                })
-              "
-            >
-              {{ scope.row.username }}
-            </span>
-            /
-            <span class="text-btn" @click="openResourceDetail(scope.row.resourceId)">
-              {{ scope.row.resourceNameAbbreviation }}
-            </span>
+            <div class="resource-name">
+              <span class="text-btn" @click="switchPage('/user/user-management', { userId: scope.row.userId })">
+                {{ scope.row.username }}
+              </span>
+              <span class="divider">/</span>
+              <span class="text-btn" @click="openResourceDetail(scope.row.resourceId)">
+                {{ scope.row.resourceNameAbbreviation }}
+              </span>
+            </div>
           </template>
         </el-table-column>
         <el-table-column label="标签" width="250">
@@ -108,12 +105,7 @@
           <template #default="scope">
             <span
               class="text-btn"
-              @click="
-                switchPage('/contract/contract-management', {
-                  keywordsType: 3,
-                  keywords: scope.row.resourceName,
-                })
-              "
+              @click="switchPage('/contract/contract-management', { licensorId: scope.row.resourceId })"
             >
               {{ scope.row.signCount }}
             </span>
@@ -272,13 +264,7 @@
         >
           <div class="version">
             <div class="version-name" :title="item.version">{{ item.version }}</div>
-            <a
-              class="icon-btn"
-              title="下载"
-              :href="`/api/v2/resources/versions/${currentVersionData.versionId}/internalClientDownload`"
-              download
-              @click.stop
-            >
+            <a class="icon-btn" title="下载" :href="downloadUrl(item.versionId)" download @click.stop>
               <el-icon><download /></el-icon>
             </a>
           </div>
@@ -375,6 +361,10 @@ export default {
         { value: "createDate:1", label: "创建时间升序" },
         { value: "createDate:-1", label: "创建时间降序" },
       ],
+      downloadUrl: (versionId: string) =>
+        `${
+          process.env.NODE_ENV === "development" ? "/api" : process.env.VUE_APP_BASE_API
+        }/v2/resources/versions/${versionId}/internalClientDownload`,
     };
     const data = reactive({
       loading: false,
@@ -540,6 +530,7 @@ export default {
           data.setTagData.resources = data.selectedData;
           data.setTagData.tags = [];
         }
+        data.setTagData.newTag = "";
         data.setTagPopupShow = true;
       },
 
@@ -551,13 +542,13 @@ export default {
         const existTag = data.resourceTagsList.find((item) => item === newTag);
 
         if (existTag) {
-          if (data.setTagData.tags.includes(existTag.tagId)) {
+          if (data.setTagData.tags.includes(newTag)) {
             // 输入的标签已选择
             return;
           }
 
           // 输入的标签已存在且未选择，直接选择该标签
-          data.setTagData.tags.push(existTag.tagId);
+          data.setTagData.tags.push(newTag);
           data.setTagData.newTag = "";
           return;
         }
@@ -683,6 +674,8 @@ export default {
     };
 
     data.searchData.keywords = query.value.keywords;
+    data.searchData.userId = query.value.userId;
+    data.searchData.resourceId = query.value.resourceId;
     if (query.value.tag) data.searchData.selectedTags = [query.value.tag];
     methods.getData(true);
     getResourceTags();
@@ -702,6 +695,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.resource-name {
+  word-break: break-all;
+
+  .divider {
+    margin: 0 3px;
+  }
+}
+
 .tag-area {
   width: 100%;
   border-radius: 4px;

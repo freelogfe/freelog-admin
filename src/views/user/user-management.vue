@@ -15,37 +15,39 @@
     </template>
 
     <template v-slot:filterBar>
-      <form-item label="关键字搜索">
-        <el-input
-          style="width: 250px"
-          v-model="searchData.keywords"
-          placeholder="请输入用户名、手机号、邮箱"
-          clearable
-          @keyup.enter="getData(true)"
-        />
-      </form-item>
-      <form-item label="标签">
-        <el-select v-model="searchData.tags" multiple placeholder="请选择标签" clearable>
-          <el-option v-for="item in userTagsList" :key="item.tagId" :label="item.tag" :value="item.tagId" />
-        </el-select>
-      </form-item>
-      <form-item label="注册时间">
-        <el-date-picker
-          v-model="searchData.registerDate"
-          type="daterange"
-          unlink-panels
-          range-separator="-"
-          format="YYYY/MM/DD"
-          value-format="YYYY-MM-DD"
-          start-placeholder="起始日期"
-          end-placeholder="截止日期"
-          :shortcuts="dateRangeShortcuts"
-        />
-      </form-item>
-      <form-item>
+      <div class="filter-controls">
+        <form-item label="关键字搜索">
+          <el-input
+            style="width: 250px"
+            v-model="searchData.keywords"
+            placeholder="请输入用户名、手机号、邮箱"
+            clearable
+            @keyup.enter="getData(true)"
+          />
+        </form-item>
+        <form-item label="标签">
+          <el-select v-model="searchData.tags" multiple placeholder="请选择标签" clearable>
+            <el-option v-for="item in userTagsList" :key="item.tagId" :label="item.tag" :value="item.tagId" />
+          </el-select>
+        </form-item>
+        <form-item label="注册时间">
+          <el-date-picker
+            v-model="searchData.registerDate"
+            type="daterange"
+            unlink-panels
+            range-separator="-"
+            format="YYYY/MM/DD"
+            value-format="YYYY-MM-DD"
+            start-placeholder="起始日期"
+            end-placeholder="截止日期"
+            :shortcuts="dateRangeShortcuts"
+          />
+        </form-item>
+      </div>
+      <div class="filter-btns">
         <el-button type="primary" @click="getData(true)">搜索</el-button>
         <el-button @click="clearSearch()">重置</el-button>
-      </form-item>
+      </div>
     </template>
 
     <template v-slot:table>
@@ -77,28 +79,14 @@
         </el-table-column>
         <el-table-column label="发布资源数" width="120" align="right">
           <template #default="scope">
-            <span
-              class="text-btn"
-              @click="
-                switchPage('/resource/resource-management', {
-                  keywords: scope.row.username,
-                })
-              "
-            >
+            <span class="text-btn" @click="switchPage('/resource/resource-management', { userId: scope.row.userId })">
               {{ scope.row.createdResourceCount }}
             </span>
           </template>
         </el-table-column>
         <el-table-column label="运营节点数" width="120" align="right">
           <template #default="scope">
-            <span
-              class="text-btn"
-              @click="
-                switchPage('/node/node-management', {
-                  userId: scope.row.userId,
-                })
-              "
-            >
+            <span class="text-btn" @click="switchPage('/node/node-management', { userId: scope.row.userId })">
               {{ scope.row.createdNodeCount }}
             </span>
           </template>
@@ -107,12 +95,7 @@
           <template #default="scope">
             <span
               class="text-btn"
-              @click="
-                switchPage('/contract/contract-management', {
-                  keywordsType: 4,
-                  keywords: scope.row.username,
-                })
-              "
+              @click="switchPage('/contract/contract-management', { licenseeId: scope.row.userId })"
             >
               {{ scope.row.signedContractCount }}
             </span>
@@ -122,11 +105,7 @@
           <template #default="scope">
             <span
               class="text-btn"
-              @click="
-                switchPage('/trade/trade-record-management', {
-                  relatedAccountName: scope.row.username,
-                })
-              "
+              @click="switchPage('/trade/trade-record-management', { relatedAccountName: scope.row.username })"
             >
               {{ scope.row.tradeCount }}
             </span>
@@ -442,6 +421,7 @@ export default {
           data.setTagData.users = data.selectedData;
           data.setTagData.tags = [];
         }
+        data.setTagData.newTag = "";
         data.setTagPopupShow = true;
       },
 
@@ -542,6 +522,7 @@ export default {
     };
 
     data.searchData.keywords = query.value.keywords;
+    data.searchData.userId = query.value.userId;
     data.searchData.tags = query.value.tag ? [Number(query.value.tag)] : [];
     methods.getData(true);
     getUserTags();

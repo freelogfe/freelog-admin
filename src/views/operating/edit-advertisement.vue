@@ -16,7 +16,7 @@
         <el-radio-group v-model="formData.place">
           <el-radio :label="1">首页，顶部公告栏</el-radio>
           <el-radio :label="2">首页，右侧浮窗</el-radio>
-          <el-radio :label="3">浏览页，右侧Banner</el-radio>
+          <el-radio :label="3">概览页，右侧Banner</el-radio>
           <el-radio :label="4">发现页，顶部Banner</el-radio>
         </el-radio-group>
       </form-item>
@@ -48,10 +48,11 @@
       <form-item label="素材">
         <el-upload
           class="cover-uploader"
-          action="/api/v2/storages/files/uploadImage"
+          :action="uploadAction"
           :show-file-list="false"
           :on-success="uploadSuccess"
           :before-upload="beforeUpload"
+          with-credentials
         >
           <img class="cover" v-if="formData.cover" :src="formData.cover" />
           <el-icon class="plus-icon" v-else><Plus /></el-icon>
@@ -124,6 +125,9 @@ export default {
     const { query, switchPage } = useMyRouter();
     const assetsData = {
       statusMappings: { 1: "已排期", 2: "投放中", 3: "已结束", 4: "已停用" },
+      uploadAction: `${
+        process.env.NODE_ENV === "development" ? "/api" : process.env.VUE_APP_BASE_API
+      }/v2/storages/files/uploadImage`,
     };
     const data = reactive({
       loading: false,
@@ -149,7 +153,7 @@ export default {
               formData.linkType = 2;
             }
             data.formData = { ...formData };
-            getStatus(result.data.data);
+            getStatus();
           }
         } else {
           // 新建
@@ -178,7 +182,7 @@ export default {
         const { _id } = data.formData;
         if (!_id) return;
 
-        const result = await ActivitiesService.operateAds({_id, status: type});
+        const result = await ActivitiesService.operateAds({ _id, status: type });
         const { errcode } = result.data;
         if (errcode === 0) {
           const msg = type === 4 ? "停用广告成功" : "启用广告成功";
@@ -186,7 +190,7 @@ export default {
           const newData = await ActivitiesService.getAdsData(query.value.id);
           data.formData.status = newData.data.data.status;
           clearTimeout(data.timeout);
-          getStatus(data.formData);
+          getStatus();
         }
       },
 
@@ -256,22 +260,29 @@ export default {
     };
 
     /** 获取广告状态提示 */
-    const getStatus = (formData: MyCreateOrEditAds) => {
-      const { status, persist, startTime = "", limitTime = "" } = formData;
+    const getStatus = () => {
+      const now = new Date().getTime();
+      const { status, persist, startTime = "", limitTime = "" } = data.formData;
       data.statusTip = assetsData.statusMappings[status as 1 | 2 | 3 | 4];
       if (status === 1) {
-        data.statusTip += persist ? "" : `（距离结束还有${differenceTime(startTime)}）`;
-        getStatusOneSecond(formData);
+        data.statusTip += persist ? "" : `（距离开始还有${differenceTime(startTime)}）`;
+        if (new Date(startTime).getTime() - now < 1000) {
+          data.formData.status = 2;
+        }
+        getStatusOneSecond();
       } else if (status === 2) {
         data.statusTip += persist ? "" : `（距离结束还有${differenceTime(limitTime)}）`;
-        getStatusOneSecond(formData);
+        if (new Date(limitTime).getTime() - now < 1000) {
+          data.formData.status = 3;
+        }
+        getStatusOneSecond();
       }
     };
 
     /** 一秒后更新广告状态提示 */
-    const getStatusOneSecond = (formData: MyCreateOrEditAds) => {
+    const getStatusOneSecond = () => {
       data.timeout = setTimeout(() => {
-        getStatus(formData);
+        getStatus();
       }, 1000);
     };
 

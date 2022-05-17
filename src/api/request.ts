@@ -1,7 +1,6 @@
 /**
  * 服务器接口
  */
-
 import {
   ListParams,
   ActivityListParams,

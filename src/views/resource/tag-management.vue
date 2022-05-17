@@ -11,28 +11,30 @@
     </template>
 
     <template v-slot:filterBar>
-      <form-item label="关键字搜索">
-        <el-input v-model="searchData.keywords" placeholder="请输入标签名" clearable @keyup.enter="getData(true)" />
-      </form-item>
-      <form-item label="类型">
-        <el-select v-model="searchData.tagType" placeholder="请选择类型" clearable>
-          <el-option v-for="item in tagTypeMapping" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </form-item>
-      <form-item label="操作权限">
-        <el-select v-model="searchData.authority" placeholder="请选择操作权限" clearable>
-          <el-option v-for="item in authorityMapping" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </form-item>
-      <form-item label="资源类型">
-        <el-select v-model="searchData.resourceType" placeholder="请选择资源类型" clearable>
-          <el-option v-for="item in resourceTypeList" :key="item" :value="item" />
-        </el-select>
-      </form-item>
-      <form-item>
+      <div class="filter-controls">
+        <form-item label="关键字搜索">
+          <el-input v-model="searchData.keywords" placeholder="请输入标签名" clearable @keyup.enter="getData(true)" />
+        </form-item>
+        <form-item label="类型">
+          <el-select v-model="searchData.tagType" placeholder="请选择类型" clearable>
+            <el-option v-for="item in tagTypeMapping" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </form-item>
+        <form-item label="操作权限">
+          <el-select v-model="searchData.authority" placeholder="请选择操作权限" clearable>
+            <el-option v-for="item in authorityMapping" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </form-item>
+        <form-item label="资源类型">
+          <el-select v-model="searchData.resourceType" placeholder="请选择资源类型" clearable>
+            <el-option v-for="item in resourceTypeList" :key="item" :value="item" />
+          </el-select>
+        </form-item>
+      </div>
+      <div class="filter-btns">
         <el-button type="primary" @click="getData(true)">搜索</el-button>
         <el-button @click="clearSearch()">重置</el-button>
-      </form-item>
+      </div>
     </template>
 
     <template v-slot:table>
@@ -40,14 +42,7 @@
         <el-table-column type="selection" />
         <el-table-column label="标签" min-width="100" show-overflow-tooltip>
           <template #default="scope">
-            <span
-              class="text-btn"
-              @click="
-                switchPage('/resource/resource-management', {
-                  tag: scope.row.tagName,
-                })
-              "
-            >
+            <span class="text-btn" @click="switchPage('/resource/resource-management', { tag: scope.row.tagName })">
               {{ scope.row.tagName }}
             </span>
           </template>

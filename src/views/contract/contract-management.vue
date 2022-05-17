@@ -2,63 +2,65 @@
 <template>
   <list-template>
     <template v-slot:filterBar>
-      <form-item label="关键字搜索">
-        <el-input
-          style="width: 350px"
-          v-model="searchData.keywords"
-          :placeholder="
-            searchData.keywordsType
-              ? '请输入' + keywordsTypeList.find((item) => item.value === searchData.keywordsType).label
-              : '请先选择关键字类型'
-          "
-          clearable
-          @keyup.enter="getData(true)"
-        >
-          <template #prepend>
-            <el-select v-model="searchData.keywordsType" placeholder="请选择类型" style="width: 120px">
-              <el-option v-for="item in keywordsTypeList" :key="item.value" :label="item.label" :value="item.value" />
-            </el-select>
-          </template>
-        </el-input>
-      </form-item>
-      <form-item label="类型">
-        <el-select v-model="searchData.subjectType" placeholder="请选择类型" clearable>
-          <el-option v-for="item in subjectTypeList" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </form-item>
-      <form-item label="状态">
-        <el-select v-model="searchData.compositeState" placeholder="请选择状态" clearable>
-          <el-option
-            v-for="item in statusMapping.filter((item) => item.value !== 7)"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
+      <div class="filter-controls">
+        <form-item label="关键字搜索">
+          <el-input
+            style="width: 350px"
+            v-model="searchData.keywords"
+            :placeholder="
+              searchData.keywordsType
+                ? '请输入' + keywordsTypeList.find((item) => item.value === searchData.keywordsType).label
+                : '请先选择关键字类型'
+            "
+            clearable
+            @keyup.enter="getData(true)"
+          >
+            <template #prepend>
+              <el-select v-model="searchData.keywordsType" placeholder="请选择类型" style="width: 120px">
+                <el-option v-for="item in keywordsTypeList" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
+            </template>
+          </el-input>
+        </form-item>
+        <form-item label="类型">
+          <el-select v-model="searchData.subjectType" placeholder="请选择类型" clearable>
+            <el-option v-for="item in subjectTypeList" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </form-item>
+        <form-item label="状态">
+          <el-select v-model="searchData.compositeState" placeholder="请选择状态" clearable>
+            <el-option
+              v-for="item in statusMapping.filter((item) => item.value !== 7)"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </form-item>
+        <form-item label="签约时间">
+          <el-date-picker
+            v-model="searchData.signDate"
+            type="daterange"
+            unlink-panels
+            range-separator="-"
+            format="YYYY/MM/DD"
+            start-placeholder="起始日期"
+            end-placeholder="截止日期"
+            :shortcuts="dateRangeShortcuts"
           />
-        </el-select>
-      </form-item>
-      <form-item label="签约时间">
-        <el-date-picker
-          v-model="searchData.signDate"
-          type="daterange"
-          unlink-panels
-          range-separator="-"
-          format="YYYY/MM/DD"
-          start-placeholder="起始日期"
-          end-placeholder="截止日期"
-          :shortcuts="dateRangeShortcuts"
-        />
-      </form-item>
-      <form-item>
+        </form-item>
+      </div>
+      <div class="filter-btns">
         <el-button type="primary" @click="getData(true)">搜索</el-button>
         <el-button @click="clearSearch()">重置</el-button>
-      </form-item>
+      </div>
     </template>
 
     <template v-slot:table>
       <el-table :data="tableData" stripe v-loading="loading">
         <el-table-column label="标的物" width="250">
           <template #default="scope">
-            <subject-name :type="scope.row.subjectType" :name="scope.row.subjectName" />
+            <subject-name :type="scope.row.subjectType" :name="scope.row.subjectName" :id="scope.row.subjectId" />
           </template>
         </el-table-column>
         <el-table-column label="封面" width="120">
@@ -83,15 +85,12 @@
             <subject-name
               :type="scope.row.subjectType"
               :name="scope.row.licensorName"
+              :id="scope.row.licensorId"
               v-if="scope.row.subjectType === 1"
             />
             <span
               class="text-btn"
-              @click="
-                switchPage('/node/node-management', {
-                  keywords: scope.row.licensorName,
-                })
-              "
+              @click="switchPage('/node/node-management', { nodeId: scope.row.licensorId })"
               v-else-if="scope.row.subjectType === 2"
             >
               {{ scope.row.licensorName }}
@@ -103,26 +102,19 @@
             <subject-name
               :type="scope.row.subjectType"
               :name="scope.row.licenseeName"
+              :id="scope.row.licenseeId"
               v-if="scope.row.licenseeIdentityType === 1"
             />
             <span
               class="text-btn"
-              @click="
-                switchPage('/node/node-management', {
-                  keywords: scope.row.licenseeName,
-                })
-              "
+              @click="switchPage('/node/node-management', { nodeId: scope.row.licenseeId })"
               v-else-if="scope.row.licenseeIdentityType === 2"
             >
               {{ scope.row.licenseeName }}
             </span>
             <span
               class="text-btn"
-              @click="
-                switchPage('/user/user-management', {
-                  keywords: scope.row.licenseeName,
-                })
-              "
+              @click="switchPage('/user/user-management', { userId: scope.row.licenseeId })"
               v-else-if="scope.row.licenseeIdentityType === 3"
             >
               {{ scope.row.licenseeName }}
@@ -389,6 +381,9 @@ export default {
 
     if (query.value.keywordsType) data.searchData.keywordsType = Number(query.value.keywordsType) as 1 | 2 | 3 | 4;
     data.searchData.keywords = query.value.keywords;
+    data.searchData.licensorId = query.value.licensorId;
+    data.searchData.licenseeId = query.value.licenseeId;
+    data.searchData.subjectIds = query.value.subjectIds;
     methods.getData(true);
 
     return {

@@ -6,23 +6,25 @@
     </template>
 
     <template v-slot:filterBar>
-      <form-item label="关键字搜索">
-        <el-input v-model="searchData.keywords" placeholder="请输入广告名称" clearable @keyup.enter="getData(true)" />
-      </form-item>
-      <form-item label="位置">
-        <el-select v-model="searchData.place">
-          <el-option v-for="item in placeOptions" :key="item.value" :value="item.value" :label="item.label" />
-        </el-select>
-      </form-item>
-      <form-item label="状态">
-        <el-select v-model="searchData.status" placeholder="请选择状态" clearable>
-          <el-option v-for="item in statusOptions" :key="item.value" :value="item.value" :label="item.label" />
-        </el-select>
-      </form-item>
-      <form-item>
+      <div class="filter-controls">
+        <form-item label="关键字搜索">
+          <el-input v-model="searchData.keywords" placeholder="请输入广告名称" clearable @keyup.enter="getData(true)" />
+        </form-item>
+        <form-item label="位置">
+          <el-select v-model="searchData.place">
+            <el-option v-for="item in placeOptions" :key="item.value" :value="item.value" :label="item.label" />
+          </el-select>
+        </form-item>
+        <form-item label="状态">
+          <el-select v-model="searchData.status" placeholder="请选择状态" clearable>
+            <el-option v-for="item in statusOptions" :key="item.value" :value="item.value" :label="item.label" />
+          </el-select>
+        </form-item>
+      </div>
+      <div class="filter-btns">
         <el-button type="primary" @click="getData(true)">搜索</el-button>
         <el-button @click="clearSearch()">重置</el-button>
-      </form-item>
+      </div>
     </template>
 
     <template v-slot:table>
@@ -62,7 +64,11 @@
         </el-table-column>
         <el-table-column label="跳转页" min-width="300">
           <template #default="scope">
-            <span class="text-btn" @click="openPage(scope.row.linkActivity)" v-if="scope.row.linkActivityId">
+            <span
+              class="text-btn"
+              @click="openPage(`${consoleUrl}/activity/${scope.row.linkActivityId}`)"
+              v-if="scope.row.linkActivityId"
+            >
               {{ scope.row.linkActivityTitle }}
             </span>
             <span class="text-btn" @click="openPage(scope.row.link)" v-else>
@@ -138,7 +144,7 @@ export default {
       placeOptions: [
         { value: 1, label: "首页，顶部公告栏" },
         { value: 2, label: "首页，右侧浮窗" },
-        { value: 3, label: "浏览页，右侧Banner" },
+        { value: 3, label: "概览页，右侧Banner" },
         { value: 4, label: "发现页，顶部Banner" },
       ],
       statusOptions: [
@@ -147,6 +153,7 @@ export default {
         { value: 3, label: "已结束" },
         { value: 4, label: "已停用" },
       ],
+      consoleUrl: (process.env.VUE_APP_BASE_API as string).replace("qi", "www"),
     };
     const data = reactive({
       loading: false,

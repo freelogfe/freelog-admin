@@ -50,10 +50,11 @@
       <form-item label="活动海报">
         <el-upload
           class="cover-uploader"
-          action="/api/v2/storages/files/uploadImage"
+          :action="uploadAction"
           :show-file-list="false"
           :on-success="uploadSuccess"
           :before-upload="beforeUpload"
+          with-credentials
         >
           <img class="cover" v-if="formData.cover" :src="formData.cover" />
           <el-icon class="plus-icon" v-else><Plus /></el-icon>
@@ -102,7 +103,11 @@ export default {
 
   setup() {
     const { query, switchPage } = useMyRouter();
-    const assetsData = {};
+    const asstesData = {
+      uploadAction: `${
+        process.env.NODE_ENV === "development" ? "/api" : process.env.VUE_APP_BASE_API
+      }/v2/storages/files/uploadImage`,
+    };
     const data = reactive({
       loading: false,
       formData: {} as MyCreateOrEditActivity,
@@ -146,7 +151,7 @@ export default {
         data.formData.isDraft = type === 1;
         data.formData.title = myTitle || "未命名活动";
         if (publishType === 1) {
-          data.formData.publishDate = formatDate(new Date());
+          data.formData.publishDate = formatDate(new Date().getTime() + 1000 * 5);
         } else if (publishType === 2 && myPublishDate) {
           data.formData.publishDate = formatDate(myPublishDate);
         }
@@ -260,8 +265,8 @@ export default {
     methods.getData();
 
     return {
+      ...asstesData,
       query,
-      ...assetsData,
       ...toRefs(data),
       ...methods,
     };

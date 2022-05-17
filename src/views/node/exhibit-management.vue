@@ -2,41 +2,43 @@
 <template>
   <list-template>
     <template v-slot:filterBar>
-      <form-item label="关键字搜索">
-        <el-input
-          style="width: 250px"
-          v-model="searchData.keywords"
-          placeholder="请输入展品名、节点名、资源名"
-          clearable
-          @keyup.enter="getData(true)"
-        />
-      </form-item>
-      <form-item label="资源类型">
-        <el-select v-model="searchData.resourceType" placeholder="请选择资源类型" clearable>
-          <el-option v-for="item in resourceTypeList" :key="item" :value="item" />
-        </el-select>
-      </form-item>
-      <form-item label="创建时间">
-        <el-date-picker
-          v-model="searchData.createDate"
-          type="daterange"
-          unlink-panels
-          range-separator="-"
-          format="YYYY/MM/DD"
-          start-placeholder="起始日期"
-          end-placeholder="截止日期"
-          :shortcuts="dateRangeShortcuts"
-        />
-      </form-item>
-      <form-item label="排序">
-        <el-select v-model="searchData.sort" placeholder="请选择排序方式" clearable>
-          <el-option v-for="item in sortTypeList" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </form-item>
-      <form-item>
+      <div class="filter-controls">
+        <form-item label="关键字搜索">
+          <el-input
+            style="width: 250px"
+            v-model="searchData.keywords"
+            placeholder="请输入展品名、节点名、资源名"
+            clearable
+            @keyup.enter="getData(true)"
+          />
+        </form-item>
+        <form-item label="资源类型">
+          <el-select v-model="searchData.resourceType" placeholder="请选择资源类型" clearable>
+            <el-option v-for="item in resourceTypeList" :key="item" :value="item" />
+          </el-select>
+        </form-item>
+        <form-item label="创建时间">
+          <el-date-picker
+            v-model="searchData.createDate"
+            type="daterange"
+            unlink-panels
+            range-separator="-"
+            format="YYYY/MM/DD"
+            start-placeholder="起始日期"
+            end-placeholder="截止日期"
+            :shortcuts="dateRangeShortcuts"
+          />
+        </form-item>
+        <form-item label="排序">
+          <el-select v-model="searchData.sort" placeholder="请选择排序方式" clearable>
+            <el-option v-for="item in sortTypeList" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </form-item>
+      </div>
+      <div class="filter-btns">
         <el-button type="primary" @click="getData(true)">搜索</el-button>
         <el-button @click="clearSearch()">重置</el-button>
-      </form-item>
+      </div>
     </template>
 
     <template v-slot:table>
@@ -55,21 +57,18 @@
         </el-table-column>
         <el-table-column label="所属节点" width="150" show-overflow-tooltip>
           <template #default="scope">
-            <span
-              class="text-btn"
-              @click="
-                switchPage('/node/node-management', {
-                  keywords: scope.row.nodeName,
-                })
-              "
-            >
+            <span class="text-btn" @click="switchPage('/node/node-management', { nodeId: scope.row.nodeId })">
               {{ scope.row.nodeName }}
             </span>
           </template>
         </el-table-column>
         <el-table-column label="关联资源" width="250" show-overflow-tooltip>
           <template #default="scope">
-            <subject-name :type="1" :name="scope.row.resourceInfo.resourceName" />
+            <subject-name
+              :type="1"
+              :name="scope.row.resourceInfo.resourceName"
+              :id="scope.row.resourceInfo.resourceId"
+            />
           </template>
         </el-table-column>
         <el-table-column label="资源类型" width="100" show-overflow-tooltip>
@@ -79,12 +78,7 @@
           <template #default="scope">
             <span
               class="text-btn"
-              @click="
-                switchPage('/contract/contract-management', {
-                  keywordsType: 3,
-                  keywords: scope.row.presentableName,
-                })
-              "
+              @click="switchPage('/contract/contract-management', { subjectIds: scope.row.presentableId })"
             >
               {{ scope.row.signCount }}
             </span>
@@ -96,7 +90,7 @@
         </el-table-column>
         <el-table-column label="状态">
           <template #default="scope">{{
-            statusMapping.find((item) => item.value === scope.row.status).label
+            statusMapping.find((item) => item.value === scope.row.onlineStatus).label
           }}</template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
@@ -265,7 +259,8 @@ export default {
       },
     };
 
-    data.searchData.keywords = query.value.keywords;
+    data.searchData.nodeId = query.value.nodeId;
+    data.searchData.presentableId = query.value.presentableId;
     methods.getData(true);
 
     return {

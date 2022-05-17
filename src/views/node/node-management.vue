@@ -11,41 +11,43 @@
     </template>
 
     <template v-slot:filterBar>
-      <form-item label="关键字搜索">
-        <el-input
-          v-model="searchData.keywords"
-          placeholder="请输入节点名、地址"
-          clearable
-          @keyup.enter="getData(true)"
-        />
-      </form-item>
-      <form-item label="标签">
-        <el-select v-model="searchData.selectedTags" multiple placeholder="请选择标签" clearable>
-          <el-option v-for="item in nodeTagsList" :key="item" :value="item" />
-        </el-select>
-      </form-item>
-      <form-item label="创建时间">
-        <el-date-picker
-          v-model="searchData.createDate"
-          type="daterange"
-          unlink-panels
-          range-separator="-"
-          format="YYYY/MM/DD"
-          start-placeholder="起始日期"
-          end-placeholder="截止日期"
-          :shortcuts="dateRangeShortcuts"
-        />
-      </form-item>
-      <form-item>
+      <div class="filter-controls">
+        <form-item label="关键字搜索">
+          <el-input
+            v-model="searchData.keywords"
+            placeholder="请输入节点名、地址"
+            clearable
+            @keyup.enter="getData(true)"
+          />
+        </form-item>
+        <form-item label="标签">
+          <el-select v-model="searchData.selectedTags" multiple placeholder="请选择标签" clearable>
+            <el-option v-for="item in nodeTagsList" :key="item" :value="item" />
+          </el-select>
+        </form-item>
+        <form-item label="创建时间">
+          <el-date-picker
+            v-model="searchData.createDate"
+            type="daterange"
+            unlink-panels
+            range-separator="-"
+            format="YYYY/MM/DD"
+            start-placeholder="起始日期"
+            end-placeholder="截止日期"
+            :shortcuts="dateRangeShortcuts"
+          />
+        </form-item>
+      </div>
+      <div class="filter-btns">
         <el-button type="primary" @click="getData(true)">搜索</el-button>
         <el-button @click="clearSearch()">重置</el-button>
-      </form-item>
+      </div>
     </template>
 
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
-        <el-table-column label="节点" width="150" show-overflow-tooltip>
+        <el-table-column label="节点" width="200" show-overflow-tooltip>
           <template #default="scope">
             <span class="text-btn" @click="openNode(scope.row.nodeDomain)">
               {{ scope.row.nodeName }}
@@ -79,28 +81,14 @@
         </el-table-column>
         <el-table-column label="用户" width="200" show-overflow-tooltip>
           <template #default="scope">
-            <span
-              class="text-btn"
-              @click="
-                switchPage('/user/user-management', {
-                  keywords: scope.row.ownerUserName,
-                })
-              "
-            >
+            <span class="text-btn" @click="switchPage('/user/user-management', { userId: scope.row.ownerUserId })">
               {{ scope.row.ownerUserName }}
             </span>
           </template>
         </el-table-column>
         <el-table-column label="运营展品数" width="120" align="right">
           <template #default="scope">
-            <span
-              class="text-btn"
-              @click="
-                switchPage('/node/exhibit-management', {
-                  keywords: scope.row.nodeName,
-                })
-              "
-            >
+            <span class="text-btn" @click="switchPage('/node/exhibit-management', { nodeId: scope.row.nodeId })">
               {{ scope.row.exhibitCount }}
             </span>
           </template>
@@ -109,12 +97,7 @@
           <template #default="scope">
             <span
               class="text-btn"
-              @click="
-                switchPage('/contract/contract-management', {
-                  keywordsType: 3,
-                  keywords: scope.row.nodeName,
-                })
-              "
+              @click="switchPage('/contract/contract-management', { licensorId: scope.row.nodeId })"
             >
               {{ scope.row.signCount }}
             </span>
@@ -224,7 +207,7 @@
 import { reactive, toRefs } from "vue";
 import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
-import { ElMessageBox } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { NodeService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
 import { Operation, Edit, Close, Check } from "@element-plus/icons-vue";
@@ -257,9 +240,9 @@ export default {
     const assetsData = {
       statusMapping: [
         { value: 1, label: "下线" },
-        { value: 2, label: "上线" },
-        { value: 5, label: "封禁" },
-        { value: 6, label: "封禁" },
+        { value: 2, label: "正常" },
+        { value: 5, label: "封停" },
+        { value: 6, label: "封停" },
       ],
       domain: process.env.VUE_APP_BASE_API as string,
     };
@@ -380,6 +363,10 @@ export default {
       async operateConfirm(type: 1 | 2) {
         let result = null;
         if (type === 1) {
+          if (!data.operateData.reason) {
+            ElMessage("请选择封停原因");
+            return;
+          }
           result = await NodeService.banNode(data.operateData);
         } else {
           result = await NodeService.restoreNode(data.operateData.nodeId);
@@ -405,6 +392,7 @@ export default {
           data.setTagData.nodes = data.selectedData;
           data.setTagData.tags = [];
         }
+        data.setTagData.newTag = "";
         data.setTagPopupShow = true;
       },
 
@@ -416,13 +404,13 @@ export default {
         const existTag = data.nodeTagsList.find((item) => item === newTag);
 
         if (existTag) {
-          if (data.setTagData.tags.includes(existTag.tagId)) {
+          if (data.setTagData.tags.includes(newTag)) {
             // 输入的标签已选择
             return;
           }
 
           // 输入的标签已存在且未选择，直接选择该标签
-          data.setTagData.tags.push(existTag.tagId);
+          data.setTagData.tags.push(newTag);
           data.setTagData.newTag = "";
           return;
         }
@@ -512,6 +500,7 @@ export default {
 
     data.searchData.keywords = query.value.keywords;
     data.searchData.ownerUserId = query.value.userId;
+    data.searchData.nodeId = query.value.nodeId;
     if (query.value.tag) data.searchData.selectedTags = [query.value.tag];
     methods.getData(true);
     getNodeTags();

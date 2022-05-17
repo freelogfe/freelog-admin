@@ -9,24 +9,26 @@
     <template v-slot:barRight> </template>
 
     <template v-slot:filterBar>
-      <form-item label="关键字搜索">
-        <el-input
-          style="width: 250px"
-          v-model="searchData.keywords"
-          placeholder="请输入用户名、手机号、邮箱"
-          clearable
-          @keyup.enter="getData(true)"
-        />
-      </form-item>
-      <form-item label="状态">
-        <el-select v-model="searchData.status" clearable placeholder="请选择状态">
-          <el-option v-for="item in statusMapping" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </form-item>
-      <form-item>
+      <div class="filter-controls">
+        <form-item label="关键字搜索">
+          <el-input
+            style="width: 250px"
+            v-model="searchData.keywords"
+            placeholder="请输入用户名、手机号、邮箱"
+            clearable
+            @keyup.enter="getData(true)"
+          />
+        </form-item>
+        <form-item label="状态">
+          <el-select v-model="searchData.status" clearable placeholder="请选择状态">
+            <el-option v-for="item in statusMapping" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </form-item>
+      </div>
+      <div class="filter-btns">
         <el-button type="primary" @click="getData(true)">搜索</el-button>
         <el-button @click="clearSearch()">重置</el-button>
-      </form-item>
+      </div>
     </template>
 
     <template v-slot:table>

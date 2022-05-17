@@ -27,10 +27,8 @@
       </el-form>
       <div class="btns">
         <el-button class="normal-btn" type="primary" @click="login()">登录</el-button>
-        <el-button class="text-btn" type="text" @click="openPage('http://user.testfreelog.com/retrieve')">
-          忘记密码？
-        </el-button>
-        <el-button class="normal-btn" @click="openPage('http://user.testfreelog.com/logon')">注册</el-button>
+        <el-button class="text-btn" type="text" @click="openPage(`${userUrl}/retrieve`)">忘记密码？</el-button>
+        <el-button class="normal-btn" @click="openPage(`${userUrl}/logon`)">注册</el-button>
       </div>
     </div>
   </div>
@@ -57,6 +55,7 @@ export default {
     const { query, replacePage, openPage } = useMyRouter();
     const ruleFormRef = ref<FormInstance>();
     const assetsData = {
+      userUrl: (process.env.VUE_APP_BASE_API as string).replace("qi", "user"),
       rules: {
         loginName: [
           {

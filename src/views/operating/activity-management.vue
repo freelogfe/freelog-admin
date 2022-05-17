@@ -6,18 +6,20 @@
     </template>
 
     <template v-slot:filterBar>
-      <form-item label="关键字搜索">
-        <el-input v-model="searchData.keywords" placeholder="请输入活动名称" clearable @keyup.enter="getData(true)" />
-      </form-item>
-      <form-item label="状态">
-        <el-select v-model="searchData.status" placeholder="请选择状态" clearable>
-          <el-option v-for="item in statusOptions" :key="item.value" :value="item.value" :label="item.label" />
-        </el-select>
-      </form-item>
-      <form-item>
+      <div class="filter-controls">
+        <form-item label="关键字搜索">
+          <el-input v-model="searchData.keywords" placeholder="请输入活动名称" clearable @keyup.enter="getData(true)" />
+        </form-item>
+        <form-item label="状态">
+          <el-select v-model="searchData.status" placeholder="请选择状态" clearable>
+            <el-option v-for="item in statusOptions" :key="item.value" :value="item.value" :label="item.label" />
+          </el-select>
+        </form-item>
+      </div>
+      <div class="filter-btns">
         <el-button type="primary" @click="getData(true)">搜索</el-button>
         <el-button @click="clearSearch()">重置</el-button>
-      </form-item>
+      </div>
     </template>
 
     <template v-slot:table>
@@ -67,7 +69,12 @@
             </el-icon>
           </template>
           <template #default="scope">
-            <el-icon class="icon-btn" title="查看活动" @click="openPage(scope.row.link)" v-if="scope.row.link">
+            <el-icon
+              class="icon-btn"
+              title="查看活动"
+              @click="openPage(`${consoleUrl}/activity/${scope.row._id}`)"
+              v-if="scope.row.link"
+            >
               <connection />
             </el-icon>
             <el-icon class="icon-btn" title="编辑" @click="toEdit(scope.row._id)">
@@ -121,6 +128,7 @@ export default {
         { value: 1, label: "正常" },
         { value: 2, label: "暂停" },
       ],
+      consoleUrl: (process.env.VUE_APP_BASE_API as string).replace("qi", "www"),
     };
     const data = reactive({
       loading: false,

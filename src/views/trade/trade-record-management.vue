@@ -2,69 +2,76 @@
 <template>
   <list-template>
     <template v-slot:filterBar>
-      <form-item label="创建时间">
-        <el-date-picker
-          v-model="searchData.createDate"
-          type="daterange"
-          unlink-panels
-          range-separator="-"
-          format="YYYY/MM/DD"
-          start-placeholder="起始日期"
-          end-placeholder="截止日期"
-          :shortcuts="dateRangeShortcuts"
-        />
-      </form-item>
-      <form-item label="金额">
-        <el-input-number
-          style="width: 100px"
-          v-model="searchData.amountStartPoint"
-          placeholder="最小金额"
-          :min="0"
-          :max="searchData.amountEndPoint"
-          :controls="false"
-          @keyup.enter="getData(true)"
-        />
-        -
-        <el-input-number
-          style="width: 100px"
-          v-model="searchData.amountEndPoint"
-          placeholder="最大金额"
-          :min="searchData.amountStartPoint"
-          :controls="false"
-          @keyup.enter="getData(true)"
-        />
-      </form-item>
-      <form-item label="交易类型">
-        <el-select v-model="searchData.transactionType" placeholder="请选择交易类型" clearable>
-          <el-option v-for="item in transactionTypeList" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </form-item>
-      <form-item label="收款方">
-        <el-input
-          v-model="searchData.reciprocalAccountName"
-          placeholder="请输入收款方"
-          clearable
-          @keyup.enter="getData(true)"
-        />
-      </form-item>
-      <form-item label="付款方">
-        <el-input v-model="searchData.accountName" placeholder="请输入付款方" clearable @keyup.enter="getData(true)" />
-      </form-item>
-      <form-item label="交易状态">
-        <el-select v-model="searchData.status" placeholder="请选择交易状态" clearable>
-          <el-option v-for="item in statusList" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </form-item>
-      <form-item label="交易编号">
-        <el-input v-model="searchData.recordId" placeholder="请输入交易编号" clearable @keyup.enter="getData(true)" />
-      </form-item>
-      <form-item label="标的物">
-        <el-input v-model="searchData.keywords" placeholder="请输入标的物" clearable @keyup.enter="getData(true)" />
-      </form-item>
-      <form-item>
+      <div class="filter-controls">
+        <form-item label="创建时间">
+          <el-date-picker
+            v-model="searchData.createDate"
+            type="daterange"
+            unlink-panels
+            range-separator="-"
+            format="YYYY/MM/DD"
+            start-placeholder="起始日期"
+            end-placeholder="截止日期"
+            :shortcuts="dateRangeShortcuts"
+          />
+        </form-item>
+        <form-item label="金额">
+          <el-input-number
+            style="width: 100px"
+            v-model="searchData.amountStartPoint"
+            placeholder="最小金额"
+            :min="0"
+            :max="searchData.amountEndPoint"
+            :controls="false"
+            @keyup.enter="getData(true)"
+          />
+          -
+          <el-input-number
+            style="width: 100px"
+            v-model="searchData.amountEndPoint"
+            placeholder="最大金额"
+            :min="searchData.amountStartPoint"
+            :controls="false"
+            @keyup.enter="getData(true)"
+          />
+        </form-item>
+        <form-item label="交易类型">
+          <el-select v-model="searchData.transactionType" placeholder="请选择交易类型" clearable>
+            <el-option v-for="item in transactionTypeList" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </form-item>
+        <form-item label="收款方">
+          <el-input
+            v-model="searchData.reciprocalAccountName"
+            placeholder="请输入收款方"
+            clearable
+            @keyup.enter="getData(true)"
+          />
+        </form-item>
+        <form-item label="付款方">
+          <el-input
+            v-model="searchData.accountName"
+            placeholder="请输入付款方"
+            clearable
+            @keyup.enter="getData(true)"
+          />
+        </form-item>
+        <form-item label="交易状态">
+          <el-select v-model="searchData.status" placeholder="请选择交易状态" clearable>
+            <el-option v-for="item in statusList" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </form-item>
+        <form-item label="交易编号">
+          <el-input v-model="searchData.recordId" placeholder="请输入交易编号" clearable @keyup.enter="getData(true)" />
+        </form-item>
+        <form-item label="标的物">
+          <el-input v-model="searchData.keywords" placeholder="请输入标的物" clearable @keyup.enter="getData(true)" />
+        </form-item>
+      </div>
+      <div class="filter-btns">
         <el-button type="primary" @click="getData(true)">搜索</el-button>
         <el-button @click="clearSearch()">重置</el-button>
-      </form-item>
+      </div>
     </template>
 
     <template v-slot:table>

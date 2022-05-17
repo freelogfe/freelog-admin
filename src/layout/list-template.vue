@@ -61,7 +61,16 @@
 
     .filter-bar {
       display: flex;
-      flex-wrap: wrap;
+
+      :deep .filter-controls {
+        flex: 1;
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      :deep .filter-btns {
+        margin-top: 10px;
+      }
     }
 
     .table {

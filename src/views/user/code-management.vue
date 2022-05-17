@@ -16,35 +16,37 @@
     </template>
 
     <template v-slot:filterBar>
-      <form-item label="关键字搜索">
-        <el-input
-          v-model="searchData.keywords"
-          placeholder="请输入邀请码、邀请者"
-          clearable
-          @keyup.enter="getData(true)"
-        />
-      </form-item>
-      <form-item label="状态">
-        <el-select v-model="searchData.status" clearable placeholder="请选择状态">
-          <el-option v-for="item in statusMapping" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </form-item>
-      <form-item label="创建时间">
-        <el-date-picker
-          v-model="searchData.createDate"
-          type="daterange"
-          unlink-panels
-          range-separator="-"
-          format="YYYY/MM/DD"
-          start-placeholder="起始日期"
-          end-placeholder="截止日期"
-          :shortcuts="dateRangeShortcuts"
-        />
-      </form-item>
-      <form-item>
+      <div class="filter-controls">
+        <form-item label="关键字搜索">
+          <el-input
+            v-model="searchData.keywords"
+            placeholder="请输入邀请码、邀请者"
+            clearable
+            @keyup.enter="getData(true)"
+          />
+        </form-item>
+        <form-item label="状态">
+          <el-select v-model="searchData.status" clearable placeholder="请选择状态">
+            <el-option v-for="item in statusMapping" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </form-item>
+        <form-item label="创建时间">
+          <el-date-picker
+            v-model="searchData.createDate"
+            type="daterange"
+            unlink-panels
+            range-separator="-"
+            format="YYYY/MM/DD"
+            start-placeholder="起始日期"
+            end-placeholder="截止日期"
+            :shortcuts="dateRangeShortcuts"
+          />
+        </form-item>
+      </div>
+      <div class="filter-btns">
         <el-button type="primary" @click="getData()">搜索</el-button>
         <el-button @click="clearSearch()">重置</el-button>
-      </form-item>
+      </div>
     </template>
 
     <template v-slot:table>
@@ -65,11 +67,7 @@
           <template #default="scope">
             <span
               class="text-btn"
-              @click="
-                switchPage('/user/user-management', {
-                  keywords: scope.row.username,
-                })
-              "
+              @click="switchPage('/user/user-management', { keywords: scope.row.username })"
               v-if="scope.row.username"
             >
               {{ scope.row.username }}
@@ -81,9 +79,7 @@
           <template #default="scope">
             <div class="table-cell-item">
               <span v-if="scope.row.limitCount">
-                {{ scope.row.limitCount - scope.row.usedCount }}
-                /
-                {{ scope.row.limitCount }}
+                {{ scope.row.limitCount - scope.row.usedCount }}/{{ scope.row.limitCount }}
               </span>
               <span v-else>不限</span>
               <el-icon class="icon-btn" title="查看使用记录" @click="viewRecord(scope.row.code)"><document /></el-icon>
@@ -92,8 +88,8 @@
         </el-table-column>
         <el-table-column label="有效期" width="250">
           <template #default="scope">
-            <span v-if="scope.row.endEffectiveDate"
-              >{{ formatDate(scope.row.startEffectiveDate, "YYYY-MM-DD") }} 至
+            <span v-if="scope.row.endEffectiveDate">
+              {{ formatDate(scope.row.startEffectiveDate, "YYYY-MM-DD") }} 至
               {{ formatDate(scope.row.endEffectiveDate, "YYYY-MM-DD") }}</span
             >
             <span v-else>永久</span>

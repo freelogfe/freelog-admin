@@ -82,7 +82,9 @@ export default {
               // 媒体资源
               const regText = "src=['\"]" + `freelog://${requestDeps[depResultIndex].resourceName}` + "['\"]";
               const reg = new RegExp(regText, "g");
-              const replaceText = `src="/api/v2/resources/versions/${requestDeps[depResultIndex].versionId}/internalClientDownload"`;
+              const replaceText = `src="${
+                process.env.NODE_ENV === "development" ? "/api" : process.env.VUE_APP_BASE_API
+              }/v2/resources/versions/${requestDeps[depResultIndex].versionId}/internalClientDownload"`;
               html = html.replace(reg, replaceText);
             } else if (type.startsWith("text")) {
               // 非媒体资源

@@ -11,13 +11,15 @@
     </template>
 
     <template v-slot:filterBar>
-      <form-item label="关键字搜索">
-        <el-input v-model="searchData.keywords" placeholder="请输入标签名" clearable @keyup.enter="getData(true)" />
-      </form-item>
-      <form-item>
+      <div class="filter-controls">
+        <form-item label="关键字搜索">
+          <el-input v-model="searchData.keywords" placeholder="请输入标签名" clearable @keyup.enter="getData(true)" />
+        </form-item>
+      </div>
+      <div class="filter-btns">
         <el-button type="primary" @click="getData(true)">搜索</el-button>
         <el-button @click="clearSearch()">重置</el-button>
-      </form-item>
+      </div>
     </template>
 
     <template v-slot:table>
@@ -25,14 +27,7 @@
         <el-table-column type="selection" />
         <el-table-column label="标签" min-width="100" show-overflow-tooltip>
           <template #default="scope">
-            <span
-              class="text-btn"
-              @click="
-                switchPage('/i18n/translation-management', {
-                  tag: scope.row._id,
-                })
-              "
-            >
+            <span class="text-btn" @click="switchPage('/i18n/translation-management', { tag: scope.row._id })">
               {{ scope.row.tagName }}
             </span>
           </template>
