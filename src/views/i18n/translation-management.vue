@@ -168,7 +168,14 @@
               <div class="btns">
                 <el-button @click="cancel()">取消</el-button>
                 <el-button type="primary" @click="save()">保存</el-button>
-                <el-button type="success" @click="save(true)" v-if="editData.status !== 3">保存并提交</el-button>
+                <el-button
+                  type="success"
+                  @click="save(true)"
+                  :disabled="!editData.value.zh.content || !editData.value.en.content"
+                  v-if="editData.status !== 3"
+                >
+                  保存并提交
+                </el-button>
               </div>
             </div>
 

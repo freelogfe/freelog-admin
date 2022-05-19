@@ -120,7 +120,9 @@ export default {
         if (init) {
           data.tableData = listData;
         } else {
-          data.tableData = data.keywords ? listData.filter((item: UserTag) => item.tag === data.keywords) : listData;
+          data.tableData = data.keywords
+            ? listData.filter((item: UserTag) => item.tag.includes(data.keywords))
+            : listData;
         }
         data.loading = false;
       },

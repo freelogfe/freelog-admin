@@ -252,7 +252,7 @@
     </template>
   </el-dialog>
 
-  <el-dialog v-model="versionData.versionPopupShow" title="版本历史记录" width="840px">
+  <el-dialog v-model="versionData.versionPopupShow" title="版本历史记录" width="840px" destroy-on-close>
     <div class="version-history">
       <el-scrollbar class="side-bar">
         <div
@@ -264,7 +264,7 @@
         >
           <div class="version">
             <div class="version-name" :title="item.version">{{ item.version }}</div>
-            <a class="icon-btn" title="下载" :href="downloadUrl(item.versionId)" download @click.stop>
+            <a class="icon-btn" title="下载" :href="getFileUrl(item.versionId)" download @click.stop>
               <el-icon><download /></el-icon>
             </a>
           </div>
@@ -361,10 +361,6 @@ export default {
         { value: "createDate:1", label: "创建时间升序" },
         { value: "createDate:-1", label: "创建时间降序" },
       ],
-      downloadUrl: (versionId: string) =>
-        `${
-          process.env.NODE_ENV === "development" ? "/api" : process.env.VUE_APP_BASE_API
-        }/v2/resources/versions/${versionId}/internalClientDownload`,
     };
     const data = reactive({
       loading: false,
@@ -659,11 +655,18 @@ export default {
         version.mime = result.headers["content-type"];
         if (version.mime.startsWith("image") || version.mime.startsWith("video") || version.mime.startsWith("audio")) {
           // 媒体资源
-          version.content = `/api/v2/resources/versions/${versionId}/internalClientDownload`;
+          version.content = this.getFileUrl(versionId);
           data.versionData.loading = false;
         } else {
           version.content = result.data;
         }
+      },
+
+      /** 获取文件路径 */
+      getFileUrl(versionId: string) {
+        return `${
+          process.env.NODE_ENV === "development" ? "/api" : process.env.VUE_APP_BASE_API
+        }/v2/resources/versions/${versionId}/internalClientDownload`;
       },
     };
 
