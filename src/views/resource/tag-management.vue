@@ -110,7 +110,13 @@
       </el-select>
     </form-item>
     <form-item label="适用资源类型">
-      <el-select style="width: 100%" v-model="operateData.resourceRangeType" clearable placeholder="请选择适用资源类型">
+      <el-select
+        style="width: 100%"
+        v-model="operateData.resourceRangeType"
+        clearable
+        placeholder="请选择适用资源类型"
+        @change="operateData.resourceRange = []"
+      >
         <el-option v-for="item in resourceRangeTypeMapping" :key="item.value" :label="item.label" :value="item.value" />
       </el-select>
     </form-item>
@@ -302,7 +308,7 @@ export default {
 
     /** 表单验证 */
     const validate = () => {
-      const { tagIds, tagName, tagType, authority, resourceRange } = data.operateData;
+      const { tagIds, tagName, tagType, authority, resourceRangeType, resourceRange } = data.operateData;
       if (!tagName) {
         ElMessage("请输入标签");
         return false;
@@ -317,7 +323,7 @@ export default {
         ElMessage("请选择操作权限");
         return false;
       }
-      if (!resourceRange) {
+      if (!resourceRangeType || (resourceRangeType === 1 && !resourceRange)) {
         ElMessage("请选择适用类型");
         return false;
       }
