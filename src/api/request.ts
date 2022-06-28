@@ -435,6 +435,11 @@ export class InternationalizationService {
     return Axios("/v2/i18n/configs/update", { method: "PUT", data });
   }
 
+  /** 批量提交所有待提交的翻译条目 */
+  static publishPreparative(): Promise<HttpResponse> {
+    return Axios("/v2/i18n/configs/publishPreparative", { method: "GET" });
+  }
+
   /** 获取翻译标签列表（不分页） */
   static getAllTranslationTagList(): Promise<HttpResponse> {
     return Axios("/v2/i18n/tags/listSimple", { method: "GET" });

@@ -15,6 +15,7 @@
 
     <template v-slot:barRight>
       <el-button type="primary" @click="switchPage('/i18n/tag-management')">管理标签</el-button>
+      <el-button type="primary" @click="publishAll()">批量提交</el-button>
       <el-button type="primary" @click="importFile()">导入</el-button>
       <el-button type="primary" @click="exportData()" :loading="exportLoading">导出</el-button>
       <el-button type="primary" @click="createTranslation()">新建翻译</el-button>
@@ -448,6 +449,16 @@ export default {
         data.setTagData.newTag = "";
         data.newTranslationShow = false;
         data.editTranslationShow = true;
+      },
+
+      /** 批量提交所有待提交的条目 */
+      async publishAll() {
+        const result = await InternationalizationService.publishPreparative();
+        const { errcode } = result.data;
+        if (errcode !== 0) return;
+
+        ElMessage.success("提交成功");
+        this.getData();
       },
 
       /** 导入 */
