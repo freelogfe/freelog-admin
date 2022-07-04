@@ -316,7 +316,7 @@ export default {
 
     /** 表单验证 */
     const validate = () => {
-      const { tagName, tagType, authority, resourceRangeType, resourceRange } = data.operateData;
+      const { tagName, tagType, authority, resourceRangeType, resourceRange = [] } = data.operateData;
       if (!tagName) {
         ElMessage("请输入标签");
         return false;
@@ -329,7 +329,7 @@ export default {
         ElMessage("请选择操作权限");
         return false;
       }
-      if (!resourceRangeType || (resourceRangeType === 1 && resourceRange?.length === 0)) {
+      if (!resourceRangeType || (resourceRangeType === 1 && resourceRange.length === 0)) {
         ElMessage("请选择适用类型");
         return false;
       }
