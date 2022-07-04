@@ -26,9 +26,13 @@
           </el-select>
         </form-item>
         <form-item label="资源类型">
-          <el-select v-model="searchData.resourceType" placeholder="请选择资源类型" clearable>
-            <el-option v-for="item in resourceTypeList" :key="item" :value="item" />
-          </el-select>
+          <el-cascader
+            v-model="searchData.type"
+            placeholder="请选择资源类型"
+            :options="resourceTypeList"
+            :props="{ label: 'value' }"
+            clearable
+          />
         </form-item>
       </div>
       <div class="filter-btns">
@@ -58,10 +62,16 @@
             {{ authorityMapping.find((item) => item.value === scope.row.authority).label }}
           </template>
         </el-table-column>
-        <el-table-column label="适用类型" show-overflow-tooltip>
+        <el-table-column label="适用类型">
           <template #default="scope">
-            <span v-if="scope.row.resourceRangeType === 3">所有</span>
-            <span v-if="scope.row.resourceRangeType === 1">{{
+            <span
+              v-if="
+                scope.row.resourceRangeType === 3 ||
+                (scope.row.resourceRangeType === 1 && scope.row.resourceRange[0] === '全部')
+              "
+              >所有</span
+            >
+            <span v-else-if="scope.row.resourceRangeType === 1">{{
               scope.row.resourceRange.length ? scope.row.resourceRange.join("、") : "-"
             }}</span>
           </template>
@@ -93,43 +103,50 @@
   </list-template>
 
   <el-dialog v-model="tagPopupShow" :title="operateData.tagId || operateData.tagIds ? '编辑标签' : '创建标签'">
-    <form-item label="标签名称">
-      <div class="tag-name" v-if="operateData.tagId || operateData.tagIds">
-        {{ operateData.tagName }}
-      </div>
-      <el-input v-model="operateData.tagName" placeholder="请输入标签" @keyup.enter="save()" v-else />
-    </form-item>
-    <form-item label="标签类型">
-      <el-select style="width: 100%" v-model="operateData.tagType" clearable placeholder="请选择标签类型">
-        <el-option v-for="item in tagTypeMapping" :key="item.value" :label="item.label" :value="item.value" />
-      </el-select>
-    </form-item>
-    <form-item label="操作权限">
-      <el-select style="width: 100%" v-model="operateData.authority" clearable placeholder="请选择操作权限">
-        <el-option v-for="item in authorityMapping" :key="item.value" :label="item.label" :value="item.value" />
-      </el-select>
-    </form-item>
-    <form-item label="适用资源类型">
-      <el-select
-        style="width: 100%"
-        v-model="operateData.resourceRangeType"
-        clearable
-        placeholder="请选择适用资源类型"
-        @change="operateData.resourceRange = []"
-      >
-        <el-option v-for="item in resourceRangeTypeMapping" :key="item.value" :label="item.label" :value="item.value" />
-      </el-select>
-    </form-item>
-    <form-item v-show="operateData.resourceRangeType === 1">
-      <el-checkbox v-model="operateData.checkAll" :indeterminate="operateData.isIndeterminate" @change="checkAllChange">
-        全选
-      </el-checkbox>
-      <el-checkbox-group v-model="operateData.resourceRange" @change="checkChange">
-        <el-checkbox v-for="item in resourceTypeList" :key="item" :label="item">
-          {{ item }}
-        </el-checkbox>
-      </el-checkbox-group>
-    </form-item>
+    <div class="tag-popup-body">
+      <form-item label="标签名称">
+        <div class="tag-name" v-if="operateData.tagId || operateData.tagIds">
+          {{ operateData.tagName }}
+        </div>
+        <el-input v-model="operateData.tagName" placeholder="请输入标签" @keyup.enter="save()" v-else />
+      </form-item>
+      <form-item label="标签类型">
+        <el-select style="width: 100%" v-model="operateData.tagType" clearable placeholder="请选择标签类型">
+          <el-option v-for="item in tagTypeMapping" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+      </form-item>
+      <form-item label="操作权限">
+        <el-select style="width: 100%" v-model="operateData.authority" clearable placeholder="请选择操作权限">
+          <el-option v-for="item in authorityMapping" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+      </form-item>
+      <form-item label="适用资源类型">
+        <el-select
+          style="width: 100%"
+          v-model="operateData.resourceRangeType"
+          clearable
+          placeholder="请选择适用资源类型"
+          @change="operateData.resourceRange = []"
+        >
+          <el-option
+            v-for="item in resourceRangeTypeMapping"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </form-item>
+      <form-item v-show="operateData.resourceRangeType === 1">
+        <el-tree
+          ref="resourceTypeTree"
+          :data="[{ value: '全部', children: resourceTypeList }]"
+          node-key="value"
+          :default-expanded-keys="['全部']"
+          :props="{ label: 'value' }"
+          show-checkbox
+        />
+      </form-item>
+    </div>
     <template #footer>
       <el-button @click="tagPopupShow = false">取消</el-button>
       <el-button type="primary" @click="save()">保存</el-button>
@@ -138,19 +155,19 @@
 </template>
 
 <script lang="ts">
-import { reactive, toRefs } from "vue";
+import { nextTick, reactive, ref, toRefs } from "vue";
 import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ResourceService } from "@/api/request";
 import { Operation, Edit } from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElTree } from "element-plus";
 import { ResourceTag } from "@/typings/object";
 import { OperateResourceTagParams, ResourceTagListParams } from "@/typings/params";
+import { resourceTypeList } from "@/assets/data";
 
-/** 创建/编辑资源标签参数 */
-export interface MyOperateResourceTag extends OperateResourceTagParams {
-  checkAll?: boolean;
-  isIndeterminate?: boolean;
+/** 获取资源标签参数 */
+export interface MyResourceTagListParams extends ResourceTagListParams {
+  type?: string[];
 }
 
 export default {
@@ -176,7 +193,6 @@ export default {
         // { value: 2, label: "排除类型" },
         { value: 3, label: "所有类型" },
       ],
-      resourceTypeList: ["image", "audio", "video", "markdown", "widget", "theme"],
       typeMapping: [
         { value: 1, label: "分类" },
         { value: 2, label: "运营" },
@@ -187,10 +203,11 @@ export default {
       tableData: [] as ResourceTag[],
       total: 0,
       selectedData: [] as ResourceTag[],
-      searchData: { currentPage: 1, limit: 20 } as ResourceTagListParams,
-      operateData: {} as MyOperateResourceTag,
+      searchData: { currentPage: 1, limit: 20 } as MyResourceTagListParams,
+      operateData: {} as OperateResourceTagParams,
       tagPopupShow: false,
     });
+    const resourceTypeTree = ref<InstanceType<typeof ElTree>>();
 
     const methods = {
       /** 获取页面数据 */
@@ -198,8 +215,13 @@ export default {
         data.tableData = [];
         data.loading = true;
         if (init) data.searchData.currentPage = 1;
-        const { currentPage, limit } = data.searchData;
+        const { currentPage, limit, type } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
+        if (type) {
+          data.searchData.resourceType = type ? type[type.length - 1] : "";
+        } else {
+          delete data.searchData.resourceType;
+        }
         const result = await ResourceService.getResourcesTagsList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
@@ -249,28 +271,14 @@ export default {
         data.selectedData = selected;
       },
 
-      // 切换全选
-      checkAllChange(checkAll: boolean) {
-        data.operateData.resourceRange = checkAll ? assetsData.resourceTypeList : [];
-        data.operateData.isIndeterminate = false;
-      },
-
-      // 选择多选项
-      checkChange(checked: string[]) {
-        const checkedCount = checked.length;
-        data.operateData.checkAll = checkedCount === assetsData.resourceTypeList.length;
-        data.operateData.isIndeterminate = checkedCount > 0 && checkedCount < assetsData.resourceTypeList.length;
-      },
-
       /** 打开标签弹窗（有参数为编辑，反之为创建） */
       openTagPopup(item?: ResourceTag) {
-        data.operateData = {
-          ...(item || ({} as ResourceTag)),
-          checkAll: false,
-        };
+        data.operateData = { ...(item || ({} as ResourceTag)) };
         if (item) {
           data.operateData.tagIds = [item.tagId];
-          data.operateData.checkAll = item.resourceRange.length === assetsData.resourceTypeList.length;
+          nextTick(() => {
+            resourceTypeTree.value!.setCheckedKeys(item.resourceRange, false);
+          });
         }
         data.tagPopupShow = true;
       },
@@ -280,13 +288,13 @@ export default {
         data.operateData = {
           tagIds: data.selectedData.map((item) => item.tagId),
           tagName: data.selectedData.map((item) => item.tagName).join("、"),
-          checkAll: false,
         };
         data.tagPopupShow = true;
       },
 
       /** 保存 */
       async save() {
+        data.operateData.resourceRange = resourceTypeTree.value!.getCheckedKeys(false) as string[];
         if (!validate()) return;
 
         const { tagIds } = data.operateData;
@@ -308,13 +316,11 @@ export default {
 
     /** 表单验证 */
     const validate = () => {
-      const { tagIds, tagName, tagType, authority, resourceRangeType, resourceRange } = data.operateData;
+      const { tagName, tagType, authority, resourceRangeType, resourceRange } = data.operateData;
       if (!tagName) {
         ElMessage("请输入标签");
         return false;
       }
-      if (tagIds) return true;
-
       if (!tagType) {
         ElMessage("请选择标签类型");
         return false;
@@ -323,7 +329,7 @@ export default {
         ElMessage("请选择操作权限");
         return false;
       }
-      if (!resourceRangeType || (resourceRangeType === 1 && !resourceRange)) {
+      if (!resourceRangeType || (resourceRangeType === 1 && resourceRange?.length === 0)) {
         ElMessage("请选择适用类型");
         return false;
       }
@@ -333,8 +339,10 @@ export default {
     methods.getData(true);
 
     return {
+      resourceTypeList,
       ...assetsData,
       ...toRefs(data),
+      resourceTypeTree,
       ...methods,
       formatDate,
       switchPage,
@@ -345,8 +353,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.tag-name {
-  line-height: 32px;
-  font-weight: bold;
+.tag-popup-body {
+  max-height: 50vh;
+  overflow-y: auto;
+
+  .tag-name {
+    line-height: 32px;
+    font-weight: bold;
+  }
 }
 </style>

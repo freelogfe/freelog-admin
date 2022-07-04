@@ -178,6 +178,7 @@ export interface OperateNodeParams {
 /** 展品列表参数 */
 export interface ExhibitListParams extends ListParams {
   nodeId?: number;
+  nodeName?: string;
   presentableId?: string;
   resourceType?: string;
   tags?: string;

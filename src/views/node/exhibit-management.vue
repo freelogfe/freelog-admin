@@ -7,15 +7,28 @@
           <el-input
             style="width: 250px"
             v-model="searchData.keywords"
-            placeholder="请输入展品名、节点名、资源名"
+            placeholder="请输入展品名、资源名"
+            clearable
+            @keyup.enter="getData(true)"
+          />
+        </form-item>
+        <form-item label="节点名称">
+          <el-input
+            style="width: 250px"
+            v-model="searchData.nodeName"
+            placeholder="请输入节点名称"
             clearable
             @keyup.enter="getData(true)"
           />
         </form-item>
         <form-item label="资源类型">
-          <el-select v-model="searchData.resourceType" placeholder="请选择资源类型" clearable>
-            <el-option v-for="item in resourceTypeList" :key="item" :value="item" />
-          </el-select>
+          <el-cascader
+            v-model="searchData.type"
+            placeholder="请选择资源类型"
+            :options="resourceTypeList"
+            :props="{ checkStrictly: true, label: 'value' }"
+            clearable
+          />
         </form-item>
         <form-item label="创建时间">
           <el-date-picker
@@ -72,7 +85,7 @@
           </template>
         </el-table-column>
         <el-table-column label="资源类型" width="100" show-overflow-tooltip>
-          <template #default="scope">{{ scope.row.resourceInfo.resourceType }}</template>
+          <template #default="scope">{{ scope.row.resourceInfo.resourceType.join("/") }}</template>
         </el-table-column>
         <el-table-column label="需方合约数" width="120" align="right">
           <template #default="scope">
@@ -147,13 +160,14 @@ import { defineAsyncComponent, reactive, toRefs } from "vue";
 import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ContractsService, NodeService } from "@/api/request";
-import { dateRangeShortcuts } from "@/assets/data";
+import { dateRangeShortcuts, resourceTypeList } from "@/assets/data";
 import { Operation, Document } from "@element-plus/icons-vue";
 import { Exhibit, Policy } from "@/typings/object";
 import { ExhibitListParams } from "@/typings/params";
 
 interface MyExhibitListParams extends ExhibitListParams {
   createDate?: string[];
+  type?: string[];
 }
 
 export default {
@@ -166,7 +180,6 @@ export default {
   setup() {
     const { query, switchPage } = useMyRouter();
     const assetsData = {
-      resourceTypeList: ["image", "audio", "video", "markdown", "widget", "theme"],
       statusMapping: [
         { value: 0, label: "下线" },
         { value: 1, label: "上线" },
@@ -193,10 +206,15 @@ export default {
         data.tableData = [];
         data.loading = true;
         if (init) data.searchData.currentPage = 1;
-        const { currentPage, limit, sort, createDate } = data.searchData;
+        const { currentPage, limit, sort, createDate, type } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
         if (!sort) delete data.searchData.sort;
         [data.searchData.startCreatedDate, data.searchData.endCreatedDate] = dateRange(createDate);
+        if (type) {
+          data.searchData.resourceType = type ? type[type.length - 1] : "";
+        } else {
+          delete data.searchData.resourceType;
+        }
         const result = await NodeService.getExhibitList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
@@ -264,6 +282,7 @@ export default {
     methods.getData(true);
 
     return {
+      resourceTypeList,
       dateRangeShortcuts,
       ...assetsData,
       ...toRefs(data),

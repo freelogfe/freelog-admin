@@ -67,7 +67,7 @@ export interface CodeRecord {
 /** 资源数据 */
 export interface Resource {
   resourceId: string;
-  resourceType: string;
+  resourceType: string[];
   resourceName: string;
   userId: number;
   username: string;

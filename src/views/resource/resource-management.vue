@@ -27,9 +27,13 @@
           </el-select>
         </form-item>
         <form-item label="类型">
-          <el-select v-model="searchData.resourceType" placeholder="请选择类型" clearable>
-            <el-option v-for="item in resourceTypeList" :key="item" :value="item" />
-          </el-select>
+          <el-cascader
+            v-model="searchData.type"
+            placeholder="请选择类型"
+            :options="resourceTypeList"
+            :props="{ checkStrictly: true, label: 'value' }"
+            clearable
+          />
         </form-item>
         <form-item label="创建时间">
           <el-date-picker
@@ -100,7 +104,9 @@
             />
           </template>
         </el-table-column>
-        <el-table-column property="resourceType" label="类型" width="100" show-overflow-tooltip />
+        <el-table-column label="类型" width="150" show-overflow-tooltip>
+          <template #default="scope">{{ scope.row.resourceType.join("/") }}</template>
+        </el-table-column>
         <el-table-column label="需方合约数" width="120" align="right">
           <template #default="scope">
             <span
@@ -309,7 +315,7 @@ import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessageBox } from "element-plus";
 import { ResourceService, ContractsService } from "@/api/request";
-import { dateRangeShortcuts } from "@/assets/data";
+import { dateRangeShortcuts, resourceTypeList } from "@/assets/data";
 import { Operation, Edit, Clock, Close, Check, Document, Download } from "@element-plus/icons-vue";
 import { reactive, toRefs, computed, defineAsyncComponent } from "vue";
 import { Policy, Resource, ResourceTag, ResourceVersion } from "@/typings/object";
@@ -324,6 +330,7 @@ import {
 export interface MyResourceListParams extends ResourceListParams {
   createDate?: string[];
   selectedTags?: string[];
+  type?: string[];
 }
 
 /** 设置资源标签参数 */
@@ -348,7 +355,6 @@ export default {
   setup() {
     const { query, switchPage, openPage } = useMyRouter();
     const assetsData = {
-      resourceTypeList: ["image", "audio", "video", "markdown", "widget", "theme"],
       statusMapping: [
         { value: 0, label: "下线" },
         { value: 1, label: "上线" },
@@ -394,11 +400,16 @@ export default {
         data.tableData = [];
         data.loading = true;
         if (init) data.searchData.currentPage = 1;
-        const { currentPage, limit, sort, selectedTags = [], createDate } = data.searchData;
+        const { currentPage, limit, sort, selectedTags = [], createDate, type } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
         if (!sort) delete data.searchData.sort;
         data.searchData.tags = selectedTags.join(",");
         [data.searchData.startCreateDate, data.searchData.endCreateDate] = dateRange(createDate);
+        if (type) {
+          data.searchData.resourceType = type ? type[type.length - 1] : "";
+        } else {
+          delete data.searchData.resourceType;
+        }
         const result = await ResourceService.getResourceList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
@@ -684,6 +695,7 @@ export default {
     getResourceTags();
 
     return {
+      resourceTypeList,
       dateRangeShortcuts,
       ...assetsData,
       ...toRefs(data),
