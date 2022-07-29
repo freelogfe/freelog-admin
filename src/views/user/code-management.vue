@@ -52,7 +52,7 @@
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
-        <el-table-column label="邀请码" width="200">
+        <el-table-column label="邀请码" min-width="200">
           <template #default="scope">
             <div class="table-cell-item">
               <span>{{ scope.row.code }}</span>
@@ -60,10 +60,10 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="创建时间" width="160">
+        <el-table-column label="创建时间" min-width="160">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
-        <el-table-column label="邀请者" width="150" show-overflow-tooltip>
+        <el-table-column label="邀请者" min-width="150" show-overflow-tooltip>
           <template #default="scope">
             <span
               class="text-btn"
@@ -75,7 +75,7 @@
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column label="剩余次数" width="120">
+        <el-table-column label="剩余次数" min-width="120">
           <template #default="scope">
             <div class="table-cell-item">
               <span v-if="scope.row.limitCount">
@@ -86,7 +86,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="有效期" width="250">
+        <el-table-column label="有效期" min-width="250">
           <template #default="scope">
             <span v-if="scope.row.endEffectiveDate">
               {{ formatDate(scope.row.startEffectiveDate, "YYYY-MM-DD") }} 至
@@ -102,7 +102,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="备注" width="150">
+        <el-table-column label="备注" min-width="150">
           <template #default="scope">
             {{ scope.row.remark || "-" }}
           </template>

@@ -76,11 +76,11 @@
 
     <template v-slot:table>
       <el-table :data="tableData" stripe v-loading="loading">
-        <el-table-column property="createDate" label="创建时间" width="160">
+        <el-table-column property="createDate" label="创建时间" min-width="160">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
-        <el-table-column property="digest" label="交易说明" width="300" />
-        <el-table-column label="合约编号" width="300">
+        <el-table-column property="digest" label="交易说明" min-width="300" />
+        <el-table-column label="合约编号" min-width="300">
           <template #default="scope">
             <span
               class="text-btn"
@@ -97,10 +97,10 @@
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column property="recordId" label="交易编号" width="160" />
-        <el-table-column property="reciprocalAccountName" label="收款方" width="200" />
-        <el-table-column property="accountName" label="付款方" width="200" />
-        <el-table-column label="交易金额（枚）" width="140" align="right">
+        <el-table-column property="recordId" label="交易编号" min-width="160" />
+        <el-table-column property="reciprocalAccountName" label="收款方" min-width="200" />
+        <el-table-column property="accountName" label="付款方" min-width="200" />
+        <el-table-column label="交易金额（枚）" min-width="140" align="right">
           <template #default="scope">{{ abs(scope.row.transactionAmount) }}</template>
         </el-table-column>
         <el-table-column label="状态">

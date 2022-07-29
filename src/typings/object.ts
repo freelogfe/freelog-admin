@@ -84,6 +84,7 @@ export interface Resource {
   status: 0 | 1 | 2 | 3;
   reason: string;
   remark: string;
+  choiceness: boolean;
 }
 
 /** 策略数据 */
@@ -206,6 +207,12 @@ export interface TradeRecord {
   createDate: string;
   updateDate: string;
   tradeDetail: any[];
+}
+
+/** 操作编辑精选参数 */
+export interface OperateChoicenessParams {
+  type: 1;
+  resourceIds: string[];
 }
 
 /** 活动数据 */

@@ -1,6 +1,7 @@
 /**
  * 服务器接口
  */
+import { OperateChoicenessParams } from "@/typings/object";
 import {
   ListParams,
   ActivityListParams,
@@ -32,6 +33,7 @@ import {
   UserIdsParams,
   UserListParams,
   CreateOrEditTranslationParams,
+  ChoicenessListParams,
 } from "@/typings/params";
 import Axios from "./http";
 
@@ -141,6 +143,13 @@ export class ResourceService {
   /** 获取资源列表 */
   static getResourceList(params: ResourceListParams): Promise<HttpResponse> {
     return Axios("/v2/resources/search", { method: "GET", params: { ...params, isLoadPolicyInfo: 1 } });
+  }
+
+  /** 查询资源是否为编辑精选 */
+  static searchChoiceness(resourceIds: string): Promise<HttpResponse> {
+    return Axios(`/v2/resources/operations/list?resourceIds=${resourceIds}&projection=resourceId`, {
+      method: "GET",
+    });
   }
 
   /** 查询资源 */
@@ -320,6 +329,16 @@ export class TransactionsService {
 
 /** Activities 类接口 */
 export class ActivitiesService {
+  /** 获取编辑精选列表 */
+  static getChoicenessList(params: ChoicenessListParams): Promise<HttpResponse> {
+    return Axios("/v2/resources/operations", { method: "GET", params: { ...params, sort: "createDate:-1" } });
+  }
+
+  /** 操作编辑精选 */
+  static OperateChoiceness(data: OperateChoicenessParams, method: "POST" | "DELETE"): Promise<HttpResponse> {
+    return Axios("/v2/resources/operations", { method, data });
+  }
+
   /** 获取活动列表 */
   static getActivityList(params: ActivityListParams): Promise<HttpResponse> {
     return Axios("/v2/activities/list", {

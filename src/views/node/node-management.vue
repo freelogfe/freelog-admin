@@ -47,21 +47,21 @@
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
-        <el-table-column label="节点" width="200" show-overflow-tooltip>
+        <el-table-column label="节点" min-width="200" show-overflow-tooltip>
           <template #default="scope">
             <span class="text-btn" @click="openNode(scope.row.nodeDomain)">
               {{ scope.row.nodeName }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="地址" width="300" show-overflow-tooltip>
+        <el-table-column label="地址" min-width="300" show-overflow-tooltip>
           <template #default="scope">
             <span class="text-btn" @click="openNode(scope.row.nodeDomain)">
               {{ domain.replace("qi", scope.row.nodeDomain) }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="标签" width="250">
+        <el-table-column label="标签" min-width="250">
           <template #default="scope">
             <div class="tags-box">
               <el-tag
@@ -79,21 +79,21 @@
             </el-icon>
           </template>
         </el-table-column>
-        <el-table-column label="用户" width="200" show-overflow-tooltip>
+        <el-table-column label="用户" min-width="200" show-overflow-tooltip>
           <template #default="scope">
             <span class="text-btn" @click="switchPage('/user/user-management', { userId: scope.row.ownerUserId })">
               {{ scope.row.ownerUserName }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="运营展品数" width="120" align="right">
+        <el-table-column label="运营展品数" min-width="120" align="right">
           <template #default="scope">
             <span class="text-btn" @click="switchPage('/node/exhibit-management', { nodeId: scope.row.nodeId })">
               {{ scope.row.exhibitCount }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="需方合约数" width="120" align="right">
+        <el-table-column label="需方合约数" min-width="120" align="right">
           <template #default="scope">
             <span
               class="text-btn"
@@ -103,7 +103,7 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column property="createDate" label="创建时间" width="160">
+        <el-table-column property="createDate" label="创建时间" min-width="160">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
         <el-table-column label="状态">

@@ -71,18 +71,18 @@
           v-loading="loading"
         >
           <el-table-column type="selection" />
-          <el-table-column property="key" label="key" width="200" />
-          <el-table-column label="zh-CN" min-width="200" v-if="!editData">
+          <el-table-column property="key" label="key" min-width="200" />
+          <el-table-column label="zh-CN" min-width="300" v-if="!editData">
             <template #default="scope">
               {{ scope.row.value.zh ? scope.row.value.zh.content || "-" : "-" }}
             </template>
           </el-table-column>
-          <el-table-column label="en-US" min-width="200" v-if="!editData">
+          <el-table-column label="en-US" min-width="300" v-if="!editData">
             <template #default="scope">
               {{ scope.row.value.en ? scope.row.value.en.content || "-" : "-" }}
             </template>
           </el-table-column>
-          <el-table-column label="标签" width="250" v-if="!editData">
+          <el-table-column label="标签" min-width="100" v-if="!editData">
             <template #default="scope">
               <div class="tags-box" v-if="scope.row.i18nTags.length">
                 <el-tag class="tag" v-for="item in scope.row.i18nTags" :key="item._id">
@@ -92,7 +92,7 @@
               <span v-else>-</span>
             </template>
           </el-table-column>
-          <el-table-column property="comment" label="描述" min-width="200" v-if="!editData">
+          <el-table-column property="comment" label="描述" min-width="100" v-if="!editData">
             <template #default="scope">
               {{ scope.row.comment || "-" }}
             </template>

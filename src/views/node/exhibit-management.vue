@@ -56,8 +56,8 @@
 
     <template v-slot:table>
       <el-table :data="tableData" stripe v-loading="loading">
-        <el-table-column property="presentableName" label="展品" width="250" />
-        <el-table-column label="封面" width="120">
+        <el-table-column property="presentableName" label="展品" min-width="250" />
+        <el-table-column label="封面" min-width="120">
           <template #default="scope">
             <el-image
               class="cover-image"
@@ -68,14 +68,14 @@
             />
           </template>
         </el-table-column>
-        <el-table-column label="所属节点" width="150" show-overflow-tooltip>
+        <el-table-column label="所属节点" min-width="150" show-overflow-tooltip>
           <template #default="scope">
             <span class="text-btn" @click="switchPage('/node/node-management', { nodeId: scope.row.nodeId })">
               {{ scope.row.nodeName }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="关联资源" width="250" show-overflow-tooltip>
+        <el-table-column label="关联资源" min-width="250" show-overflow-tooltip>
           <template #default="scope">
             <subject-name
               :type="1"
@@ -84,10 +84,10 @@
             />
           </template>
         </el-table-column>
-        <el-table-column label="资源类型" width="100" show-overflow-tooltip>
+        <el-table-column label="资源类型" min-width="100" show-overflow-tooltip>
           <template #default="scope">{{ scope.row.resourceInfo.resourceType.join("/") }}</template>
         </el-table-column>
-        <el-table-column label="需方合约数" width="120" align="right">
+        <el-table-column label="需方合约数" min-width="120" align="right">
           <template #default="scope">
             <span
               class="text-btn"
@@ -97,8 +97,8 @@
             </span>
           </template>
         </el-table-column>
-        <!-- <el-table-column property="collectCount" label="策略授权次数" align="right" width="120" /> -->
-        <el-table-column property="createDate" label="创建时间" width="160">
+        <!-- <el-table-column property="collectCount" label="策略授权次数" align="right" min-width="120" /> -->
+        <el-table-column property="createDate" label="创建时间" min-width="160">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
         <el-table-column label="状态">
@@ -119,7 +119,7 @@
               @click="viewPolicy(scope.row)"
               v-if="scope.row.policies.length"
             >
-              <document />
+              <grid />
             </el-icon>
           </template>
         </el-table-column>
@@ -161,7 +161,7 @@ import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ContractsService, NodeService } from "@/api/request";
 import { dateRangeShortcuts, resourceTypeList } from "@/assets/data";
-import { Operation, Document } from "@element-plus/icons-vue";
+import { Operation, Grid } from "@element-plus/icons-vue";
 import { Exhibit, Policy } from "@/typings/object";
 import { ExhibitListParams } from "@/typings/params";
 
@@ -174,7 +174,7 @@ export default {
   components: {
     "subject-name": defineAsyncComponent(() => import("@/components/subject-name.vue")),
     Operation,
-    Document,
+    Grid,
   },
 
   setup() {
@@ -301,6 +301,7 @@ export default {
   max-height: 600px;
   overflow-y: auto;
   padding: 10px;
+  box-sizing: border-box;
   display: flex;
   flex-wrap: wrap;
 

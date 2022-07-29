@@ -49,7 +49,7 @@
         <el-table-column label="点击率">
           <template #default="scope">{{ getPercents(scope.row.cvr) }}</template>
         </el-table-column>
-        <el-table-column label="广告图片" width="150">
+        <el-table-column label="广告图片" min-width="150">
           <template #default="scope">
             <el-image
               class="cover-image"

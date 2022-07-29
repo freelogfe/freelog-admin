@@ -221,6 +221,17 @@ export interface TradeListParams extends ListParams {
   transactionType?: 1 | 2;
 }
 
+/** 编辑精选列表参数 */
+export interface ChoicenessListParams extends ListParams {
+  resourceType?: string;
+  authorName?: string;
+  resourceName?: string;
+  status?: 0 | 1 | 2 | 3;
+  isLoadPolicyInfo?: 0 | 1;
+  isLoadLatestVersionInfo?: 0 | 1;
+  sort?: string;
+}
+
 /** 活动列表参数 */
 export interface ActivityListParams extends ListParams {
   status?: 0 | 1 | 2 | 3 | 4 | 5 | 6;

@@ -27,7 +27,7 @@
         <el-table-column label="活动名称" min-width="200">
           <template #default="scope">{{ scope.row.title || "-" }}</template>
         </el-table-column>
-        <el-table-column label="海报" width="150">
+        <el-table-column label="海报" min-width="150">
           <template #default="scope">
             <el-image
               class="cover-image"

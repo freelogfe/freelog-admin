@@ -53,8 +53,8 @@
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
-        <el-table-column property="username" label="用户" width="200" />
-        <el-table-column label="标签" width="250">
+        <el-table-column property="username" label="用户" min-width="200" />
+        <el-table-column label="标签" min-width="250">
           <template #default="scope">
             <div class="tags-box">
               <el-tag
@@ -72,26 +72,26 @@
             </el-icon>
           </template>
         </el-table-column>
-        <el-table-column label="最近登录" width="160">
+        <el-table-column label="最近登录" min-width="160">
           <template #default="scope">
             {{ scope.row.latestLoginDate ? relativeTime(scope.row.latestLoginDate) : "-" }}
           </template>
         </el-table-column>
-        <el-table-column label="发布资源数" width="120" align="right">
+        <el-table-column label="发布资源数" min-width="120" align="right">
           <template #default="scope">
             <span class="text-btn" @click="switchPage('/resource/resource-management', { userId: scope.row.userId })">
               {{ scope.row.createdResourceCount }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="运营节点数" width="120" align="right">
+        <el-table-column label="运营节点数" min-width="120" align="right">
           <template #default="scope">
             <span class="text-btn" @click="switchPage('/node/node-management', { userId: scope.row.userId })">
               {{ scope.row.createdNodeCount }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="消费合约数" width="120" align="right">
+        <el-table-column label="消费合约数" min-width="120" align="right">
           <template #default="scope">
             <span
               class="text-btn"
@@ -101,7 +101,7 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="交易次数" width="100" align="right">
+        <el-table-column label="交易次数" min-width="100" align="right">
           <template #default="scope">
             <span
               class="text-btn"
@@ -111,8 +111,8 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column property="balance" label="代币余额" align="right" width="100" />
-        <el-table-column label="手机号" width="150">
+        <el-table-column property="balance" label="代币余额" align="right" min-width="100" />
+        <el-table-column label="手机号" min-width="150">
           <template #default="scope">
             <div class="table-cell-item">
               <span>{{ scope.row.mobile || "-" }}</span>
@@ -122,7 +122,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="邮箱" width="250">
+        <el-table-column label="邮箱" min-width="250">
           <template #default="scope">
             <div class="table-cell-item">
               <span>{{ scope.row.email || "-" }}</span>
@@ -132,7 +132,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="注册时间" width="160">
+        <el-table-column label="注册时间" min-width="160">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
         <el-table-column label="账号状态">
@@ -200,7 +200,7 @@
     </template>
   </el-dialog>
 
-  <el-dialog v-model="freezePopupShow" title="冻结账户" width="800px">
+  <el-dialog v-model="freezePopupShow" title="冻结账户" min-width="800px">
     <form-item label="冻结原因">
       <el-radio-group v-model="operateData.reason">
         <el-radio label="抄袭、侵权"></el-radio>

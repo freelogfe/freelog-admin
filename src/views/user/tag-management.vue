@@ -31,7 +31,7 @@
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
-        <el-table-column label="标签" width="100">
+        <el-table-column label="标签" min-width="100">
           <template #default="scope">
             <span class="text-btn" @click="switchPage('/user/user-management', { tag: scope.row.tagId })">
               {{ scope.row.tag }}

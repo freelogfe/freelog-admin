@@ -34,18 +34,18 @@
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" :selectable="(row) => row.status === 0" />
-        <el-table-column label="申请日期" width="160">
+        <el-table-column label="申请日期" min-width="160">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
-        <el-table-column property="occupation" label="职业" width="150" />
-        <el-table-column property="city" label="区域" />
-        <el-table-column property="description" label="其他" width="200" />
-        <el-table-column property="username" label="用户名" width="150" />
-        <el-table-column label="手机" width="130" show-overflow-tooltip>
+        <el-table-column property="occupation" label="职业" min-width="150" />
+        <el-table-column property="areaName" label="区域" min-width="150" />
+        <el-table-column property="description" label="其他" min-width="200" />
+        <el-table-column property="username" label="用户名" min-width="150" />
+        <el-table-column label="手机" min-width="130" show-overflow-tooltip>
           <template #default="scope">{{ scope.row.mobile || "-" }}</template>
         </el-table-column>
-        <el-table-column property="email" label="邮箱" width="250" show-overflow-tooltip />
-        <el-table-column label="最后登录" width="160">
+        <el-table-column property="email" label="邮箱" min-width="250" show-overflow-tooltip />
+        <el-table-column label="最后登录" min-width="160">
           <template #default="scope">{{ relativeTime(scope.row.latestLoginData) }}</template>
         </el-table-column>
         <el-table-column label="审核状态">
@@ -89,16 +89,13 @@
         <div class="apply-info" v-for="(item, index) in operateData.items" :key="item.username + index">
           <div>用户：{{ item.username }}</div>
           <div>职业：{{ item.occupation }}</div>
-          <div>区域：{{ item.city }}</div>
+          <div>区域：{{ item.areaName }}</div>
           <div>其他：{{ item.description }}</div>
         </div>
       </div>
       <div class="title">审核结果</div>
       <el-radio-group v-model="operateData.auditResult">
-        <el-radio label="通过"></el-radio>
-        <el-radio label="拒绝：链接无法打开"></el-radio>
-        <el-radio label="拒绝：公众号ID不存在"></el-radio>
-        <el-radio label="拒绝：其他原因"></el-radio>
+        <el-radio :label="item.label" v-for="item in auditResultList" :key="item.id"></el-radio>
       </el-radio-group>
       <el-input
         style="margin-top: 10px"
@@ -125,6 +122,14 @@ import { Operation, Checked } from "@element-plus/icons-vue";
 import { Qualifications } from "@/typings/object";
 import { AuditQualificationsParams, QualificationsListParams } from "@/typings/params";
 
+/** 审核结果选项 */
+interface AuditResult {
+  id: number;
+  label: string;
+  remark: string;
+  result: 1 | 2;
+}
+
 /** 审核内测资格参数 */
 interface MyAuditQualificationsParams extends AuditQualificationsParams {
   items?: Qualifications[];
@@ -145,6 +150,22 @@ export default {
         { value: 1, label: "已通过" },
         { value: 2, label: "未通过" },
       ],
+      auditResultList: [
+        { id: 1, label: "通过", remark: "", result: 1 },
+        {
+          id: 2,
+          label: "拒绝：链接无法打开",
+          remark: "经审核，您提交的链接无法打开，请重新提交您常用的创作平台或社区的个人主页网址。",
+          result: 2,
+        },
+        {
+          id: 3,
+          label: "拒绝：公众号ID不存在",
+          remark: "经审核，您提交的公众号不存在，请重新提交您的微信公众号ID。",
+          result: 2,
+        },
+        { id: 4, label: "拒绝：其他原因", remark: "经审核，您需要重新提交申请信息。", result: 2 },
+      ] as AuditResult[],
     };
     const data = reactive({
       loading: false,
@@ -241,12 +262,11 @@ export default {
     watch(
       () => data.operateData.auditResult,
       (cur) => {
-        if (cur === "通过") {
-          data.operateData.status = 1;
-        } else {
-          data.operateData.status = 2;
-          data.operateData.auditMsg = cur || "";
-        }
+        const item = assetsData.auditResultList.find((item) => item.label === cur);
+        if (!item) return;
+
+        data.operateData.auditMsg = item.remark;
+        data.operateData.status = item.result;
       }
     );
 

@@ -223,6 +223,15 @@ const routes: Array<RouteRecordRaw> = [
     },
     children: [
       {
+        path: "edit-choiceness",
+        name: "editChoiceness",
+        component: () => import("../views/operating/edit-choiceness.vue"),
+        meta: {
+          title: "编辑精选",
+          sideBarItem: "editChoiceness",
+        },
+      },
+      {
         path: "activity-management",
         name: "activityManagement",
         component: () => import("../views/operating/activity-management.vue"),

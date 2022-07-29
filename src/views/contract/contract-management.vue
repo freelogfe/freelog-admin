@@ -58,12 +58,12 @@
 
     <template v-slot:table>
       <el-table :data="tableData" stripe v-loading="loading">
-        <el-table-column label="标的物" width="250">
+        <el-table-column label="标的物" min-width="250">
           <template #default="scope">
             <subject-name :type="scope.row.subjectType" :name="scope.row.subjectName" :id="scope.row.subjectId" />
           </template>
         </el-table-column>
-        <el-table-column label="封面" width="120">
+        <el-table-column label="封面" min-width="120">
           <template #default="scope">
             <el-image
               class="cover-image"
@@ -79,8 +79,8 @@
             {{ subjectTypeList.find((item) => item.value === scope.row.subjectType).label }}
           </template>
         </el-table-column>
-        <el-table-column property="contractName" label="所签授权策略" width="150" show-overflow-tooltip />
-        <el-table-column label="供方" width="250">
+        <el-table-column property="contractName" label="所签授权策略" min-width="150" show-overflow-tooltip />
+        <el-table-column label="供方" min-width="250">
           <template #default="scope">
             <subject-name
               :type="scope.row.subjectType"
@@ -97,7 +97,7 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="需方" width="250">
+        <el-table-column label="需方" min-width="250">
           <template #default="scope">
             <subject-name
               :type="scope.row.subjectType"
@@ -121,8 +121,8 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column property="contractId" label="合约ID" width="210" />
-        <el-table-column label="签约时间" width="160">
+        <el-table-column property="contractId" label="合约ID" min-width="210" />
+        <el-table-column label="签约时间" min-width="160">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
         <el-table-column label="状态">
