@@ -331,11 +331,11 @@ export class TransactionsService {
 export class ActivitiesService {
   /** 获取编辑精选列表 */
   static getChoicenessList(params: ChoicenessListParams): Promise<HttpResponse> {
-    return Axios("/v2/resources/operations", { method: "GET", params: { ...params, sort: "createDate:-1" } });
+    return Axios("/v2/resources/operations", { method: "GET", params: { ...params, sort: "createDate:-1", isLoadPolicyInfo: 1 } });
   }
 
   /** 操作编辑精选 */
-  static OperateChoiceness(data: OperateChoicenessParams, method: "POST" | "DELETE"): Promise<HttpResponse> {
+  static OperateChoiceness(data: OperateChoicenessParams, method: "POST" | "PUT"): Promise<HttpResponse> {
     return Axios("/v2/resources/operations", { method, data });
   }
 

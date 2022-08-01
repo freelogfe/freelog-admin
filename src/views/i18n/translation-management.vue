@@ -381,6 +381,7 @@ export default {
       editTranslationShow: false,
       addTagPopupShow: false,
       importPopupShow: false,
+      scrollTop: 0,
     });
     const tableRef = ref<InstanceType<typeof ElTable>>();
 
@@ -433,6 +434,7 @@ export default {
 
       /** 选择列表单项 */
       clickRow(item: Translation) {
+        data.scrollTop = (document.getElementById("listTemplate") as any).scrollTop;
         const { _id, key, value, comment, i18nTags, status } = item;
         data.editData = {
           _id,
@@ -524,6 +526,7 @@ export default {
         let tags = [];
         let tagsStr = "";
         results.forEach((item, index) => {
+          item["key*"] = (item["key*"] as string).trim();
           if (!item["key*"]) {
             noKeyErrors.push(index);
             return;
@@ -625,6 +628,7 @@ export default {
             confirmButtonText: "知道了",
             showClose: false,
             dangerouslyUseHTMLString: true,
+            customStyle: { "max-height": "400px", "overflow-y": "auto" },
             callback: () => {
               this.getData();
             },
@@ -689,11 +693,15 @@ export default {
 
       /** 保存 */
       async save(needPublish: boolean) {
-        if (!data.editData || !validate()) return;
+        if (!data.editData) return;
 
+        data.editData.key = (data.editData.key as string).trim();
+        if (!validate()) return;
+
+        const { _id } = data.editData;
         if (needPublish || data.editData.status === 3) data.editData.needPublish = true;
         let result;
-        if (data.editData._id) {
+        if (_id) {
           // 编辑
           result = await InternationalizationService.editTranslation(data.editData);
         } else {
@@ -704,8 +712,22 @@ export default {
         if (errcode === 0) {
           data.newTranslationShow = false;
           data.editTranslationShow = false;
+          data.editData = null;
           ElMessage.success("保存成功");
-          this.getData();
+          if (_id) {
+            // 编辑，不刷新列表
+            const result = await InternationalizationService.getTranslationList(data.searchData);
+            const { errcode, data: listData } = result.data;
+            if (errcode === 0) {
+              const newRow = listData.find((item: Translation) => item._id === _id);
+              const index = data.tableData.findIndex((item: Translation) => item._id === _id);
+              data.tableData[index] = newRow;
+            }
+            (document.getElementById("listTemplate") as any).scrollTo({ top: data.scrollTop });
+          } else {
+            // 新增，刷新列表
+            this.getData();
+          }
         }
       },
 

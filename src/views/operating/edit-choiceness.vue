@@ -2,7 +2,7 @@
 <template>
   <list-template>
     <template v-slot:barLeft v-if="selectedData.length">
-      <el-button type="primary" @click="operateChoiceness()">移出编辑精选</el-button>
+      <el-button type="primary" @click="operateChoiceness('PUT')">移出编辑精选</el-button>
     </template>
 
     <template v-slot:barRight>
@@ -13,14 +13,19 @@
       <div class="filter-controls">
         <form-item label="资源作者">
           <el-input
-            v-model="searchData.keywords"
+            v-model="searchData.authorName"
             placeholder="请输入资源发布者的用户名"
             clearable
             @keyup.enter="getData(true)"
           />
         </form-item>
         <form-item label="资源名">
-          <el-input v-model="searchData.keywords" placeholder="请输入资源名" clearable @keyup.enter="getData(true)" />
+          <el-input
+            v-model="searchData.resourceName"
+            placeholder="请输入资源名"
+            clearable
+            @keyup.enter="getData(true)"
+          />
         </form-item>
         <form-item label="类型">
           <el-cascader
@@ -32,8 +37,8 @@
           />
         </form-item>
         <form-item label="状态">
-          <el-select v-model="searchData.sort" placeholder="请选择状态" clearable>
-            <el-option v-for="item in statusMapping" :key="item.value" :label="item.label" :value="item.value" />
+          <el-select v-model="searchData.status" placeholder="请选择状态" clearable>
+            <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </form-item>
       </div>
@@ -110,9 +115,9 @@
               placement="top"
               v-if="[2, 3].includes(scope.row.status)"
             >
-              {{ statusMapping.find((item) => item.value === scope.row.status).label }}
+              {{ statusMapping.find((item: any) => item.value === scope.row.status).label }}
             </el-tooltip>
-            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status).label }}</span>
+            <span v-else>{{ statusMapping.find((item: any) => item.value === scope.row.status).label }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="100">
@@ -140,7 +145,7 @@
             <el-icon
               class="icon-btn"
               title="移除"
-              @click="remove(scope.row.resourceId)"
+              @click="operateChoiceness('PUT', scope.row.resourceId)"
               v-if="![2, 3].includes(scope.row.status)"
             >
               <close />
@@ -178,20 +183,27 @@
     </div>
   </el-dialog>
 
-  <el-dialog v-model="resourcePopupShow" title="添加资源进入编辑精选" width="1000px">
-    <div class="filter-bar">
+  <el-dialog v-model="resourcePopupShow" title="添加资源进入编辑精选" width="1000px" @close="closeResourcePopup()">
+    <div class="filter-bar" v-if="!resourceData.showSelected">
       <form-item label="关键字搜索">
-        <el-input v-model="resourceSearchData.keywords" placeholder="请输入资源名" clearable />
+        <el-input
+          v-model="resourceSearchData.keywords"
+          placeholder="请输入资源名"
+          clearable
+          @keyup.enter="getResourceList(true)"
+        />
       </form-item>
       <form-item>
-        <el-button type="primary" @click="getResourceList(resourceData.code)">搜索</el-button>
+        <el-button type="primary" @click="getResourceList(true)">搜索</el-button>
       </form-item>
     </div>
 
     <el-table
+      ref="tableRef"
       :data="resourceData.showSelected ? selectedResourceData : resourceData.list"
       stripe
-      @selection-change="selectReousce"
+      @select="selectResources"
+      @select-all="selectAllResources"
       border
       height="400"
     >
@@ -249,9 +261,9 @@
             placement="top"
             v-if="[2, 3].includes(scope.row.status)"
           >
-            {{ statusMapping.find((item) => item.value === scope.row.status).label }}
+            {{ statusMapping.find((item: any) => item.value === scope.row.status).label }}
           </el-tooltip>
-          <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status).label }}</span>
+          <span v-else>{{ statusMapping.find((item: any) => item.value === scope.row.status).label }}</span>
         </template>
       </el-table-column>
     </el-table>
@@ -259,7 +271,7 @@
       <div class="selected-tip">
         <template v-if="selectedResourceData.length">
           <div>已选{{ selectedResourceData.length }}项</div>
-          <div class="text-btn" @click="resourceData.showSelected = !resourceData.showSelected">
+          <div class="text-btn" @click="switchShowSelected()">
             {{ resourceData.showSelected ? "返回" : "查看所有已选" }}
           </div>
         </template>
@@ -275,8 +287,8 @@
       />
     </div>
     <div class="btns-area">
-      <el-button @click="clearSearch()">取消</el-button>
-      <el-button type="primary" @click="getData(true)">保存</el-button>
+      <el-button @click="closeResourcePopup()">取消</el-button>
+      <el-button type="primary" @click="operateChoiceness('POST')">保存</el-button>
     </div>
   </el-dialog>
 
@@ -338,10 +350,11 @@ import { useMyRouter } from "@/utils/hooks";
 import { ResourceService, ContractsService, ActivitiesService } from "@/api/request";
 import { dateRangeShortcuts, resourceTypeList } from "@/assets/data";
 import { Operation, Close, Document, Download, Grid, Clock } from "@element-plus/icons-vue";
-import { reactive, toRefs, computed, defineAsyncComponent } from "vue";
+import { reactive, toRefs, computed, defineAsyncComponent, ref, nextTick } from "vue";
 import { OperateChoicenessParams, Policy, Resource, ResourceVersion } from "@/typings/object";
 import { ResourceListParams } from "@/typings/params";
-import { ElMessageBox } from "element-plus";
+import { ElMessageBox, ElTable } from "element-plus";
+import { ElMessage } from "element-plus/lib/components";
 
 /** 资源列表参数 */
 export interface MyResourceListParams extends ResourceListParams {
@@ -363,7 +376,13 @@ export default {
 
   setup() {
     const { query, switchPage, openPage } = useMyRouter();
+    const tableRef = ref<InstanceType<typeof ElTable>>();
     const assetsData = {
+      statusOptions: [
+        { value: "0", label: "下线" },
+        { value: "1", label: "上线" },
+        { value: "2,3", label: "禁用" },
+      ],
       statusMapping: [
         { value: 0, label: "下线" },
         { value: 1, label: "上线" },
@@ -392,7 +411,6 @@ export default {
         list: [] as Resource[],
         total: 0,
         showSelected: false,
-        selectedListToShow: [] as Resource[],
       },
       selectedResourceData: [] as Resource[],
       policyPopupShow: false,
@@ -497,15 +515,10 @@ export default {
         openPage(url);
       },
 
-      /** 操作编辑精选 */
-      operateChoiceness() {
-        console.error(data.selectedData);
-      },
-
       /** 打开资源列表 */
       openResourceList() {
         data.resourcePopupShow = true;
-        this.getResourceList();
+        this.getResourceList(true);
       },
 
       /** 获取资源列表 */
@@ -526,15 +539,64 @@ export default {
             list: dataList,
             total: totalItem,
             showSelected: false,
-            selectedListToShow: [],
           };
+          this.updateResourceSelections();
         }
+      },
+
+      /** 更新资源列表选中状态 */
+      updateResourceSelections() {
+        const list = data.resourceData.showSelected ? data.selectedResourceData : data.resourceData.list;
+        list.forEach((row) => {
+          const index = data.selectedResourceData.findIndex((item) => item.resourceId === row.resourceId);
+          nextTick(() => {
+            tableRef.value!.toggleRowSelection(row, index !== -1);
+          });
+        });
       },
 
       /** 切换资源表格页码 */
       changeResourcePage(value: number) {
         data.resourceSearchData.currentPage = value;
         this.getResourceList();
+      },
+
+      /** 关闭资源列表弹窗 */
+      closeResourcePopup() {
+        tableRef.value!.clearSelection();
+        data.resourcePopupShow = false;
+        data.selectedResourceData = [];
+      },
+
+      /** 切换资源列表显示内容 */
+      switchShowSelected() {
+        data.resourceData.showSelected = !data.resourceData.showSelected;
+        this.updateResourceSelections();
+      },
+
+      /** 选择资源表格项 */
+      selectResources(selected: Resource[], row: Resource) {
+        const index = data.selectedResourceData.findIndex((item) => item.resourceId === row.resourceId);
+        if (index === -1) {
+          data.selectedResourceData.push(row);
+        } else {
+          data.selectedResourceData.splice(index, 1);
+        }
+      },
+
+      /** 全选资源表格项 */
+      selectAllResources(selected: Resource[]) {
+        const all = selected.length !== 0;
+        data.resourceData.list.forEach((row) => {
+          const index = data.selectedResourceData.findIndex(
+            (selectedItem) => selectedItem.resourceId === row.resourceId
+          );
+          if (all && index === -1) {
+            data.selectedResourceData.push(row);
+          } else if (!all && index !== -1) {
+            data.selectedResourceData.splice(index, 1);
+          }
+        });
       },
 
       /** 选择表格项 */
@@ -548,23 +610,32 @@ export default {
         data.policyData = resource.policies;
       },
 
-      /** 移除操作 */
-      remove(resourceId?: string) {
-        ElMessageBox.confirm(`确认要移出${resourceId ? "此" : "选中"}资源吗？`, "移出", {
-          confirmButtonText: "移出",
-          cancelButtonText: "取消",
-        }).then(() => {
-          data.operateData.resourceIds = resourceId ? [resourceId] : data.selectedData.map((item) => item.resourceId);
-          this.operateConfirm("DELETE");
+      /** 添加/移除编辑精选 */
+      operateChoiceness(method: "POST" | "PUT", resourceId?: string) {
+        ElMessageBox.confirm(
+          `确定要将${resourceId ? "此" : "选中"}资源${method === "POST" ? "添加" : "移除"}编辑精选吗？`,
+          method === "POST" ? "添加" : "移除",
+          {
+            confirmButtonText: method === "POST" ? "添加" : "移除",
+            cancelButtonText: "取消",
+          }
+        ).then(() => {
+          const selectedList = method === "POST" ? data.selectedResourceData : data.selectedData;
+          data.operateData.resourceIds = resourceId ? [resourceId] : selectedList.map((item) => item.resourceId);
+          this.operateConfirm(method);
         });
       },
 
-      /** 操作（封禁/解封） */
-      async operateConfirm(type: "POST" | "DELETE") {
-        const result = await ActivitiesService.OperateChoiceness(data.operateData, type);
-        const { errcode } = result.data;
+      /** 操作编辑精选 */
+      async operateConfirm(method: "POST" | "PUT") {
+        const result = await ActivitiesService.OperateChoiceness(data.operateData, method);
+        const { errcode, msg } = result.data;
         if (errcode === 0) {
+          ElMessage.success(`${method === "POST" ? "添加" : "移除"}成功`);
+          this.closeResourcePopup();
           this.getData();
+        } else {
+          ElMessage.error(msg);
         }
       },
 
@@ -612,6 +683,7 @@ export default {
     return {
       resourceTypeList,
       dateRangeShortcuts,
+      tableRef,
       ...assetsData,
       ...toRefs(data),
       currentVersionData,

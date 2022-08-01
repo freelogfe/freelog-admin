@@ -3,8 +3,8 @@
   <list-template>
     <template v-slot:barLeft v-if="selectedData.length">
       <el-button type="primary" @click="setTag()">添加标签</el-button>
-      <el-button type="primary" @click="operateChoiceness()">加入编辑精选</el-button>
-      <el-button type="primary" @click="operateChoiceness()">移出编辑精选</el-button>
+      <el-button type="primary" @click="operateChoiceness('POST')">加入编辑精选</el-button>
+      <el-button type="primary" @click="operateChoiceness('PUT')">移出编辑精选</el-button>
       <el-button type="primary" @click="banResources()">封禁</el-button>
       <el-button type="primary" @click="restore()">解封</el-button>
       <span class="selected-tip">已选中{{ selectedData.length }}条</span>
@@ -63,7 +63,7 @@
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
+      <el-table ref="tableRef" :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
         <el-table-column label="资源" min-width="250">
           <template #default="scope">
@@ -321,12 +321,12 @@
 <script lang="ts">
 import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
-import { ElMessageBox } from "element-plus";
-import { ResourceService, ContractsService } from "@/api/request";
+import { ElMessage, ElMessageBox, ElTable } from "element-plus";
+import { ResourceService, ContractsService, ActivitiesService } from "@/api/request";
 import { dateRangeShortcuts, resourceTypeList } from "@/assets/data";
 import { Operation, Edit, Clock, Close, Check, Grid, Download } from "@element-plus/icons-vue";
-import { reactive, toRefs, computed, defineAsyncComponent } from "vue";
-import { Policy, Resource, ResourceTag, ResourceVersion } from "@/typings/object";
+import { reactive, toRefs, computed, defineAsyncComponent, ref } from "vue";
+import { OperateChoicenessParams, Policy, Resource, ResourceTag, ResourceVersion } from "@/typings/object";
 import {
   ResourceListParams,
   OperateResourceParams,
@@ -362,6 +362,7 @@ export default {
 
   setup() {
     const { query, switchPage, openPage } = useMyRouter();
+    const tableRef = ref<InstanceType<typeof ElTable>>();
     const assetsData = {
       statusMapping: [
         { value: 0, label: "下线" },
@@ -503,8 +504,31 @@ export default {
       },
 
       /** 操作编辑精选 */
-      operateChoiceness() {
-        console.error(data.selectedData);
+      operateChoiceness(method: "POST" | "PUT") {
+        ElMessageBox.confirm(
+          `确认要将选中资源${method === "POST" ? "添加" : "移除"}编辑精选吗？`,
+          method === "POST" ? "添加编辑精选" : "移除编辑精选",
+          {
+            confirmButtonText: method === "POST" ? "添加" : "移除",
+            cancelButtonText: "取消",
+          }
+        ).then(async () => {
+          const params: OperateChoicenessParams = {
+            type: 1,
+            resourceIds: data.selectedData.map((item) => item.resourceId),
+          };
+          const result = await ActivitiesService.OperateChoiceness(params, method);
+          const { errcode, msg } = result.data;
+          if (errcode === 0) {
+            ElMessage.success(`${method === "POST" ? "添加" : "移除"}成功`);
+            data.selectedData.forEach((item) => {
+              item.choiceness = method === "POST";
+            });
+            tableRef.value!.clearSelection();
+          } else {
+            ElMessage.error(msg);
+          }
+        });
       },
 
       /** 封禁操作 */
@@ -710,6 +734,7 @@ export default {
     return {
       resourceTypeList,
       dateRangeShortcuts,
+      tableRef,
       ...assetsData,
       ...toRefs(data),
       currentVersionData,
