@@ -75,8 +75,8 @@ export default {
     };
     const data = reactive({
       loginData: {
-        loginName: "support@freelog.com",
-        password: "f233109!",
+        loginName: "",
+        password: "",
       } as LoginParams,
     });
 
