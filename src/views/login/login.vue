@@ -75,8 +75,8 @@ export default {
     };
     const data = reactive({
       loginData: {
-        loginName: "",
-        password: "",
+        loginName: process.env.NODE_ENV === "production" ? "" : "support@freelog.com",
+        password: process.env.NODE_ENV === "production" ? "" : "f233109!",
       } as LoginParams,
     });
 
