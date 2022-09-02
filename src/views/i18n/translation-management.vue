@@ -173,7 +173,6 @@
                   type="success"
                   @click="save(true)"
                   :disabled="!editData.value.zh.content || !editData.value.en.content"
-                  v-if="editData.status !== 3"
                 >
                   保存并提交
                 </el-button>
@@ -692,14 +691,14 @@ export default {
       },
 
       /** 保存 */
-      async save(needPublish: boolean) {
+      async save(needPublish = false) {
         if (!data.editData) return;
 
         data.editData.key = (data.editData.key as string).trim();
         if (!validate()) return;
 
         const { _id } = data.editData;
-        if (needPublish || data.editData.status === 3) data.editData.needPublish = true;
+        data.editData.needPublish = needPublish;
         let result;
         if (_id) {
           // 编辑
