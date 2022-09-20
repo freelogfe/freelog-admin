@@ -1,6 +1,8 @@
 <!-- 列表页模板 -->
 <template>
   <div id="listTemplate" class="list-template-wrapper">
+    <slot name="top" />
+
     <div class="header-bar">
       <!-- 头部左侧 -->
       <div>

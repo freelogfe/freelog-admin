@@ -156,7 +156,7 @@
     </template>
   </list-template>
 
-  <el-dialog v-model="detailPopupShow" title="合约详情">
+  <el-dialog v-model="detailPopupShow" title="合约详情" destroy-on-close>
     <div class="basic-info">
       <form-item label="标的物">{{ detailData.subjectName }}</form-item>
       <form-item label="授权策略">{{ detailData.contractName }}</form-item>
@@ -183,14 +183,8 @@
           </div>
           <div class="state-info">{{ item.stateInfoStr }}</div>
           <template v-if="index === 0 && detailData.myStatus !== 6">
-            <div
-              class="event"
-              v-for="event in detailData.policyInfo.translateInfo.fsmInfos.find(
-                (info) => info.stateInfo.origin === detailData.fsmCurrentState
-              ).eventTranslateInfos"
-              :key="event.content"
-            >
-              {{ event.content }}
+            <div class="event" v-for="event in item.eventSectionStrs" :key="event">
+              {{ event }}
             </div>
           </template>
         </div>

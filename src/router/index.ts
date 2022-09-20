@@ -251,6 +251,25 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
+        path: "reward-management",
+        name: "rewardManagement",
+        component: () => import("../views/operating/reward-management.vue"),
+        meta: {
+          title: "活动奖励管理",
+          sideBarItem: "rewardManagement",
+        },
+      },
+      {
+        path: "issue-record",
+        name: "issueRecord",
+        component: () => import("../views/operating/issue-record.vue"),
+        meta: {
+          title: "发放记录",
+          sideBarItem: "rewardManagement",
+          hidden: true,
+        },
+      },
+      {
         path: "advertisement-management",
         name: "advertisementManagement",
         component: () => import("../views/operating/advertisement-management.vue"),
