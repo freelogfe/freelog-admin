@@ -167,33 +167,35 @@
     </div>
     <el-tabs v-model="detailTabActive" type="border-card">
       <el-tab-pane name="tab1" label="合约流转记录">
-        <div class="record-item" v-for="(item, index) in detailData.transitionRecords" :key="item.time">
-          <div class="item-header">
-            <div
-              class="status"
-              :class="{
-                terminal: detailData.myStatus === 6,
-                active: [1, 2, 3].includes(item.serviceStates),
-                inactive: item.serviceStates === 128,
-              }"
-            >
-              {{ index === 0 && detailData.myStatus === 6 ? "已终止" : authStatusMapping[item.serviceStates] }}
+        <div class="tab-pane-item">
+          <div class="record-item" v-for="(item, index) in detailData.transitionRecords" :key="item.time">
+            <div class="item-header">
+              <div
+                class="status"
+                :class="{
+                  terminal: detailData.myStatus === 6,
+                  active: [1, 2, 3].includes(item.serviceStates),
+                  inactive: item.serviceStates === 128,
+                }"
+              >
+                {{ index === 0 && detailData.myStatus === 6 ? "已终止" : authStatusMapping[item.serviceStates] }}
+              </div>
+              <div class="time">{{ item.time }}</div>
             </div>
-            <div class="time">{{ item.time }}</div>
+            <div class="state-info">{{ item.stateInfoStr }}</div>
+            <template v-if="index === 0 && detailData.myStatus !== 6">
+              <div class="event" v-for="event in item.eventSectionStrs" :key="event">
+                {{ event }}
+              </div>
+            </template>
           </div>
-          <div class="state-info">{{ item.stateInfoStr }}</div>
-          <template v-if="index === 0 && detailData.myStatus !== 6">
-            <div class="event" v-for="event in item.eventSectionStrs" :key="event">
-              {{ event }}
-            </div>
-          </template>
         </div>
       </el-tab-pane>
       <el-tab-pane name="tab2" label="策略内容">
-        <div class="policy-content" v-html="detailData.policyInfo.translateInfo.content"></div>
+        <div class="tab-pane-item policy-content" v-html="detailData.policyInfo.translateInfo.content"></div>
       </el-tab-pane>
       <el-tab-pane name="tab3" label="策略代码">
-        <div class="policy-content" v-html="detailData.policyInfo.policyText"></div>
+        <div class="tab-pane-item policy-content" v-html="detailData.policyInfo.policyText"></div>
       </el-tab-pane>
     </el-tabs>
   </el-dialog>
@@ -408,67 +410,67 @@ export default {
   }
 }
 
-.record-item {
-  width: 100%;
-  color: #222;
-  font-size: 14px;
-
-  & + .record-item {
-    margin-top: 20px;
-    opacity: 0.3;
-  }
-
-  .item-header {
-    display: flex;
-    align-items: center;
-
-    .status {
-      height: 20px;
-      font-size: 12px;
-      color: #fff;
-      padding: 0 10px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-
-      &.active {
-        background-color: #44c28c;
-      }
-
-      &.inactive {
-        background-color: #e9a923;
-      }
-
-      &.terminal {
-        background-color: #999;
-      }
-    }
-
-    .time {
-      margin-left: 10px;
-    }
-  }
-
-  .state-info {
-    line-height: 20px;
-    font-weight: bold;
-    margin-top: 10px;
-  }
-
-  .event {
-    width: 100%;
-    font-weight: bold;
-    border-radius: 4px;
-    padding: 10px;
-    box-sizing: border-box;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    margin-top: 10px;
-  }
-}
-
-.policy-content {
+.tab-pane-item {
   max-height: 300px;
   overflow-y: auto;
   white-space: pre-wrap;
+
+  .record-item {
+    width: 100%;
+    color: #222;
+    font-size: 14px;
+
+    & + .record-item {
+      margin-top: 20px;
+      opacity: 0.3;
+    }
+
+    .item-header {
+      display: flex;
+      align-items: center;
+
+      .status {
+        height: 20px;
+        font-size: 12px;
+        color: #fff;
+        padding: 0 10px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+
+        &.active {
+          background-color: #44c28c;
+        }
+
+        &.inactive {
+          background-color: #e9a923;
+        }
+
+        &.terminal {
+          background-color: #999;
+        }
+      }
+
+      .time {
+        margin-left: 10px;
+      }
+    }
+
+    .state-info {
+      line-height: 20px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .event {
+      width: 100%;
+      font-weight: bold;
+      border-radius: 4px;
+      padding: 10px;
+      box-sizing: border-box;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      margin-top: 10px;
+    }
+  }
 }
 </style>
