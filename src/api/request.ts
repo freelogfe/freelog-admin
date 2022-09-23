@@ -34,6 +34,8 @@ import {
   UserListParams,
   CreateOrEditTranslationParams,
   ChoicenessListParams,
+  RewardListParams,
+  RewardRecordListParams,
 } from "@/typings/params";
 import Axios from "./http";
 
@@ -331,11 +333,14 @@ export class TransactionsService {
 export class ActivitiesService {
   /** 获取编辑精选列表 */
   static getChoicenessList(params: ChoicenessListParams): Promise<HttpResponse> {
-    return Axios("/v2/resources/operations", { method: "GET", params: { ...params, sort: "createDate:-1", isLoadPolicyInfo: 1 } });
+    return Axios("/v2/resources/operations", {
+      method: "GET",
+      params: { ...params, sort: "createDate:-1", isLoadPolicyInfo: 1 },
+    });
   }
 
   /** 操作编辑精选 */
-  static OperateChoiceness(data: OperateChoicenessParams, method: "POST" | "PUT"): Promise<HttpResponse> {
+  static operateChoiceness(data: OperateChoicenessParams, method: "POST" | "PUT"): Promise<HttpResponse> {
     return Axios("/v2/resources/operations", { method, data });
   }
 
@@ -370,6 +375,58 @@ export class ActivitiesService {
   /** 操作活动 */
   static operateActivity(data: { _id: number; status: 1 | 2 }): Promise<HttpResponse> {
     return Axios("/v2/activities/updateStatus", { method: "PUT", data });
+  }
+
+  /** 获取活动奖励列表 */
+  static getRewardList(params: RewardListParams): Promise<HttpResponse> {
+    return Axios("/v2/activities/reward/configs/list", {
+      method: "POST",
+      data: {
+        skipSize: params.skip,
+        pageSize: params.limit,
+        title: params.keywords || "",
+        tag: params.tag,
+        rewardType: params.rewardType,
+      },
+    });
+  }
+
+  /** 通过 id 获取活动奖励信息 */
+  static getRewardById(id: string): Promise<HttpResponse> {
+    return Axios("/v2/activities/reward/configs/find", {
+      method: "GET",
+      params: { id },
+    });
+  }
+
+  /** 暂停/恢复活动奖励 */
+  static operateReward(params: { id: string }): Promise<HttpResponse> {
+    return Axios("/v2/activities/reward/configs/pauseOrRecover", { method: "GET", params });
+  }
+
+  /** 获取活动奖励统计信息 */
+  static getRewardStatistic(id: string): Promise<HttpResponse> {
+    return Axios("/v2/activities/reward/configs/statisticInfo", {
+      method: "POST",
+      data: { code: id },
+    });
+  }
+
+  /** 获取活动奖励发放记录列表 */
+  static getRewardRecordList(params: RewardRecordListParams): Promise<HttpResponse> {
+    const data: any = {
+      rewardConfigCode: params.id,
+      skipSize: params.skip,
+      pageSize: params.limit,
+      tag: params.tag,
+    };
+    if (params.keywords) data.username = params.keywords;
+    return Axios("/v2/activities/reward/records/listDetails", { method: "POST", data });
+  }
+
+  /** 审核活动奖励发放 */
+  static operateIssue(data: { isPass: boolean; ids: string[] }): Promise<HttpResponse> {
+    return Axios("/v2/activities/reward/records/verifyBatch", { method: "POST", data });
   }
 
   /** 获取广告列表 */

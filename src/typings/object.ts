@@ -229,6 +229,27 @@ export interface Activity {
   isDraft: boolean;
 }
 
+/** 活动奖励数据 */
+export interface Reward {
+  id: string;
+  title: string;
+  rewardType: number;
+  startTime: string;
+  limitTime: string;
+  status: 1 | 2;
+}
+
+/** 活动奖励发放记录数据 */
+export interface RewardRecord {
+  id: string;
+  rewardConfigTitle: string;
+  userId: string;
+  username: string;
+  updateTime: string;
+  rewardNum: number;
+  tag: 1 | 2 | 3 | 4;
+}
+
 /** 广告数据 */
 export interface Advertisement {
   _id: string;

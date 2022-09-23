@@ -13,11 +13,11 @@
     <template v-slot:filterBar>
       <div class="filter-controls">
         <form-item label="关键字搜索">
-          <el-input v-model="searchData.keywords" placeholder="请输入标签名" clearable @keyup.enter="getData(true)" />
+          <el-input v-model="searchData.keywords" placeholder="请输入标签名" clearable @keyup.enter="getData()" />
         </form-item>
       </div>
       <div class="filter-btns">
-        <el-button type="primary" @click="getData(true)">搜索</el-button>
+        <el-button type="primary" @click="getData()">搜索</el-button>
         <el-button @click="clearSearch()">重置</el-button>
       </div>
     </template>

@@ -628,7 +628,7 @@ export default {
 
       /** 操作编辑精选 */
       async operateConfirm(method: "POST" | "PUT") {
-        const result = await ActivitiesService.OperateChoiceness(data.operateData, method);
+        const result = await ActivitiesService.operateChoiceness(data.operateData, method);
         const { errcode, msg } = result.data;
         if (errcode === 0) {
           ElMessage.success(`${method === "POST" ? "添加" : "移除"}成功`);

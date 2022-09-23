@@ -44,7 +44,7 @@
         </form-item>
       </div>
       <div class="filter-btns">
-        <el-button type="primary" @click="getData()">搜索</el-button>
+        <el-button type="primary" @click="getData(true)">搜索</el-button>
         <el-button @click="clearSearch()">重置</el-button>
       </div>
     </template>
@@ -368,7 +368,7 @@ export default {
         const result = await UserService.createCode(data.operateData);
         const { errcode } = result.data;
         if (errcode === 0) {
-          this.getData();
+          this.getData(true);
           data.createCodePopupShow = false;
         }
       },
@@ -384,6 +384,7 @@ export default {
         if (init) data.recordSearchData.currentPage = 1;
         const { currentPage, limit } = data.recordSearchData;
         data.recordSearchData.skip = (currentPage - 1) * limit;
+        data.recordSearchData.code = code;
         const result = await UserService.getCodeRecordList(data.recordSearchData);
         const { errcode } = result.data;
         if (errcode === 0) {
@@ -408,7 +409,7 @@ export default {
           });
           const { errcode } = result.data;
           if (errcode === 0) {
-            this.getData();
+            this.getData(true);
           }
         });
       },

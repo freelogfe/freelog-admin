@@ -175,7 +175,7 @@ export default {
         const { errcode } = result.data;
         if (errcode === 0) {
           data.tagPopupShow = false;
-          this.getData();
+          this.getData(true);
         }
       },
 

@@ -517,7 +517,7 @@ export default {
             type: 1,
             resourceIds: data.selectedData.map((item) => item.resourceId),
           };
-          const result = await ActivitiesService.OperateChoiceness(params, method);
+          const result = await ActivitiesService.operateChoiceness(params, method);
           const { errcode, msg } = result.data;
           if (errcode === 0) {
             ElMessage.success(`${method === "POST" ? "添加" : "移除"}成功`);
@@ -556,7 +556,7 @@ export default {
         const { errcode } = result.data;
         if (errcode === 0) {
           data.banPopupShow = false;
-          this.getData();
+          this.getData(true);
         }
       },
 
@@ -639,7 +639,7 @@ export default {
             if (errcode !== 0) return;
             if (addTags.length === 0) {
               data.setTagPopupShow = false;
-              this.getData();
+              this.getData(true);
             }
           }
         } else {
@@ -657,7 +657,7 @@ export default {
           const { errcode } = result.data;
           if (errcode === 0) {
             data.setTagPopupShow = false;
-            this.getData();
+            this.getData(true);
           }
         }
       },

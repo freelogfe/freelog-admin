@@ -237,12 +237,6 @@ export interface ActivityListParams extends ListParams {
   status?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
 }
 
-/** 广告列表参数 */
-export interface AdsListParams extends ListParams {
-  status?: 0 | 1 | 2 | 3 | 4;
-  place?: 1 | 2 | 3 | 4;
-}
-
 /** 创建/编辑活动参数 */
 export interface CreateOrEditActivityParams {
   _id?: number;
@@ -255,6 +249,24 @@ export interface CreateOrEditActivityParams {
   publishDate: string;
   status?: 1 | 2;
   isDraft?: boolean;
+}
+
+/** 活动奖励列表参数 */
+export interface RewardListParams extends ListParams {
+  tag?: 1 | 2 | 3 | 4;
+  rewardType?: 1 | 2 | 3;
+}
+
+/** 活动奖励发放列表参数 */
+export interface RewardRecordListParams extends ListParams {
+  id: string,
+  tag?: 1 | 2 | 3 | 4;
+}
+
+/** 广告列表参数 */
+export interface AdsListParams extends ListParams {
+  status?: 0 | 1 | 2 | 3 | 4;
+  place?: 1 | 2 | 3 | 4;
 }
 
 /** 创建/编辑广告参数 */
