@@ -212,12 +212,16 @@ export default {
       async getRewardInfo() {
         const result = await ActivitiesService.getRewardById(data.id);
         const { data: rewardData } = result.data;
-        if (rewardData) data.rewardData = [rewardData];
+        if (!rewardData) return;
+        data.rewardData = [rewardData];
+        data.searchData.code = rewardData.code;
+        this.getRewardStatistic();
+        this.getData(true);
       },
 
       /** 获取活动奖励统计数据 */
       async getRewardStatistic() {
-        const result = await ActivitiesService.getRewardStatistic(data.id);
+        const result = await ActivitiesService.getRewardStatistic(data.rewardData[0].code);
         data.statisticData = result.data.data;
       },
 
@@ -247,7 +251,7 @@ export default {
       /** 重置 */
       clearSearch() {
         data.searchData = {
-          id: data.id,
+          code: data.rewardData[0].code,
           currentPage: 1,
           limit: 20,
         };
@@ -337,10 +341,7 @@ export default {
     };
 
     data.id = query.value.id;
-    data.searchData.id = data.id;
     methods.getRewardInfo();
-    methods.getRewardStatistic();
-    methods.getData(true);
 
     return {
       ...assetsData,

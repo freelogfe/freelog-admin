@@ -259,7 +259,7 @@ export interface RewardListParams extends ListParams {
 
 /** 活动奖励发放列表参数 */
 export interface RewardRecordListParams extends ListParams {
-  id: string,
+  code: string,
   tag?: 1 | 2 | 3 | 4;
 }
 

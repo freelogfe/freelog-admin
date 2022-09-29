@@ -415,7 +415,7 @@ export class ActivitiesService {
   /** 获取活动奖励发放记录列表 */
   static getRewardRecordList(params: RewardRecordListParams): Promise<HttpResponse> {
     const data: any = {
-      rewardConfigCode: params.id,
+      rewardConfigCode: params.code,
       skipSize: params.skip,
       pageSize: params.limit,
       tag: params.tag,

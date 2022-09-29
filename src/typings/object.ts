@@ -232,6 +232,7 @@ export interface Activity {
 /** 活动奖励数据 */
 export interface Reward {
   id: string;
+  code: string;
   title: string;
   rewardType: number;
   startTime: string;
