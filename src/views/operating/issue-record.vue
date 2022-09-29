@@ -6,10 +6,9 @@
         <el-table :data="rewardData">
           <el-table-column property="title" label="奖励名称" min-width="150" />
           <el-table-column label="奖励类型" min-width="100">
-            <template
-              #default="scope"
-              >{{ rewardTypeMapping.find((item: any) => item.value === scope.row.rewardType).label }}</template
-            >
+            <template #default="scope">
+              {{ rewardTypeMapping.find((item: any) => item.value === scope.row.rewardType).label }}
+            </template>
           </el-table-column>
           <el-table-column label="有效期" min-width="250">
             <template #default="scope">{{
@@ -40,27 +39,27 @@
       <div class="card statistic-area">
         <div class="statistic-item">
           <div class="title">昨日发放额度（元）</div>
-          <div class="num">{{ statisticData.sumRewardNumY || "" }}</div>
+          <div class="num">{{ statisticData.sumRewardNumY }}</div>
         </div>
         <div class="statistic-item">
           <div class="title">昨日发放次数</div>
-          <div class="num">{{ statisticData.countRewardRecordY || "" }}</div>
+          <div class="num">{{ statisticData.countRewardRecordY }}</div>
         </div>
         <div class="statistic-item">
           <div class="title">昨日发放用户数</div>
-          <div class="num">{{ statisticData.countUserIdY || "" }}</div>
+          <div class="num">{{ statisticData.countUserIdY }}</div>
         </div>
         <div class="statistic-item">
           <div class="title">累计发放额度（元）</div>
-          <div class="num">{{ statisticData.sumRewardNum || "" }}</div>
+          <div class="num">{{ statisticData.sumRewardNum }}</div>
         </div>
         <div class="statistic-item">
           <div class="title">累计发放次数</div>
-          <div class="num">{{ statisticData.countRewardRecord || "" }}</div>
+          <div class="num">{{ statisticData.countRewardRecord }}</div>
         </div>
         <div class="statistic-item">
           <div class="title">累计发放用户数</div>
-          <div class="num">{{ statisticData.countUserId || "" }}</div>
+          <div class="num">{{ statisticData.countUserId }}</div>
         </div>
       </div>
     </template>
@@ -88,11 +87,26 @@
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
-        <el-table-column type="selection" />
+      <el-table ref="tableRef" :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
+        <el-table-column type="selection" :selectable="(row) => row.tag === 1" />
         <el-table-column property="id" label="记录编号" min-width="250" />
-        <el-table-column property="rewardConfigTitle" label="关联信息" min-width="250" />
-        <el-table-column property="username" label="用户" min-width="250" />
+        <el-table-column label="关联信息" min-width="250">
+          <template #default="scope">
+            <div class="info">
+              <div>{{ scope.row.rewardConfigTitle }}</div>
+              <template v-for="item in scope.row.resources" :key="item.resourceId">
+                <subject-name :type="1" :name="item.resourceName" :id="item.resourceId" />
+              </template>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="用户" min-width="200" show-overflow-tooltip>
+          <template #default="scope">
+            <span class="text-btn" @click="switchPage('/user/user-management', { userId: scope.row.userId })">
+              {{ scope.row.username }}
+            </span>
+          </template>
+        </el-table-column>
         <el-table-column label="生成日期" min-width="160">
           <template #default="scope">{{ formatDate(scope.row.updateTime) }}</template>
         </el-table-column>
@@ -109,7 +123,7 @@
             </el-icon>
           </template>
           <template #default="scope">
-            <el-icon class="icon-btn" title="审核" @click="audit(scope.row.id)">
+            <el-icon class="icon-btn" title="审核" @click="audit(scope.row.id)" v-if="scope.row.tag === 1">
               <check />
             </el-icon>
           </template>
@@ -130,12 +144,12 @@
 
   <el-dialog v-model="auditPopupShow" title="奖励发放审核" width="400px">
     <el-radio-group v-model="operateData.isPass">
-      <el-radio value="1" label="审核通过，允许发放"></el-radio><br />
-      <el-radio value="0" label="审核未通过，不予发放"></el-radio>
+      <el-radio :label="true">审核通过，允许发放</el-radio><br />
+      <el-radio :label="false"><span class="refuse-tip">审核未通过，不予发放</span></el-radio>
     </el-radio-group>
     <template #footer>
       <el-button @click="auditPopupShow = false">取消</el-button>
-      <el-button type="primary" :disabled="!operateData.reason" @click="operateAuditConfirm()">确定</el-button>
+      <el-button type="primary" :disabled="operateData.isPass === null" @click="operateAuditConfirm()">确定</el-button>
     </template>
   </el-dialog>
 </template>
@@ -144,16 +158,18 @@
 import { formatDate } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ActivitiesService } from "@/api/request";
-import { Operation, Check } from "@element-plus/icons-vue";
-import { reactive, toRefs } from "vue";
+import { Operation, Check, Close } from "@element-plus/icons-vue";
+import { defineAsyncComponent, reactive, ref, toRefs } from "vue";
 import { Reward, RewardRecord } from "@/typings/object";
-import { ElMessage, ElMessageBox } from "element-plus/lib/components";
+import { ElMessage, ElMessageBox, ElTable } from "element-plus/lib/components";
 import { RewardRecordListParams } from "@/typings/params";
 
 export default {
   components: {
+    "subject-name": defineAsyncComponent(() => import("@/components/subject-name.vue")),
     Operation,
     Check,
+    Close,
   },
 
   setup() {
@@ -177,6 +193,7 @@ export default {
         { value: 4, label: "已发放" },
       ],
     };
+    const tableRef = ref<InstanceType<typeof ElTable>>();
     const data = reactive({
       id: "",
       rewardData: [] as Reward[],
@@ -186,7 +203,7 @@ export default {
       total: 0,
       searchData: { currentPage: 1, limit: 20 } as RewardRecordListParams,
       selectedData: [] as RewardRecord[],
-      operateData: { isPass: false, ids: [] as string[] },
+      operateData: { isPass: null as boolean | null, ids: [] as string[] },
       auditPopupShow: false,
     });
 
@@ -194,7 +211,8 @@ export default {
       /** 获取活动奖励数据 */
       async getRewardInfo() {
         const result = await ActivitiesService.getRewardById(data.id);
-        console.error(result);
+        const { data: rewardData } = result.data;
+        if (rewardData) data.rewardData = [rewardData];
       },
 
       /** 获取活动奖励统计数据 */
@@ -213,15 +231,15 @@ export default {
         const result = await ActivitiesService.getRewardRecordList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
-          const { dataList, totalItem } = result.data.data;
+          const { rewardRecords, num } = result.data.data;
 
-          if (dataList.length === 0) {
+          if (rewardRecords.length === 0) {
             data.loading = false;
             return;
           }
 
-          // data.tableData = dataList;
-          data.total = totalItem;
+          data.tableData = rewardRecords;
+          data.total = num;
           data.loading = false;
         }
       },
@@ -299,12 +317,19 @@ export default {
       /** 操作审核 */
       async operateAuditConfirm() {
         const { isPass } = data.operateData;
-        data.operateData.isPass = !!data.operateData.isPass;
-        const result = await ActivitiesService.operateIssue(data.operateData);
+        if (isPass === null) return;
+
+        const result = await ActivitiesService.operateIssue(data.operateData as { isPass: boolean; ids: string[] });
         const { errcode, msg } = result.data;
         if (errcode === 0) {
-          ElMessage.success(`审核${data.operateData.isPass ? "通过" : "拒绝"}`);
-          this.getData();
+          data.operateData.ids.forEach((id) => {
+            const record = data.tableData.find((item) => item.id === id);
+            if (record) record.tag = isPass ? 4 : 2;
+          });
+          tableRef.value!.clearSelection();
+          ElMessage.success(`审核${isPass ? "通过" : "拒绝"}`);
+          data.auditPopupShow = false;
+          data.operateData.isPass = null;
         } else {
           ElMessage.error(msg);
         }
@@ -319,6 +344,7 @@ export default {
 
     return {
       ...assetsData,
+      tableRef,
       ...toRefs(data),
       ...methods,
       formatDate,
@@ -363,5 +389,9 @@ export default {
 
 .el-radio-group {
   display: block;
+}
+
+.refuse-tip {
+  color: #ff0000;
 }
 </style>
