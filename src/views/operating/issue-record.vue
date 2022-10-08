@@ -108,7 +108,7 @@
           </template>
         </el-table-column>
         <el-table-column label="生成日期" min-width="160">
-          <template #default="scope">{{ formatDate(scope.row.updateTime) }}</template>
+          <template #default="scope">{{ formatDate(scope.row.completedTime) }}</template>
         </el-table-column>
         <el-table-column property="rewardNum" label="发放额度（元）" min-width="250" />
         <el-table-column label="发放状态">
