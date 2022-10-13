@@ -28,7 +28,7 @@
         <el-table-column property="title" label="奖励名称" min-width="150" />
         <el-table-column label="奖励类型" min-width="100">
           <template #default="scope">
-            {{ rewardTypeMapping.find((item: any) => item.value === scope.row.rewardType)?.label }}
+            {{ (rewardTypeMapping.find((item: any) => item.value === scope.row.rewardType)|| {label:''}).label }}
           </template>
         </el-table-column>
         <el-table-column label="有效期" min-width="250">
