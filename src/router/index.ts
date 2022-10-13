@@ -260,6 +260,16 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
+        path: "edit-reward",
+        name: "editReward",
+        component: () => import("../views/operating/edit-reward.vue"),
+        meta: {
+          title: "编辑奖励配置",
+          sideBarItem: "rewardManagement",
+          hidden: true,
+        },
+      },
+      {
         path: "issue-record",
         name: "issueRecord",
         component: () => import("../views/operating/issue-record.vue"),

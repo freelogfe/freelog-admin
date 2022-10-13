@@ -27,10 +27,9 @@
       <el-table :data="tableData" stripe v-loading="loading">
         <el-table-column property="title" label="奖励名称" min-width="150" />
         <el-table-column label="奖励类型" min-width="100">
-          <template
-            #default="scope"
-            >{{ rewardTypeMapping.find((item: any) => item.value === scope.row.rewardType).label }}</template
-          >
+          <template #default="scope">
+            {{ rewardTypeMapping.find((item: any) => item.value === scope.row.rewardType)?.label }}
+          </template>
         </el-table-column>
         <el-table-column label="有效期" min-width="250">
           <template #default="scope">{{
@@ -40,7 +39,7 @@
         <el-table-column label="状态">
           <template #default="scope">{{ getStatus(scope.row) }}</template>
         </el-table-column>
-        <el-table-column fixed="right" width="70">
+        <el-table-column fixed="right" width="100">
           <template #header>
             <el-icon class="operation-icon" title="操作">
               <operation />
@@ -59,6 +58,9 @@
             </el-icon>
             <el-icon class="icon-btn" title="暂停" @click="operateReward(scope.row)" v-if="scope.row.status === 1">
               <close />
+            </el-icon>
+            <el-icon class="icon-btn" title="编辑" @click="toEdit(scope.row.id)">
+              <edit />
             </el-icon>
           </template>
         </el-table-column>
@@ -81,7 +83,7 @@
 import { formatDate } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ActivitiesService } from "@/api/request";
-import { Operation, Close, Document, Check } from "@element-plus/icons-vue";
+import { Operation, Close, Document, Check, Edit } from "@element-plus/icons-vue";
 import { reactive, toRefs } from "vue";
 import { Reward } from "@/typings/object";
 import { RewardListParams } from "@/typings/params";
@@ -94,6 +96,7 @@ export default {
     Check,
     Close,
     Document,
+    Edit,
   },
 
   setup() {
@@ -199,6 +202,11 @@ export default {
         } else {
           ElMessage.error(msg);
         }
+      },
+
+      /** 编辑奖励 */
+      toEdit(id: string) {
+        switchPage("/operating/edit-reward", { id });
       },
     };
 

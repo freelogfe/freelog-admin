@@ -1,7 +1,7 @@
 /**
  * 服务器接口
  */
-import { OperateChoicenessParams } from "@/typings/object";
+import { OperateChoicenessParams, Reward } from "@/typings/object";
 import {
   ListParams,
   ActivityListParams,
@@ -389,6 +389,11 @@ export class ActivitiesService {
         rewardType: params.rewardType,
       },
     });
+  }
+
+  /** 编辑活动奖励配置 */
+  static editReward(data: Reward): Promise<HttpResponse> {
+    return Axios("/v2/activities/reward/configs/update", { method: "PUT", data });
   }
 
   /** 通过 id 获取活动奖励信息 */
