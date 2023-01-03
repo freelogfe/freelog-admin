@@ -6,14 +6,19 @@
     <template v-slot:status v-if="query.id">{{ statusTip }}</template>
 
     <template v-slot:barRight>
-      <el-button type="danger" @click="operate(2)" v-if="query.id && !formData.isDraft && formData.status === 1">
+      <el-button
+        type="danger"
+        @click="operate(2)"
+        :disabled="statusTip === '已结束'"
+        v-if="query.id && !formData.isDraft && formData.status === 1"
+      >
         暂停
       </el-button>
       <el-button type="success" @click="operate(1)" v-if="query.id && !formData.isDraft && formData.status === 2">
         恢复
       </el-button>
       <el-button @click="save(1)" v-if="!query.id || formData.isDraft">保存</el-button>
-      <el-button type="primary" @click="save(2)">
+      <el-button type="primary" :disabled="statusTip === '已结束'" @click="save(2)">
         <span v-if="!query.id || formData.isDraft">保存并发布</span>
         <span v-else>保存</span>
       </el-button>
@@ -21,7 +26,13 @@
 
     <template v-slot:main>
       <form-item label="活动名称">
-        <el-input style="width: 400px" v-model="formData.myTitle" placeholder="请输入活动名称" clearable />
+        <el-input
+          style="width: 400px"
+          :readonly="statusTip === '已结束'"
+          v-model="formData.myTitle"
+          placeholder="请输入活动名称"
+          clearable
+        />
       </form-item>
       <form-item label="活动时间">
         <el-radio-group
@@ -42,9 +53,15 @@
             v-model="formData.startTime"
             type="datetime"
             placeholder="请选择活动开始时间"
+            :readonly="statusTip === '已结束'"
           />
           <span style="margin: 0 20px">-</span>
-          <el-date-picker v-model="formData.limitTime" type="datetime" placeholder="请选择活动结束时间" />
+          <el-date-picker
+            v-model="formData.limitTime"
+            type="datetime"
+            placeholder="请选择活动结束时间"
+            :readonly="statusTip === '已结束'"
+          />
         </template>
       </form-item>
       <form-item label="活动海报">
@@ -55,13 +72,20 @@
           :on-success="uploadSuccess"
           :before-upload="beforeUpload"
           with-credentials
+          :disabled="statusTip === '已结束'"
         >
           <img class="cover" v-if="formData.cover" :src="formData.cover" />
           <el-icon class="plus-icon" v-else><Plus /></el-icon>
         </el-upload>
       </form-item>
       <form-item label="活动页链接">
-        <el-input style="width: 500px" v-model="formData.link" placeholder="请输入活动页链接" clearable />
+        <el-input
+          style="width: 500px"
+          v-model="formData.link"
+          placeholder="请输入活动页链接"
+          clearable
+          :readonly="statusTip === '已结束'"
+        />
       </form-item>
       <form-item label="发布时间" v-if="!query.id || formData.isDraft || statusTip === '未发布'">
         <el-radio-group v-model="formData.publishType" @change="formData.myPublishDate = null">
@@ -73,6 +97,7 @@
           v-model="formData.myPublishDate"
           type="datetime"
           placeholder="请选择发布时间"
+          :readonly="statusTip === '已结束'"
           v-if="formData.publishType === 2"
         />
       </form-item>
