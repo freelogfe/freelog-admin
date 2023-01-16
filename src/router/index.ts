@@ -128,6 +128,24 @@ const routes: Array<RouteRecordRaw> = [
           hidden: true,
         },
       },
+      {
+        path: "type-management",
+        name: "resourceTypeManagement",
+        component: () => import("../views/resource/type-management.vue"),
+        meta: {
+          title: "资源类型管理",
+          sideBarItem: "resourceTypeManagement",
+        },
+      },
+      {
+        path: "property-management",
+        name: "resourcePropertyManagement",
+        component: () => import("../views/resource/property-management.vue"),
+        meta: {
+          title: "资源属性管理",
+          sideBarItem: "resourcePropertyManagement",
+        },
+      },
     ],
   },
   {
@@ -222,6 +240,15 @@ const routes: Array<RouteRecordRaw> = [
       icon: "money",
     },
     children: [
+      {
+        path: "classification-management",
+        name: "classificationManagement",
+        component: () => import("../views/operating/classification-management.vue"),
+        meta: {
+          title: "运营分类管理",
+          sideBarItem: "classificationManagement",
+        },
+      },
       {
         path: "edit-choiceness",
         name: "editChoiceness",
