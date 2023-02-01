@@ -138,12 +138,32 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
+        path: "edit-type",
+        name: "resourceEditType",
+        component: () => import("../views/resource/edit-type.vue"),
+        meta: {
+          title: "编辑资源类型",
+          sideBarItem: "resourceTypeManagement",
+          hidden: true,
+        },
+      },
+      {
         path: "property-management",
         name: "resourcePropertyManagement",
         component: () => import("../views/resource/property-management.vue"),
         meta: {
           title: "资源属性管理",
           sideBarItem: "resourcePropertyManagement",
+        },
+      },
+      {
+        path: "edit-property",
+        name: "resourceEditProperty",
+        component: () => import("../views/resource/edit-property.vue"),
+        meta: {
+          title: "编辑资源属性",
+          sideBarItem: "resourcePropertyManagement",
+          hidden: true,
         },
       },
     ],

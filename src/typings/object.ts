@@ -89,6 +89,7 @@ export interface Resource {
 
 /** 策略数据 */
 export interface Policy {
+  policyId: string;
   policyName: string;
   status: 0 | 1;
   policyText: string;

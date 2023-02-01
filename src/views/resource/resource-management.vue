@@ -153,11 +153,11 @@
               effect="dark"
               :content="`${scope.row.reason}${scope.row.remark ? '（' + scope.row.remark + '）' : ''}`"
               placement="top"
-              v-if="[2, 3].includes(scope.row.status)"
+              v-if="scope.row.status === 2"
             >
-              {{ statusMapping.find((item) => item.value === scope.row.status).label }}
+              {{ statusMapping.find((item) => item.value === scope.row.status)?.label }}
             </el-tooltip>
-            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status).label }}</span>
+            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status)?.label }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="70">
@@ -179,16 +179,11 @@
               class="icon-btn"
               title="封禁"
               @click="banResources(scope.row.resourceId)"
-              v-if="![2, 3].includes(scope.row.status)"
+              v-if="scope.row.status !== 2"
             >
               <close />
             </el-icon>
-            <el-icon
-              class="icon-btn"
-              title="解禁"
-              @click="restore(scope.row.resourceId)"
-              v-if="[2, 3].includes(scope.row.status)"
-            >
+            <el-icon class="icon-btn" title="解禁" @click="restore(scope.row.resourceId)" v-if="scope.row.status === 2">
               <check />
             </el-icon>
           </template>
@@ -365,10 +360,10 @@ export default {
     const tableRef = ref<InstanceType<typeof ElTable>>();
     const assetsData = {
       statusMapping: [
-        { value: 0, label: "下线" },
-        { value: 1, label: "上线" },
-        { value: 2, label: "禁用" },
-        { value: 3, label: "禁用" },
+        { value: 0, label: "待发行" },
+        { value: 1, label: "上架" },
+        { value: 2, label: "冻结" },
+        { value: 4, label: "下架" },
       ],
       sortTypeList: [
         { value: "updateDate:1", label: "更新时间升序" },
@@ -456,10 +451,8 @@ export default {
               results[2].data.data.findIndex((item: { resourceId: string }) => item.resourceId === resourceId) !== -1;
           });
           const bannedIds = dataList
-            .filter((item: Resource) => [2, 3].includes(item.status))
-            .map((item: Resource) => {
-              return item.resourceId;
-            })
+            .filter((item: Resource) => item.status === 2)
+            .map((item: Resource) => item.resourceId)
             .join(",");
 
           if (bannedIds) {
@@ -728,6 +721,7 @@ export default {
     data.searchData.userId = query.value.userId;
     data.searchData.resourceId = query.value.resourceId;
     if (query.value.tag) data.searchData.selectedTags = [query.value.tag];
+    data.searchData.type = query.value.type;
     methods.getData(true);
     getResourceTags();
 

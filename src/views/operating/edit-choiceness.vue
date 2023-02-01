@@ -38,7 +38,7 @@
         </form-item>
         <form-item label="状态">
           <el-select v-model="searchData.status" placeholder="请选择状态" clearable>
-            <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
+            <el-option v-for="item in statusMapping" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </form-item>
       </div>
@@ -113,11 +113,11 @@
               effect="dark"
               :content="`${scope.row.reason}${scope.row.remark ? '（' + scope.row.remark + '）' : ''}`"
               placement="top"
-              v-if="[2, 3].includes(scope.row.status)"
+              v-if="scope.row.status === 2"
             >
-              {{ statusMapping.find((item: any) => item.value === scope.row.status).label }}
+              {{ statusMapping.find((item: any) => item.value === scope.row.status)?.label }}
             </el-tooltip>
-            <span v-else>{{ statusMapping.find((item: any) => item.value === scope.row.status).label }}</span>
+            <span v-else>{{ statusMapping.find((item: any) => item.value === scope.row.status)?.label }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="100">
@@ -142,12 +142,7 @@
             >
               <document />
             </el-icon>
-            <el-icon
-              class="icon-btn"
-              title="移除"
-              @click="operateChoiceness('PUT', scope.row.resourceId)"
-              v-if="![2, 3].includes(scope.row.status)"
-            >
+            <el-icon class="icon-btn" title="移除" @click="operateChoiceness('PUT', scope.row.resourceId)">
               <close />
             </el-icon>
           </template>
@@ -259,11 +254,11 @@
             effect="dark"
             :content="`${scope.row.reason}${scope.row.remark ? '（' + scope.row.remark + '）' : ''}`"
             placement="top"
-            v-if="[2, 3].includes(scope.row.status)"
+            v-if="scope.row.status === 2"
           >
-            {{ statusMapping.find((item: any) => item.value === scope.row.status).label }}
+            {{ statusMapping.find((item: any) => item.value === scope.row.status)?.label }}
           </el-tooltip>
-          <span v-else>{{ statusMapping.find((item: any) => item.value === scope.row.status).label }}</span>
+          <span v-else>{{ statusMapping.find((item: any) => item.value === scope.row.status)?.label }}</span>
         </template>
       </el-table-column>
     </el-table>
@@ -348,18 +343,16 @@
 import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ResourceService, ContractsService, ActivitiesService } from "@/api/request";
-import { dateRangeShortcuts, resourceTypeList } from "@/assets/data";
+import { resourceTypeList } from "@/assets/data";
 import { Operation, Close, Document, Download, Grid, Clock } from "@element-plus/icons-vue";
 import { reactive, toRefs, computed, defineAsyncComponent, ref, nextTick } from "vue";
 import { OperateChoicenessParams, Policy, Resource, ResourceVersion } from "@/typings/object";
-import { ResourceListParams } from "@/typings/params";
+import { ChoicenessListParams, ResourceListParams } from "@/typings/params";
 import { ElMessageBox, ElTable } from "element-plus";
 import { ElMessage } from "element-plus/lib/components";
 
 /** 资源列表参数 */
-export interface MyResourceListParams extends ResourceListParams {
-  createDate?: string[];
-  selectedTags?: string[];
+export interface MyChoicenessListParams extends ChoicenessListParams {
   type?: string[];
 }
 
@@ -375,19 +368,14 @@ export default {
   },
 
   setup() {
-    const { query, switchPage, openPage } = useMyRouter();
+    const { switchPage, openPage } = useMyRouter();
     const tableRef = ref<InstanceType<typeof ElTable>>();
     const assetsData = {
-      statusOptions: [
-        { value: "0", label: "下线" },
-        { value: "1", label: "上线" },
-        { value: "2,3", label: "禁用" },
-      ],
       statusMapping: [
-        { value: 0, label: "下线" },
-        { value: 1, label: "上线" },
-        { value: 2, label: "禁用" },
-        { value: 3, label: "禁用" },
+        { value: 0, label: "待发行" },
+        { value: 1, label: "上架" },
+        { value: 2, label: "冻结" },
+        { value: 4, label: "下架" },
       ],
     };
     const data = reactive({
@@ -395,7 +383,7 @@ export default {
       tableData: [] as Resource[],
       total: 0,
       selectedData: [] as Resource[],
-      searchData: { currentPage: 1, limit: 20 } as MyResourceListParams,
+      searchData: { currentPage: 1, limit: 20 } as MyChoicenessListParams,
       versionData: {
         resourceId: "",
         activeIndex: 0,
@@ -674,15 +662,10 @@ export default {
       },
     };
 
-    data.searchData.keywords = query.value.keywords;
-    data.searchData.userId = query.value.userId;
-    data.searchData.resourceId = query.value.resourceId;
-    if (query.value.tag) data.searchData.selectedTags = [query.value.tag];
     methods.getData(true);
 
     return {
       resourceTypeList,
-      dateRangeShortcuts,
       tableRef,
       ...assetsData,
       ...toRefs(data),

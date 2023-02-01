@@ -1,19 +1,26 @@
 <!-- 资源属性管理 -->
 <template>
   <list-template>
-    <template v-slot:barRight>
-      <el-button type="primary" @click="toEdit()">发布活动</el-button>
+    <template v-slot:top>
+      <el-tabs v-model="pageType" @tab-change="pageType = $event">
+        <el-tab-pane label="标准属性" name="standard"></el-tab-pane>
+        <el-tab-pane label="补充属性" name="supplement"></el-tab-pane>
+      </el-tabs>
+    </template>
+
+    <template v-slot:barRight v-if="pageType === 'standard'">
+      <el-button type="primary" @click="toEdit()">新增资源属性</el-button>
     </template>
 
     <template v-slot:filterBar>
       <div class="filter-controls">
         <form-item label="关键字搜索">
-          <el-input v-model="searchData.keywords" placeholder="请输入活动名称" clearable @keyup.enter="getData(true)" />
-        </form-item>
-        <form-item label="状态">
-          <el-select v-model="searchData.status" placeholder="请选择状态" clearable>
-            <el-option v-for="item in statusOptions" :key="item.value" :value="item.value" :label="item.label" />
-          </el-select>
+          <el-input
+            v-model="searchData.keywords"
+            placeholder="请输入属性名称、属性键"
+            clearable
+            @keyup.enter="getData(true)"
+          />
         </form-item>
       </div>
       <div class="filter-btns">
@@ -23,64 +30,48 @@
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe v-loading="loading">
-        <el-table-column label="活动名称" min-width="200">
+      <el-table :data="tableData" stripe v-loading="loading" v-if="pageType === 'standard'">
+        <el-table-column label="属性名称" min-width="200">
           <template #default="scope">{{ scope.row.title || "-" }}</template>
         </el-table-column>
-        <el-table-column label="海报" min-width="150">
-          <template #default="scope">
-            <el-image
-              class="cover-image"
-              :src="scope.row.cover"
-              :preview-src-list="[scope.row.cover]"
-              preview-teleported
-              hide-on-click-modal
-              v-if="scope.row.cover"
-            />
-            <span v-else>-</span>
-          </template>
+        <el-table-column label="属性键" min-width="200">
+          <template #default="scope">{{ scope.row.title || "-" }}</template>
         </el-table-column>
-        <el-table-column label="活动时间" min-width="300">
-          <template #default="scope">
-            <span v-if="scope.row.persist">长期活动</span>
-            <span v-else>
-              {{ scope.row.startTime ? formatDate(scope.row.startTime) : "-" }} 至
-              {{ scope.row.limitTime ? formatDate(scope.row.limitTime) : "-" }}
-            </span>
-          </template>
+        <el-table-column label="关联资源类型" min-width="200">
+          <template #default="scope">{{ scope.row.title || "-" }}</template>
         </el-table-column>
-        <el-table-column label="状态">
-          <template #default="scope">
-            {{ getStatus(scope.row) }}
-          </template>
+        <el-table-column label="录入方式" min-width="200">
+          <template #default="scope">{{ scope.row.title || "-" }}</template>
         </el-table-column>
-        <el-table-column label="发布时间" min-width="160">
-          <template #default="scope">
-            <span :style="{ color: getStatus(scope.row) === '未发布' ? 'red' : '#333' }" v-if="scope.row.publishDate">{{
-              formatDate(scope.row.publishDate)
-            }}</span>
-            <span v-else>-</span>
-          </template>
-        </el-table-column>
-        <el-table-column fixed="right" width="70">
+        <el-table-column fixed="right" width="40">
           <template #header>
             <el-icon class="operation-icon" title="操作">
               <operation />
             </el-icon>
           </template>
           <template #default="scope">
-            <el-icon
-              class="icon-btn"
-              title="查看活动"
-              @click="openPage(`${consoleUrl}/activity/${scope.row._id}`)"
-              v-if="scope.row.link"
-            >
-              <connection />
-            </el-icon>
             <el-icon class="icon-btn" title="编辑" @click="toEdit(scope.row._id)">
               <edit />
             </el-icon>
           </template>
+        </el-table-column>
+      </el-table>
+
+      <el-table :data="tableData" stripe v-loading="loading" v-else-if="pageType === 'supplement'">
+        <el-table-column label="常用属性名称" min-width="200">
+          <template #default="scope">{{ scope.row.title || "-" }}</template>
+        </el-table-column>
+        <el-table-column label="属性键" min-width="200">
+          <template #default="scope">{{ scope.row.title || "-" }}</template>
+        </el-table-column>
+        <el-table-column label="关联资源类型" min-width="200">
+          <template #default="scope">{{ scope.row.title || "-" }}</template>
+        </el-table-column>
+        <el-table-column label="关联资源数量" min-width="200">
+          <template #default="scope">{{ scope.row.title || "-" }}</template>
+        </el-table-column>
+        <el-table-column label="创建时间" min-width="200">
+          <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
       </el-table>
     </template>
@@ -100,7 +91,7 @@
 <script lang="ts">
 import { formatDate } from "../../utils/common";
 import { ActivitiesService } from "@/api/request";
-import { Operation, Edit, Connection } from "@element-plus/icons-vue";
+import { Operation, Edit } from "@element-plus/icons-vue";
 import { reactive, toRefs } from "vue";
 import { useMyRouter } from "@/utils/hooks";
 import { Activity } from "@/typings/object";
@@ -110,27 +101,13 @@ export default {
   components: {
     Operation,
     Edit,
-    Connection,
   },
 
   setup() {
     const { switchPage, openPage } = useMyRouter();
-    const assetsData = {
-      statusOptions: [
-        { value: 1, label: "未发布" },
-        { value: 2, label: "已暂停" },
-        { value: 3, label: "未开始" },
-        { value: 4, label: "进行中" },
-        { value: 5, label: "已结束" },
-        { value: 6, label: "草稿" },
-      ],
-      statusMapping: [
-        { value: 1, label: "正常" },
-        { value: 2, label: "暂停" },
-      ],
-      consoleUrl: (process.env.VUE_APP_BASE_API as string).replace("qi", "www"),
-    };
+    const assetsData = {};
     const data = reactive({
+      pageType: "standard",
       loading: false,
       tableData: [] as Activity[],
       total: 0,
@@ -176,31 +153,9 @@ export default {
         this.getData();
       },
 
-      /** 获取活动状态 */
-      getStatus(item: Activity) {
-        const now = new Date().getTime();
-        const { status, isDraft, persist, publishDate, startTime, limitTime } = item;
-        const publishTimestamp = new Date(publishDate).getTime();
-        const startTimestamp = new Date(startTime).getTime();
-        const limitTimestamp = new Date(limitTime).getTime();
-        if (status === 2) {
-          return "已暂停";
-        } else if (isDraft) {
-          return "草稿";
-        } else if (now < publishTimestamp) {
-          return "未发布";
-        } else if (now <= startTimestamp) {
-          return "未开始";
-        } else if (now < limitTimestamp || persist) {
-          return "进行中";
-        } else if (limitTimestamp <= now) {
-          return "已结束";
-        }
-      },
-
-      /** 编辑活动 */
+      /** 编辑资源属性 */
       toEdit(id?: string) {
-        switchPage("/operating/edit-activity", { id });
+        switchPage("/resource/edit-property", { id });
       },
     };
 
