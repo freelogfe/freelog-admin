@@ -155,9 +155,9 @@
               placement="top"
               v-if="scope.row.status === 2"
             >
-              {{ statusMapping.find((item) => item.value === scope.row.status)?.label }}
+              {{ statusMapping.find((item) => item.value === scope.row.status).label }}
             </el-tooltip>
-            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status)?.label }}</span>
+            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status).label }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="70">

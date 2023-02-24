@@ -2,19 +2,19 @@
 <template>
   <list-template>
     <template v-slot:top>
-      <el-tabs v-model="pageType" @tab-change="pageType = $event">
-        <el-tab-pane label="基础资源类型" name="base"></el-tab-pane>
-        <el-tab-pane label="自定义资源类型" name="custom"></el-tab-pane>
+      <el-tabs v-model="searchData.category">
+        <el-tab-pane label="基础资源类型" :name="1"></el-tab-pane>
+        <el-tab-pane label="自定义资源类型" :name="2"></el-tab-pane>
       </el-tabs>
     </template>
 
     <template v-slot:barLeft v-if="selectedData.length">
-      <el-button type="primary" @click="operate()">启用</el-button>
-      <el-button type="primary" @click="operate()">停用</el-button>
+      <el-button type="primary" @click="operate(1)">启用</el-button>
+      <el-button type="primary" @click="operate(2)">停用</el-button>
       <span class="selected-tip">已选中{{ selectedData.length }}条</span>
     </template>
 
-    <template v-slot:barRight v-if="pageType === 'base'">
+    <template v-slot:barRight v-if="searchData.category === 1">
       <el-button type="primary" @click="toEdit()">排序</el-button>
       <el-button type="primary" @click="toEdit()">新增资源类型</el-button>
     </template>
@@ -23,21 +23,21 @@
       <div class="filter-controls">
         <form-item label="关键字搜索">
           <el-input
-            v-model="searchData.keywords"
+            v-model="searchData.codeOrName"
             placeholder="请输入类型编号、名称"
             clearable
             @keyup.enter="getData(true)"
           />
         </form-item>
-        <template v-if="pageType === 'base'">
+        <template v-if="searchData.category === 1">
           <form-item label="状态">
-            <el-select v-model="searchData.status" multiple placeholder="所有" clearable>
+            <el-select v-model="searchData.status" placeholder="所有" clearable>
               <el-option v-for="item in statusMapping" :key="item.value" :value="item.value" :label="item.label" />
             </el-select>
           </form-item>
           <form-item label="父类">
-            <el-select v-model="searchData.parent" multiple placeholder="不限" clearable>
-              <el-option v-for="item in parentList" :key="item.value" :value="item.value" :label="item.label" />
+            <el-select v-model="searchData.parentCode" placeholder="不限" clearable>
+              <el-option v-for="item in parentList" :key="item.code" :value="item.code" :label="item.name" />
             </el-select>
           </form-item>
         </template>
@@ -49,28 +49,34 @@
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading" v-if="pageType === 'base'">
+      <el-table
+        :data="tableData"
+        stripe
+        @selection-change="selectTable"
+        v-loading="loading"
+        v-if="searchData.category === 1"
+      >
         <el-table-column type="selection" />
         <el-table-column label="编号" min-width="200">
-          <template #default="scope">{{ scope.row.title || "-" }}</template>
+          <template #default="scope">{{ scope.row.code || "-" }}</template>
         </el-table-column>
         <el-table-column label="资源类型" min-width="200">
-          <template #default="scope">{{ scope.row.title || "-" }}</template>
+          <template #default="scope">{{ scope.row.name || "-" }}</template>
         </el-table-column>
         <el-table-column label="父类" min-width="200">
-          <template #default="scope">{{ scope.row.title || "-" }}</template>
+          <template #default="scope">{{ scope.row.parentCode || "-" }}</template>
         </el-table-column>
         <el-table-column label="关联资源数量" min-width="200">
           <template #default="scope">
-            <span class="text-btn" @click="switchPage('/resource/resource-management', { type: scope.row.resourceId })">
-              {{ scope.row.title }}
+            <span class="text-btn" @click="switchPage('/resource/resource-management', { type: scope.row.name })">
+              {{ scope.row.resourceCount || "-" }}
             </span>
           </template>
         </el-table-column>
         <el-table-column label="状态">
-          <!-- <template #default="scope">
+          <template #default="scope">
             {{ statusMapping.find((item) => item.value === scope.row.status).label }}
-          </template> -->
+          </template>
         </el-table-column>
         <el-table-column fixed="right" width="70">
           <template #header>
@@ -79,48 +85,38 @@
             </el-icon>
           </template>
           <template #default="scope">
-            <el-icon
-              class="icon-btn"
-              title="停用"
-              @click="operate(scope.row.resourceId)"
-              v-if="![2, 3].includes(scope.row.status)"
-            >
+            <el-icon class="icon-btn" title="停用" @click="operate(2, scope.row.code)" v-if="scope.row.status === 1">
               <close />
             </el-icon>
-            <el-icon
-              class="icon-btn"
-              title="启用"
-              @click="operate(scope.row.resourceId)"
-              v-if="[2, 3].includes(scope.row.status)"
-            >
+            <el-icon class="icon-btn" title="启用" @click="operate(1, scope.row.code)" v-if="scope.row.status === 2">
               <check />
             </el-icon>
-            <el-icon class="icon-btn" title="编辑" @click="toEdit(scope.row._id)">
+            <el-icon class="icon-btn" title="编辑" @click="toEdit(scope.row.code)">
               <edit />
             </el-icon>
           </template>
         </el-table-column>
       </el-table>
 
-      <el-table :data="tableData" stripe v-loading="loading" v-else-if="pageType === 'custom'">
+      <el-table :data="tableData" stripe v-loading="loading" v-else-if="searchData.category === 2">
         <el-table-column label="编号" min-width="200">
-          <template #default="scope">{{ scope.row.title || "-" }}</template>
+          <template #default="scope">{{ scope.row.code || "-" }}</template>
         </el-table-column>
         <el-table-column label="资源类型" min-width="200">
-          <template #default="scope">{{ scope.row.title || "-" }}</template>
+          <template #default="scope">{{ scope.row.name || "-" }}</template>
         </el-table-column>
         <el-table-column label="隶属类型" min-width="200">
-          <template #default="scope">{{ scope.row.title || "-" }}</template>
+          <template #default="scope">{{ scope.row.code || "-" }}</template>
         </el-table-column>
         <el-table-column label="关联资源数量" min-width="200">
           <template #default="scope">
-            <span class="text-btn" @click="switchPage('/resource/resource-management', { type: scope.row.resourceId })">
-              {{ scope.row.title }}
+            <span class="text-btn" @click="switchPage('/resource/resource-management', { type: scope.row.name })">
+              {{ scope.row.resourceCount || "-" }}
             </span>
           </template>
         </el-table-column>
         <el-table-column label="创建时间" min-width="200">
-          <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
+          <template #default="scope">{{ formatDate(scope.row.startTime) }}</template>
         </el-table-column>
       </el-table>
     </template>
@@ -139,12 +135,13 @@
 
 <script lang="ts">
 import { formatDate } from "../../utils/common";
-import { ActivitiesService } from "@/api/request";
+import { ResourceService } from "@/api/request";
 import { Operation, Edit, Close, Check } from "@element-plus/icons-vue";
-import { reactive, toRefs } from "vue";
+import { reactive, toRefs, watch } from "vue";
 import { useMyRouter } from "@/utils/hooks";
-import { Activity } from "@/typings/object";
-import { ActivityListParams } from "@/typings/params";
+import { ResourceType } from "@/typings/object";
+import { ResourceTypeListParams } from "@/typings/params";
+import { ElMessageBox } from "element-plus";
 
 export default {
   components: {
@@ -158,24 +155,17 @@ export default {
     const { switchPage, openPage } = useMyRouter();
     const assetsData = {
       statusMapping: [
-        { value: "Option2", label: "已启用" },
-        { value: "Option3", label: "已停用" },
-      ],
-      parentList: [
-        { value: "Option2", label: "无" },
-        { value: "Option3", label: "图片" },
-        { value: "Option3", label: "音频" },
-        { value: "Option4", label: "视频" },
-        { value: "Option5", label: "主题" },
+        { value: 1, label: "已启用" },
+        { value: 2, label: "已停用" },
       ],
     };
     const data = reactive({
-      pageType: "base",
       loading: false,
-      tableData: [] as Activity[],
+      tableData: [] as ResourceType[],
       total: 0,
-      selectedData: [] as Activity[],
-      searchData: { currentPage: 1, limit: 20 } as ActivityListParams,
+      selectedData: [] as ResourceType[],
+      searchData: { currentPage: 1, limit: 20, category: 1 } as ResourceTypeListParams,
+      parentList: [] as ResourceType[],
     });
 
     const methods = {
@@ -186,27 +176,38 @@ export default {
         if (init) data.searchData.currentPage = 1;
         const { currentPage, limit } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
-        const result = await ActivitiesService.getActivityList(data.searchData);
+        const result = await ResourceService.getResourceTypeList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
-          const { activities, num } = result.data.data;
+          const { dataList, totalItem } = result.data.data.resourceTypes;
 
-          if (activities.length === 0) {
+          if (dataList.length === 0) {
             data.loading = false;
             return;
           }
 
-          data.tableData = activities;
-          data.total = num;
+          data.tableData = dataList;
+          data.total = totalItem;
           data.loading = false;
+        }
+      },
+
+      /** 获取父类选项数据 */
+      async getParentList() {
+        const result = await ResourceService.getResourceTypeListByParentType("");
+        const { errcode } = result.data;
+        if (errcode === 0) {
+          data.parentList = result.data.data;
         }
       },
 
       /** 重置 */
       clearSearch() {
+        const { category } = data.searchData;
         data.searchData = {
           currentPage: 1,
           limit: 20,
+          category,
         };
         this.getData(true);
       },
@@ -217,23 +218,46 @@ export default {
         this.getData();
       },
 
-      /** 编辑活动 */
-      toEdit(id?: string) {
-        switchPage("/resource/edit-type", { id });
+      /** 编辑资源类型 */
+      toEdit(code?: string) {
+        switchPage("/resource/edit-type", { code });
       },
 
       /** 选择表格项 */
-      selectTable(selected: Activity[]) {
+      selectTable(selected: ResourceType[]) {
         data.selectedData = selected;
       },
 
-      /** 封禁操作 */
-      operate(resourceId?: string) {
-        console.error(resourceId);
+      /** 启用/停用操作 */
+      operate(status: 1 | 2, code?: string) {
+        ElMessageBox.confirm(
+          `确认${status === 1 ? "启用" : "停用"}此资源类型吗？`,
+          `${status === 1 ? "启用" : "停用"}资源类型`,
+          {
+            confirmButtonText: status === 1 ? "启用" : "停用",
+            cancelButtonText: "取消",
+          }
+        ).then(async () => {
+          const codes = code ? [code] : data.selectedData.map((item) => item.code);
+          const params = { codes, status };
+          const result = await ResourceService.operateResourceType(params);
+          const { errcode } = result.data;
+          if (errcode === 0) {
+            this.getData(true);
+          }
+        });
       },
     };
 
+    watch(
+      () => data.searchData.category,
+      () => {
+        methods.getData(true);
+      }
+    );
+
     methods.getData(true);
+    methods.getParentList();
 
     return {
       openPage,

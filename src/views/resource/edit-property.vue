@@ -1,29 +1,41 @@
 <!-- 编辑资源属性 -->
 <template>
   <edit-template>
-    <template v-slot:title>{{ query.id ? "编辑资源属性" : "创建资源属性" }}</template>
+    <template v-slot:title>{{ mode === 'create' ? "编辑资源属性" : "创建资源属性" }}</template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="save(1)">{{ query.id ? "保存" : "创建" }}</el-button>
+      <el-button type="primary" @click="save()">{{ mode === 'create' ? "保存" : "创建" }}</el-button>
     </template>
 
     <template v-slot:main>
       <form-item label="名称">
-        <el-input style="width: 400px" v-model="formData.myTitle" placeholder="请输入名称" clearable />
+        <el-input style="width: 400px" v-model="formData.name" placeholder="请输入名称" clearable />
       </form-item>
       <form-item label="说明">
-        <el-input style="width: 400px" v-model="formData.myTitle" placeholder="请输入说明（选填）" clearable />
+        <el-input style="width: 400px" v-model="formData.note" placeholder="请输入说明（选填）" clearable />
       </form-item>
       <form-item label="属性键">
-        <el-input style="width: 400px" v-model="formData.myTitle" placeholder="请输入属性键" clearable />
+        <el-input
+          style="width: 400px"
+          v-model="formData.key"
+          placeholder="请输入属性键"
+          clearable
+          :disabled="mode === 'update'"
+        />
       </form-item>
       <form-item label="录入方式">
-        <el-select style="width: 400px" placeholder="请选择录入方式" v-model="formData.myTitle" clearable>
-          <el-option v-for="item in formatList" :key="item.value" :value="item.value" :label="item.label" />
+        <el-select
+          style="width: 400px"
+          placeholder="请选择录入方式"
+          v-model="formData.insertMode"
+          clearable
+          :disabled="mode === 'update'"
+        >
+          <el-option v-for="item in insertModeList" :key="item.value" :value="item.value" :label="item.label" />
         </el-select>
       </form-item>
       <form-item label="属性值格式">
-        <el-select style="width: 400px" placeholder="请选择属性值格式" v-model="formData.myTitle" clearable>
+        <el-select style="width: 400px" placeholder="请选择属性值格式" v-model="formData.format" clearable>
           <el-option v-for="item in formatList" :key="item.value" :value="item.value" :label="item.label" />
         </el-select>
       </form-item>
@@ -33,103 +45,80 @@
 
 <script lang="ts">
 import { reactive, toRefs } from "vue";
-import { ActivitiesService } from "@/api/request";
+import { ResourceService } from "@/api/request";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage } from "element-plus";
-import { formatDate } from "@/utils/common";
-import { CreateOrEditActivityParams } from "@/typings/params";
-
-/** 资源属性数据 */
-export interface MyCreateOrEditActivity extends CreateOrEditActivityParams {
-  myTitle?: string;
-  myPublishDate?: string | null;
-  publishType?: 1 | 2;
-}
+import { CreateOrEditResourcePropertyParams } from "@/typings/params";
 
 export default {
   setup() {
     const { query, switchPage } = useMyRouter();
     const asstesData = {
+      insertModeList: [{ value: 1, label: "系统解析" }],
       formatList: [
-        { value: "Option1", label: "文本" },
-        { value: "Option2", label: "数值" },
-        { value: "Option3", label: "时间" },
-        { value: "Option4", label: "日期" },
-        { value: "Option5", label: "日期和时间" },
+        { value: 1, label: "文本" },
+        { value: 2, label: "数值" },
+        { value: 3, label: "时间" },
+        { value: 4, label: "日期" },
+        { value: 5, label: "日期和时间" },
       ],
     };
     const data = reactive({
       loading: false,
-      formData: {} as MyCreateOrEditActivity,
+      mode: "create" as "create" | "update",
+      formData: {} as CreateOrEditResourcePropertyParams,
     });
 
     const methods = {
       /** 获取资源属性数据 */
       async getData() {
-        const { id } = query.value;
-        if (id) {
+        const { key } = query.value;
+        if (key) {
           // 编辑
-          const result = await ActivitiesService.getActivityData(id);
+          data.mode = "update";
+          const result = await ResourceService.getResourcePropertyData(key);
           const { errcode } = result.data;
           if (errcode === 0) {
-            const formData: MyCreateOrEditActivity = result.data.data;
-            const { title, publishDate } = formData;
-            formData.myTitle = title;
-            if (publishDate) {
-              formData.publishType = 2;
-              formData.myPublishDate = publishDate;
-            }
-            data.formData = { ...formData };
+            console.error(result.data)
+            data.formData = result.data.data;
           }
         } else {
           // 新建
-          data.formData.persist = true;
+          data.mode = "create";
         }
       },
 
       /**
        * 保存
-       * @params type 保存类型 1-保存 2-保存并发布
+       * @params type 保存类型 1-创建 2-保存
        */
-      async save(type: 1 | 2) {
-        if (type === 2 && !validate()) return;
+      async save() {
+        if (!validate()) return;
 
-        const { myTitle, publishType, myPublishDate } = data.formData;
-        data.formData.isDraft = type === 1;
-        data.formData.title = myTitle || "未命名活动";
-        if (publishType === 1) {
-          data.formData.publishDate = formatDate(new Date().getTime() + 1000 * 5);
-        } else if (publishType === 2 && myPublishDate) {
-          data.formData.publishDate = formatDate(myPublishDate);
-        }
-        const func = query.value.id ? "editActivity" : "createActivity";
-        const result = await ActivitiesService[func](data.formData);
+        const result = await ResourceService.createOrEditResourceProperty(data.formData, data.mode);
         const { errcode } = result.data;
         if (errcode === 0) {
-          const msg = type === 1 ? "保存成功" : "保存并发布成功";
+          const msg = data.mode === "create" ? "创建成功" : "保存成功";
           ElMessage.success(msg);
-          switchPage("/operating/activity-management");
+          switchPage("/resource/property-management");
         }
       },
     };
 
     /** 表单验证 */
     const validate = () => {
-      const { myTitle, persist, startTime, limitTime, cover, link, publishType, myPublishDate } = data.formData;
-      if (!myTitle) {
-        ElMessage("请输入活动名称");
+      const { name, key, insertMode, format } = data.formData;
+      if (!name) {
+        ElMessage("请输入名称");
         return false;
-      } else if (!persist && (!startTime || !limitTime)) {
-        ElMessage("请选择活动时间");
+      } else if (!key) {
+        ElMessage("请选择属性键");
         return false;
-      } else if (!cover) {
-        ElMessage("请上传活动海报");
+      } else if (!insertMode) {
+        ElMessage("请选择录入方式");
         return false;
-      } else if (!link) {
-        ElMessage("请输入活动页链接");
-        return false;
-      } else if (!publishType || (publishType === 2 && !myPublishDate)) {
-        ElMessage("请选择发布时间");
+      } else if (!format) {
+        ElMessage("请选择属性值格式");
         return false;
       }
       return true;
@@ -139,7 +128,6 @@ export default {
 
     return {
       ...asstesData,
-      query,
       ...toRefs(data),
       ...methods,
     };

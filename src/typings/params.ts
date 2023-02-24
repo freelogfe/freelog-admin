@@ -143,6 +143,42 @@ export interface OperateResourceTagParams {
   authority?: number;
 }
 
+/** 资源类型列表参数 */
+export interface ResourceTypeListParams extends ListParams {
+  status?: 1 | 2;
+  parentCode?: string;
+  codeOrName?: string;
+  category?: 1 | 2;
+}
+
+/** 创建/编辑资源类型参数 */
+export interface CreateOrEditResourceTypeParams {
+  code?: string;
+  name: string;
+  parentCode: string;
+  priority: number;
+  status: 1 | 2;
+  category: 1 | 2;
+  formats?: string[];
+  attrs?: string[];
+  startTime?: string;
+}
+
+/** 资源属性列表参数 */
+export interface ResourcePropertyListParams extends ListParams {
+  nameOrKey?: string;
+  group?: 1 | 2;
+}
+
+/** 创建/编辑资源属性参数 */
+export interface CreateOrEditResourcePropertyParams {
+  name: string;
+  key: string;
+  insertMode: number;
+  format: 1 | 2 | 3 | 4 | 5;
+  note?: string;
+}
+
 /** 节点列表参数 */
 export interface NodeListParams extends ListParams {
   nodeId?: number;
@@ -259,7 +295,7 @@ export interface RewardListParams extends ListParams {
 
 /** 活动奖励发放列表参数 */
 export interface RewardRecordListParams extends ListParams {
-  code: string,
+  code: string;
   tag?: 1 | 2 | 3 | 4;
 }
 

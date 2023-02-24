@@ -36,6 +36,10 @@ import {
   ChoicenessListParams,
   RewardListParams,
   RewardRecordListParams,
+  ResourceTypeListParams,
+  CreateOrEditResourceTypeParams,
+  ResourcePropertyListParams,
+  CreateOrEditResourcePropertyParams,
 } from "@/typings/params";
 import Axios from "./http";
 
@@ -212,6 +216,57 @@ export class ResourceService {
   /** 查看资源禁用记录 */
   static getResourceRecordList(params: ResourceRecordParams): Promise<HttpResponse> {
     return Axios("/v2/resources/freeOrRecover/records", { method: "GET", params });
+  }
+
+  /** 获取资源类型列表 */
+  static getResourceTypeList(params: ResourceTypeListParams): Promise<HttpResponse> {
+    return Axios("/v2/resources/types/list", { method: "GET", params });
+  }
+
+  /** 根据父类型获取子资源类型 */
+  static getResourceTypeListByParentType(parentCode: string): Promise<HttpResponse> {
+    return Axios("/v2/resources/types/listSimpleByParentCode", { method: "GET", params: { parentCode } });
+  }
+
+  /** 操作资源类型 */
+  static operateResourceType(data: { codes: string[]; status: 1 | 2 }): Promise<HttpResponse> {
+    return Axios("/v2/resources/types/updateStatusBatch", { method: "POST", data });
+  }
+
+  /** 查询资源类型数据 */
+  static getResourceTypeData(code: string): Promise<HttpResponse> {
+    return Axios("/v2/resources/types/getInfoByCode", { method: "GET", params: { code } });
+  }
+
+  /** 创建/编辑资源类型 */
+  static createOrEditResourceType(
+    data: CreateOrEditResourceTypeParams,
+    type: "create" | "update"
+  ): Promise<HttpResponse> {
+    return Axios(`/v2/resources/types/${type}`, { method: "POST", data });
+  }
+
+  /** 获取资源类型的属性 */
+  static getAttributesOfResourceType(code: string): Promise<HttpResponse> {
+    return Axios("/v2/resources/types/getAttrsByCode", { method: "GET", params: { code } });
+  }
+
+  /** 获取资源属性列表 */
+  static getResourcePropertyList(params: ResourcePropertyListParams): Promise<HttpResponse> {
+    return Axios("/v2/resources/attrs/list", { method: "GET", params });
+  }
+
+  /** 查询资源属性数据 */
+  static getResourcePropertyData(key: string): Promise<HttpResponse> {
+    return Axios("/v2/resources/attrs/getInfoByKey", { method: "GET", params: { key } });
+  }
+
+  /** 创建/编辑资源属性 */
+  static createOrEditResourceProperty(
+    data: CreateOrEditResourcePropertyParams,
+    type: "create" | "update"
+  ): Promise<HttpResponse> {
+    return Axios(`/v2/resources/attrs/${type}`, { method: "POST", data: { ...data, group: 1 } });
   }
 }
 

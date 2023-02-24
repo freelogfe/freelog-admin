@@ -1,27 +1,31 @@
 <!-- 编辑资源类型 -->
 <template>
   <edit-template>
-    <template v-slot:title>{{ query.id ? "编辑资源类型" : "创建资源类型" }}</template>
+    <template v-slot:title>{{ mode === "create" ? "创建资源类型" : "编辑资源类型" }}</template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="save(1)">{{ query.id ? "保存" : "创建" }}</el-button>
+      <el-button type="primary" @click="save()">{{ mode === "create" ? "创建" : "保存" }}</el-button>
     </template>
 
     <template v-slot:main>
-      <form-item label="编号">
-        <el-input style="width: 400px" v-model="formData.myTitle" placeholder="请输入编号" clearable />
+      <form-item label="编号" v-if="mode === 'update'">
+        <el-input style="width: 400px" v-model="formData.code" disabled />
         <span class="desc">系统自动分配</span>
       </form-item>
       <form-item label="名称">
-        <el-input style="width: 400px" v-model="formData.myTitle" placeholder="请输入名称" clearable />
+        <el-input style="width: 400px" v-model="formData.name" placeholder="请输入名称" clearable />
       </form-item>
       <form-item label="父类">
-        <el-cascader-panel :options="parentList" />
+        <el-cascader-panel
+          v-model="formData.parentCode"
+          :props="{ value: 'code', label: 'name' }"
+          :options="parentList"
+        />
       </form-item>
       <form-item label="关联文件格式（选填）">
         <el-input
           style="width: 400px"
-          v-model="formData.myTitle"
+          v-model="formData.formatsStr"
           placeholder="输入限制上传文件的扩展名，用英文逗号分隔"
           clearable
         />
@@ -36,7 +40,7 @@
           <div
             class="property-item"
             :data-id="item"
-            v-for="(item, index) in formData.testList"
+            v-for="(item, index) in formData.attrs"
             :key="item"
             @click="deletePropertyItem(index)"
           >
@@ -47,14 +51,14 @@
       <form-item label="展示序号">
         <el-input-number
           style="width: 400px"
-          v-model="formData.myTitle"
+          v-model="formData.priority"
           placeholder="请输入展示序号"
           controls-position="right"
         />
         <span class="desc">序号越小，展示优先级越高</span>
       </form-item>
       <form-item label="是否启用">
-        <el-radio-group v-model="formData.myTitle">
+        <el-radio-group v-model="formData.status">
           <el-radio :label="1">
             启用<span class="desc">在用户端资源类型选择器中显示，用户在创建资源是可以直接选择此资源类型</span>
           </el-radio>
@@ -69,323 +73,53 @@
 
 <script lang="ts">
 import { reactive, toRefs } from "vue";
-import { ActivitiesService } from "@/api/request";
+import { ResourceService } from "@/api/request";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage } from "element-plus";
-import { formatDate } from "@/utils/common";
-import { CreateOrEditActivityParams } from "@/typings/params";
+import { CreateOrEditResourceTypeParams } from "@/typings/params";
 import Sortable from "sortablejs";
 
-/** 资源类型数据 */
-export interface MyCreateOrEditActivity extends CreateOrEditActivityParams {
-  myTitle?: string;
-  myPublishDate?: string | null;
-  publishType?: 1 | 2;
-  testList: string[];
+/** 父类选项 */
+interface ParentType {
+  _id: string;
+  code: string;
+  name: string;
+  children?: ParentType[];
+}
+
+/** 资源类型编辑数据 */
+interface MyCreateOrEditResourceTypeParams extends CreateOrEditResourceTypeParams {
+  formatsStr?: string;
 }
 
 export default {
   setup() {
     const { query, switchPage } = useMyRouter();
-    const asstesData = {
-      parentList: [
-        {
-          value: "guide",
-          label: "Guide",
-          children: [
-            {
-              value: "disciplines",
-              label: "Disciplines",
-              children: [
-                {
-                  value: "consistency",
-                  label: "Consistency",
-                },
-                {
-                  value: "feedback",
-                  label: "Feedback",
-                },
-                {
-                  value: "efficiency",
-                  label: "Efficiency",
-                },
-                {
-                  value: "controllability",
-                  label: "Controllability",
-                },
-              ],
-            },
-            {
-              value: "navigation",
-              label: "Navigation",
-              children: [
-                {
-                  value: "side nav",
-                  label: "Side Navigation",
-                },
-                {
-                  value: "top nav",
-                  label: "Top Navigation",
-                },
-              ],
-            },
-          ],
-        },
-        {
-          value: "component",
-          label: "Component",
-          children: [
-            {
-              value: "basic",
-              label: "Basic",
-              children: [
-                {
-                  value: "layout",
-                  label: "Layout",
-                },
-                {
-                  value: "color",
-                  label: "Color",
-                },
-                {
-                  value: "typography",
-                  label: "Typography",
-                },
-                {
-                  value: "icon",
-                  label: "Icon",
-                },
-                {
-                  value: "button",
-                  label: "Button",
-                },
-              ],
-            },
-            {
-              value: "form",
-              label: "Form",
-              children: [
-                {
-                  value: "radio",
-                  label: "Radio",
-                },
-                {
-                  value: "checkbox",
-                  label: "Checkbox",
-                },
-                {
-                  value: "input",
-                  label: "Input",
-                },
-                {
-                  value: "input-number",
-                  label: "InputNumber",
-                },
-                {
-                  value: "select",
-                  label: "Select",
-                },
-                {
-                  value: "cascader",
-                  label: "Cascader",
-                },
-                {
-                  value: "switch",
-                  label: "Switch",
-                },
-                {
-                  value: "slider",
-                  label: "Slider",
-                },
-                {
-                  value: "time-picker",
-                  label: "TimePicker",
-                },
-                {
-                  value: "date-picker",
-                  label: "DatePicker",
-                },
-                {
-                  value: "datetime-picker",
-                  label: "DateTimePicker",
-                },
-                {
-                  value: "upload",
-                  label: "Upload",
-                },
-                {
-                  value: "rate",
-                  label: "Rate",
-                },
-                {
-                  value: "form",
-                  label: "Form",
-                },
-              ],
-            },
-            {
-              value: "data",
-              label: "Data",
-              children: [
-                {
-                  value: "table",
-                  label: "Table",
-                },
-                {
-                  value: "tag",
-                  label: "Tag",
-                },
-                {
-                  value: "progress",
-                  label: "Progress",
-                },
-                {
-                  value: "tree",
-                  label: "Tree",
-                },
-                {
-                  value: "pagination",
-                  label: "Pagination",
-                },
-                {
-                  value: "badge",
-                  label: "Badge",
-                },
-              ],
-            },
-            {
-              value: "notice",
-              label: "Notice",
-              children: [
-                {
-                  value: "alert",
-                  label: "Alert",
-                },
-                {
-                  value: "loading",
-                  label: "Loading",
-                },
-                {
-                  value: "message",
-                  label: "Message",
-                },
-                {
-                  value: "message-box",
-                  label: "MessageBox",
-                },
-                {
-                  value: "notification",
-                  label: "Notification",
-                },
-              ],
-            },
-            {
-              value: "navigation",
-              label: "Navigation",
-              children: [
-                {
-                  value: "menu",
-                  label: "Menu",
-                },
-                {
-                  value: "tabs",
-                  label: "Tabs",
-                },
-                {
-                  value: "breadcrumb",
-                  label: "Breadcrumb",
-                },
-                {
-                  value: "dropdown",
-                  label: "Dropdown",
-                },
-                {
-                  value: "steps",
-                  label: "Steps",
-                },
-              ],
-            },
-            {
-              value: "others",
-              label: "Others",
-              children: [
-                {
-                  value: "dialog",
-                  label: "Dialog",
-                },
-                {
-                  value: "tooltip",
-                  label: "Tooltip",
-                },
-                {
-                  value: "popover",
-                  label: "Popover",
-                },
-                {
-                  value: "card",
-                  label: "Card",
-                },
-                {
-                  value: "carousel",
-                  label: "Carousel",
-                },
-                {
-                  value: "collapse",
-                  label: "Collapse",
-                },
-              ],
-            },
-          ],
-        },
-        {
-          value: "resource",
-          label: "Resource",
-          children: [
-            {
-              value: "axure",
-              label: "Axure Components",
-            },
-            {
-              value: "sketch",
-              label: "Sketch Templates",
-            },
-            {
-              value: "docs",
-              label: "Design Documentation",
-            },
-          ],
-        },
-      ],
-    };
     const data = reactive({
       loading: false,
-      formData: {} as MyCreateOrEditActivity,
+      mode: "create" as "create" | "update",
+      formData: {} as MyCreateOrEditResourceTypeParams,
+      parentList: [] as ParentType[],
     });
 
     const methods = {
       /** 获取资源类型数据 */
       async getData() {
-        const { id } = query.value;
-        if (id) {
+        const { code } = query.value;
+        if (code) {
           // 编辑
-          const result = await ActivitiesService.getActivityData(id);
+          data.mode = "update";
+          const result = await ResourceService.getResourceTypeData(code);
           const { errcode } = result.data;
           if (errcode === 0) {
-            const formData: MyCreateOrEditActivity = result.data.data;
-            const { title, publishDate } = formData;
-            formData.myTitle = title;
-            if (publishDate) {
-              formData.publishType = 2;
-              formData.myPublishDate = publishDate;
-            }
-            data.formData = { ...formData };
+            data.formData = result.data.data;
           }
         } else {
           // 新建
-          data.formData.persist = true;
+          data.mode = "create";
         }
 
-        data.formData.testList = [
+        data.formData.attrs = [
           "test1",
           "test2",
           "test3",
@@ -410,70 +144,85 @@ export default {
           const sortable = new Sortable(document.getElementById("testlist"), {
             // 结束拖拽
             onEnd() {
-              data.formData.testList = sortable.toArray();
+              data.formData.attrs = sortable.toArray();
             },
           });
         }, 100);
       },
 
+      /** 根据父类获取子类型 */
+      async getTypeList() {
+        const result = await ResourceService.getResourceTypeListByParentType("");
+        const { errcode } = result.data;
+        if (errcode === 0) {
+          data.parentList = result.data.data;
+        }
+      },
+
+      /** 初始化父类选项数据 */
+      async initParentList() {
+        const result = await ResourceService.getResourceTypeListByParentType("");
+        data.parentList = result.data.data;
+        this.getSonTypeList(data.parentList);
+        console.error(data.parentList);
+      },
+
+      /** 根据父类获取子类 */
+      async getSonTypeList(list: ParentType[]) {
+        list.forEach(async (item) => {
+          const sonResult = await ResourceService.getResourceTypeListByParentType(item.code);
+          item.children = sonResult.data.data;
+          this.getSonTypeList(sonResult.data.data);
+        });
+      },
+
       /** 删除标准属性 */
       deletePropertyItem(index: number) {
-        data.formData.testList.splice(index, 1);
+        data.formData.attrs?.splice(index, 1);
       },
 
       /**
        * 保存
-       * @params type 保存类型 1-保存 2-保存并发布
+       * @params type 保存类型 1-创建 2-保存
        */
-      async save(type: 1 | 2) {
-        if (type === 2 && !validate()) return;
+      async save() {
+        if (!validate()) return;
 
-        const { myTitle, publishType, myPublishDate } = data.formData;
-        data.formData.isDraft = type === 1;
-        data.formData.title = myTitle || "未命名活动";
-        if (publishType === 1) {
-          data.formData.publishDate = formatDate(new Date().getTime() + 1000 * 5);
-        } else if (publishType === 2 && myPublishDate) {
-          data.formData.publishDate = formatDate(myPublishDate);
-        }
-        const func = query.value.id ? "editActivity" : "createActivity";
-        const result = await ActivitiesService[func](data.formData);
-        const { errcode } = result.data;
-        if (errcode === 0) {
-          const msg = type === 1 ? "保存成功" : "保存并发布成功";
-          ElMessage.success(msg);
-          switchPage("/operating/activity-management");
-        }
+        if (data.formData.formatsStr) data.formData.formats = data.formData.formatsStr.split(",");
+        console.error(data.formData);
+        // const result = await ResourceService.createOrEditResourceType(data.formData, data.mode);
+        // const { errcode } = result.data;
+        // if (errcode === 0) {
+        //   const msg = data.mode === "create" ? "创建成功" : "保存成功";
+        //   ElMessage.success(msg);
+        //   switchPage("/resource/property-management");
+        // }
       },
     };
 
     /** 表单验证 */
     const validate = () => {
-      const { myTitle, persist, startTime, limitTime, cover, link, publishType, myPublishDate } = data.formData;
-      if (!myTitle) {
-        ElMessage("请输入活动名称");
+      const { name, parentCode, priority, status } = data.formData;
+      if (!name) {
+        ElMessage("请输入名称");
         return false;
-      } else if (!persist && (!startTime || !limitTime)) {
-        ElMessage("请选择活动时间");
+      } else if (!parentCode) {
+        ElMessage("请选择父类");
         return false;
-      } else if (!cover) {
-        ElMessage("请上传活动海报");
+      } else if (!priority) {
+        ElMessage("请输入展示序号");
         return false;
-      } else if (!link) {
-        ElMessage("请输入活动页链接");
-        return false;
-      } else if (!publishType || (publishType === 2 && !myPublishDate)) {
-        ElMessage("请选择发布时间");
+      } else if (!status) {
+        ElMessage("请选择是否启用");
         return false;
       }
       return true;
     };
 
     methods.getData();
+    methods.initParentList();
 
     return {
-      ...asstesData,
-      query,
       ...toRefs(data),
       ...methods,
     };

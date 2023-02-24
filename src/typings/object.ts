@@ -142,6 +142,31 @@ export interface NodeTag {
   count: number;
 }
 
+/** 资源类型数据 */
+export interface ResourceType {
+  parentCode: string;
+  formats: string[];
+  attrs: string[];
+  resourceCount: number;
+  code: string;
+  name: string;
+  priority: number;
+  status: number;
+  category: number;
+  startTime: string;
+}
+
+/** 资源属性数据 */
+export interface ResourceProperty {
+  name: string;
+  note: string;
+  key: string;
+  format: number;
+  insertMode: number;
+  group: number;
+  dependencies: number;
+}
+
 /** 展品数据 */
 export interface Exhibit {
   presentableId: string;

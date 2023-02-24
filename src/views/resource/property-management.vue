@@ -2,13 +2,13 @@
 <template>
   <list-template>
     <template v-slot:top>
-      <el-tabs v-model="pageType" @tab-change="pageType = $event">
-        <el-tab-pane label="标准属性" name="standard"></el-tab-pane>
-        <el-tab-pane label="补充属性" name="supplement"></el-tab-pane>
+      <el-tabs v-model="searchData.group">
+        <el-tab-pane label="标准属性" :name="1"></el-tab-pane>
+        <el-tab-pane label="补充属性" :name="2"></el-tab-pane>
       </el-tabs>
     </template>
 
-    <template v-slot:barRight v-if="pageType === 'standard'">
+    <template v-slot:barRight v-if="searchData.group === 1">
       <el-button type="primary" @click="toEdit()">新增资源属性</el-button>
     </template>
 
@@ -16,7 +16,7 @@
       <div class="filter-controls">
         <form-item label="关键字搜索">
           <el-input
-            v-model="searchData.keywords"
+            v-model="searchData.nameOrKey"
             placeholder="请输入属性名称、属性键"
             clearable
             @keyup.enter="getData(true)"
@@ -30,18 +30,20 @@
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe v-loading="loading" v-if="pageType === 'standard'">
+      <el-table :data="tableData" stripe v-loading="loading" v-if="searchData.group === 1">
         <el-table-column label="属性名称" min-width="200">
-          <template #default="scope">{{ scope.row.title || "-" }}</template>
+          <template #default="scope">{{ scope.row.name || "-" }}</template>
         </el-table-column>
         <el-table-column label="属性键" min-width="200">
-          <template #default="scope">{{ scope.row.title || "-" }}</template>
+          <template #default="scope">{{ scope.row.key || "-" }}</template>
         </el-table-column>
         <el-table-column label="关联资源类型" min-width="200">
-          <template #default="scope">{{ scope.row.title || "-" }}</template>
+          <template #default="scope">{{ scope.row.dependencies || "-" }}</template>
         </el-table-column>
         <el-table-column label="录入方式" min-width="200">
-          <template #default="scope">{{ scope.row.title || "-" }}</template>
+          <template #default="scope">
+            {{ insertModeMapping.find((item) => item.value === scope.row.insertMode).label }}
+          </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
           <template #header>
@@ -50,25 +52,29 @@
             </el-icon>
           </template>
           <template #default="scope">
-            <el-icon class="icon-btn" title="编辑" @click="toEdit(scope.row._id)">
+            <el-icon class="icon-btn" title="编辑" @click="toEdit(scope.row.key)">
               <edit />
             </el-icon>
           </template>
         </el-table-column>
       </el-table>
 
-      <el-table :data="tableData" stripe v-loading="loading" v-else-if="pageType === 'supplement'">
+      <el-table :data="tableData" stripe v-loading="loading" v-else-if="searchData.group === 2">
         <el-table-column label="常用属性名称" min-width="200">
-          <template #default="scope">{{ scope.row.title || "-" }}</template>
+          <template #default="scope">{{ scope.row.name || "-" }}</template>
         </el-table-column>
         <el-table-column label="属性键" min-width="200">
-          <template #default="scope">{{ scope.row.title || "-" }}</template>
+          <template #default="scope">{{ scope.row.key || "-" }}</template>
         </el-table-column>
         <el-table-column label="关联资源类型" min-width="200">
           <template #default="scope">{{ scope.row.title || "-" }}</template>
         </el-table-column>
         <el-table-column label="关联资源数量" min-width="200">
-          <template #default="scope">{{ scope.row.title || "-" }}</template>
+          <template #default="scope">
+            <span class="text-btn" @click="switchPage('/resource/resource-management', { type: scope.row.name })">
+              {{ scope.row.createdResourceCount || "-" }}
+            </span>
+          </template>
         </el-table-column>
         <el-table-column label="创建时间" min-width="200">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
@@ -90,12 +96,12 @@
 
 <script lang="ts">
 import { formatDate } from "../../utils/common";
-import { ActivitiesService } from "@/api/request";
+import { ResourceService } from "@/api/request";
 import { Operation, Edit } from "@element-plus/icons-vue";
-import { reactive, toRefs } from "vue";
+import { reactive, toRefs, watch } from "vue";
 import { useMyRouter } from "@/utils/hooks";
-import { Activity } from "@/typings/object";
-import { ActivityListParams } from "@/typings/params";
+import { ResourceProperty } from "@/typings/object";
+import { ResourcePropertyListParams } from "@/typings/params";
 
 export default {
   components: {
@@ -104,14 +110,15 @@ export default {
   },
 
   setup() {
-    const { switchPage, openPage } = useMyRouter();
-    const assetsData = {};
+    const { switchPage } = useMyRouter();
+    const assetsData = {
+      insertModeMapping: [{ value: 1, label: "系统解析" }],
+    };
     const data = reactive({
-      pageType: "standard",
       loading: false,
-      tableData: [] as Activity[],
+      tableData: [] as ResourceProperty[],
       total: 0,
-      searchData: { currentPage: 1, limit: 20 } as ActivityListParams,
+      searchData: { currentPage: 1, limit: 20, group: 1 } as ResourcePropertyListParams,
     });
 
     const methods = {
@@ -122,27 +129,29 @@ export default {
         if (init) data.searchData.currentPage = 1;
         const { currentPage, limit } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
-        const result = await ActivitiesService.getActivityList(data.searchData);
+        const result = await ResourceService.getResourcePropertyList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
-          const { activities, num } = result.data.data;
+          const { dataList, totalItem } = result.data.data.resourceAttrs;
 
-          if (activities.length === 0) {
+          if (dataList.length === 0) {
             data.loading = false;
             return;
           }
 
-          data.tableData = activities;
-          data.total = num;
+          data.tableData = dataList;
+          data.total = totalItem;
           data.loading = false;
         }
       },
 
       /** 重置 */
       clearSearch() {
+        const { group } = data.searchData;
         data.searchData = {
           currentPage: 1,
           limit: 20,
+          group,
         };
         this.getData(true);
       },
@@ -154,15 +163,22 @@ export default {
       },
 
       /** 编辑资源属性 */
-      toEdit(id?: string) {
-        switchPage("/resource/edit-property", { id });
+      toEdit(key?: string) {
+        switchPage("/resource/edit-property", { key });
       },
     };
+
+    watch(
+      () => data.searchData.group,
+      () => {
+        methods.getData(true);
+      }
+    );
 
     methods.getData(true);
 
     return {
-      openPage,
+      switchPage,
       ...assetsData,
       ...toRefs(data),
       ...methods,
