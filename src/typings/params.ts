@@ -156,6 +156,7 @@ export interface CreateOrEditResourceTypeParams {
   code?: string;
   name: string;
   parentCode: string;
+  parentName: string;
   priority: number;
   status: 1 | 2;
   category: 1 | 2;
@@ -255,6 +256,24 @@ export interface TradeListParams extends ListParams {
   recordId?: string;
   status?: 1 | 2 | 3;
   transactionType?: 1 | 2;
+}
+
+/** 运营分类列表参数 */
+export interface ClassificationListParams extends ListParams {
+  status?: 1 | 2;
+  parentCode?: string;
+  name?: string;
+}
+
+/** 创建/编辑运营分类参数 */
+export interface CreateOrEditClassificationParams {
+  code?: string;
+  name: string;
+  parentCode: string;
+  sources: string[];
+  priority: number;
+  status: 1 | 2;
+  startTime?: string;
 }
 
 /** 编辑精选列表参数 */

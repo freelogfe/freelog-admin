@@ -1,18 +1,30 @@
 <!-- 运营分类管理 -->
 <template>
   <list-template>
+    <template v-slot:barLeft v-if="selectedData.length">
+      <el-button type="primary" @click="operate(1)">启用</el-button>
+      <el-button type="primary" @click="operate(2)">停用</el-button>
+      <span class="selected-tip">已选中{{ selectedData.length }}条</span>
+    </template>
+
     <template v-slot:barRight>
-      <el-button type="primary" @click="toEdit()">发布活动</el-button>
+      <el-button type="primary" @click="toSort()">排序</el-button>
+      <el-button type="primary" @click="toEdit()">新增运营分类</el-button>
     </template>
 
     <template v-slot:filterBar>
       <div class="filter-controls">
         <form-item label="关键字搜索">
-          <el-input v-model="searchData.keywords" placeholder="请输入活动名称" clearable @keyup.enter="getData(true)" />
+          <el-input v-model="searchData.name" placeholder="请输入名称" clearable @keyup.enter="getData(true)" />
         </form-item>
         <form-item label="状态">
-          <el-select v-model="searchData.status" placeholder="请选择状态" clearable>
-            <el-option v-for="item in statusOptions" :key="item.value" :value="item.value" :label="item.label" />
+          <el-select v-model="searchData.status" placeholder="所有" clearable>
+            <el-option v-for="item in statusMapping" :key="item.value" :value="item.value" :label="item.label" />
+          </el-select>
+        </form-item>
+        <form-item label="父类">
+          <el-select v-model="searchData.parentCode" placeholder="不限" clearable>
+            <el-option v-for="item in parentList" :key="item.code" :value="item.code" :label="item.name" />
           </el-select>
         </form-item>
       </div>
@@ -23,62 +35,63 @@
     </template>
 
     <template v-slot:table>
-      <el-table :data="tableData" stripe v-loading="loading">
-        <el-table-column label="活动名称" min-width="200">
-          <template #default="scope">{{ scope.row.title || "-" }}</template>
+      <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
+        <el-table-column type="selection" />
+        <el-table-column label="运营分类" min-width="200">
+          <template #default="scope">{{ scope.row.name || "-" }}</template>
         </el-table-column>
-        <el-table-column label="海报" min-width="150">
+        <el-table-column label="父类" min-width="200">
+          <template #default="scope">{{ scope.row.parentName || "-" }}</template>
+        </el-table-column>
+        <el-table-column label="映射来源" min-width="200">
           <template #default="scope">
-            <el-image
-              class="cover-image"
-              :src="scope.row.cover"
-              :preview-src-list="[scope.row.cover]"
-              preview-teleported
-              hide-on-click-modal
-              v-if="scope.row.cover"
-            />
-            <span v-else>-</span>
+            <div class="wrap-row">
+              <div class="sources" v-for="item in scope.row.sources" :key="item.identity">
+                <el-icon class="type-icon" v-if="[1, 2].includes(item.type)">
+                  <grid />
+                </el-icon>
+                <el-icon class="type-icon" v-if="item.type === 3">
+                  <house />
+                </el-icon>
+                {{ item.name }}
+              </div>
+            </div>
           </template>
         </el-table-column>
-        <el-table-column label="活动时间" min-width="300">
-          <template #default="scope">
-            <span v-if="scope.row.persist">长期活动</span>
-            <span v-else>
-              {{ scope.row.startTime ? formatDate(scope.row.startTime) : "-" }} 至
-              {{ scope.row.limitTime ? formatDate(scope.row.limitTime) : "-" }}
-            </span>
-          </template>
+        <el-table-column label="关联资源数量" min-width="200">
+          <template #default="scope">{{ scope.row.resourceCount || "-" }}</template>
         </el-table-column>
         <el-table-column label="状态">
           <template #default="scope">
-            {{ getStatus(scope.row) }}
+            <el-tooltip
+              effect="dark"
+              :content="`将于${formatDate(scope.row.startTime)}启用`"
+              placement="top"
+              v-if="scope.row.status === 2"
+            >
+              {{ statusMapping.find((item) => item.value === scope.row.status).label }}
+            </el-tooltip>
+            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status).label }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="发布时间" min-width="160">
-          <template #default="scope">
-            <span :style="{ color: getStatus(scope.row) === '未发布' ? 'red' : '#333' }" v-if="scope.row.publishDate">{{
-              formatDate(scope.row.publishDate)
-            }}</span>
-            <span v-else>-</span>
-          </template>
-        </el-table-column>
-        <el-table-column fixed="right" width="70">
+        <el-table-column fixed="right" width="100">
           <template #header>
             <el-icon class="operation-icon" title="操作">
               <operation />
             </el-icon>
           </template>
           <template #default="scope">
-            <el-icon
-              class="icon-btn"
-              title="查看活动"
-              @click="openPage(`${consoleUrl}/activity/${scope.row._id}`)"
-              v-if="scope.row.link"
-            >
-              <connection />
+            <el-icon class="icon-btn" title="停用" @click="operate(2, scope.row.code)" v-if="scope.row.status === 1">
+              <close />
             </el-icon>
-            <el-icon class="icon-btn" title="编辑" @click="toEdit(scope.row._id)">
+            <el-icon class="icon-btn" title="启用" @click="operate(1, scope.row.code)" v-if="scope.row.status === 2">
+              <check />
+            </el-icon>
+            <el-icon class="icon-btn" title="编辑" @click="toEdit(scope.row.code)">
               <edit />
+            </el-icon>
+            <el-icon class="icon-btn" title="删除" @click="deleteClassification(scope.row.code)">
+              <delete />
             </el-icon>
           </template>
         </el-table-column>
@@ -100,41 +113,39 @@
 <script lang="ts">
 import { formatDate } from "../../utils/common";
 import { ActivitiesService } from "@/api/request";
-import { Operation, Edit, Connection } from "@element-plus/icons-vue";
+import { Grid, House, Operation, Edit, Close, Check, Delete } from "@element-plus/icons-vue";
 import { reactive, toRefs } from "vue";
 import { useMyRouter } from "@/utils/hooks";
-import { Activity } from "@/typings/object";
-import { ActivityListParams } from "@/typings/params";
+import { Classification } from "@/typings/object";
+import { ClassificationListParams } from "@/typings/params";
+import { ElMessageBox } from "element-plus";
 
 export default {
   components: {
+    Grid,
+    House,
     Operation,
+    Close,
+    Check,
     Edit,
-    Connection,
+    Delete,
   },
 
   setup() {
     const { switchPage, openPage } = useMyRouter();
     const assetsData = {
-      statusOptions: [
-        { value: 1, label: "未发布" },
-        { value: 2, label: "已暂停" },
-        { value: 3, label: "未开始" },
-        { value: 4, label: "进行中" },
-        { value: 5, label: "已结束" },
-        { value: 6, label: "草稿" },
-      ],
       statusMapping: [
-        { value: 1, label: "正常" },
-        { value: 2, label: "暂停" },
+        { value: 1, label: "已启用" },
+        { value: 2, label: "已停用" },
       ],
-      consoleUrl: (process.env.VUE_APP_BASE_API as string).replace("qi", "www"),
     };
     const data = reactive({
       loading: false,
-      tableData: [] as Activity[],
+      tableData: [] as Classification[],
       total: 0,
-      searchData: { currentPage: 1, limit: 20 } as ActivityListParams,
+      selectedData: [] as Classification[],
+      searchData: { currentPage: 1, limit: 20 } as ClassificationListParams,
+      parentList: [] as Classification[],
     });
 
     const methods = {
@@ -145,19 +156,28 @@ export default {
         if (init) data.searchData.currentPage = 1;
         const { currentPage, limit } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
-        const result = await ActivitiesService.getActivityList(data.searchData);
+        const result = await ActivitiesService.getClassificationList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
-          const { activities, num } = result.data.data;
+          const { dataList, totalItem } = result.data.data.operationCategories;
 
-          if (activities.length === 0) {
+          if (dataList.length === 0) {
             data.loading = false;
             return;
           }
 
-          data.tableData = activities;
-          data.total = num;
+          data.tableData = dataList;
+          data.total = totalItem;
           data.loading = false;
+        }
+      },
+
+      /** 获取父类选项数据 */
+      async getParentList() {
+        const result = await ActivitiesService.getClassificationGroupList("");
+        const { errcode } = result.data;
+        if (errcode === 0) {
+          data.parentList = result.data.data;
         }
       },
 
@@ -176,43 +196,84 @@ export default {
         this.getData();
       },
 
-      /** 获取活动状态 */
-      getStatus(item: Activity) {
-        const now = new Date().getTime();
-        const { status, isDraft, persist, publishDate, startTime, limitTime } = item;
-        const publishTimestamp = new Date(publishDate).getTime();
-        const startTimestamp = new Date(startTime).getTime();
-        const limitTimestamp = new Date(limitTime).getTime();
-        if (status === 2) {
-          return "已暂停";
-        } else if (isDraft) {
-          return "草稿";
-        } else if (now < publishTimestamp) {
-          return "未发布";
-        } else if (now <= startTimestamp) {
-          return "未开始";
-        } else if (now < limitTimestamp || persist) {
-          return "进行中";
-        } else if (limitTimestamp <= now) {
-          return "已结束";
-        }
+      /** 跳转运营分类排序 */
+      toSort() {
+        switchPage("/operating/classification-sort");
       },
 
-      /** 编辑活动 */
-      toEdit(id?: string) {
-        switchPage("/operating/edit-activity", { id });
+      /** 编辑运营分类 */
+      toEdit(code?: string) {
+        switchPage("/operating/edit-classification", { code });
+      },
+
+      /** 选择表格项 */
+      selectTable(selected: Classification[]) {
+        data.selectedData = selected;
+      },
+
+      /** 启用/停用/删除操作 */
+      operate(status: 1 | 2, code?: string) {
+        ElMessageBox.confirm(
+          `确认${status === 1 ? "启用" : "停用"}${code ? "当前" : "所有已选"}运营分类吗？`,
+          `${status === 1 ? "启用" : "停用"}运营分类`,
+          {
+            confirmButtonText: status === 1 ? "启用" : "停用",
+            cancelButtonText: "取消",
+          }
+        ).then(async () => {
+          const codes = code ? [code] : data.selectedData.map((item) => item.code);
+          const params = { codes, status };
+          const result = await ActivitiesService.operateClassification(params);
+          const { errcode } = result.data;
+          if (errcode === 0) {
+            this.getData(true);
+          }
+        });
+      },
+
+      /** 删除操作 */
+      deleteClassification(code: string) {
+        ElMessageBox.confirm(`确认删除当前运营分类吗？`, `删除运营分类`, {
+          confirmButtonText: "删除",
+          cancelButtonText: "取消",
+        }).then(async () => {
+          const result = await ActivitiesService.deleteClassification(code);
+          const { errcode } = result.data;
+          if (errcode === 0) {
+            this.getData(true);
+          }
+        });
       },
     };
 
     methods.getData(true);
+    methods.getParentList();
 
     return {
       openPage,
       ...assetsData,
       ...toRefs(data),
       ...methods,
+      switchPage,
       formatDate,
     };
   },
 };
 </script>
+
+<style lang="scss" scoped>
+.wrap-row {
+  display: flex;
+  flex-wrap: wrap;
+
+  .sources {
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
+
+    .type-icon {
+      margin-right: 5px;
+    }
+  }
+}
+</style>

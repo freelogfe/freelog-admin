@@ -138,8 +138,18 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
+        path: "type-sort",
+        name: "resourceTypeSort",
+        component: () => import("../views/resource/type-sort.vue"),
+        meta: {
+          title: "资源类型排序",
+          sideBarItem: "resourceTypeManagement",
+          hidden: true,
+        },
+      },
+      {
         path: "edit-type",
-        name: "resourceEditType",
+        name: "editResourceType",
         component: () => import("../views/resource/edit-type.vue"),
         meta: {
           title: "编辑资源类型",
@@ -267,6 +277,26 @@ const routes: Array<RouteRecordRaw> = [
         meta: {
           title: "运营分类管理",
           sideBarItem: "classificationManagement",
+        },
+      },
+      {
+        path: "classification-sort",
+        name: "classificationSort",
+        component: () => import("../views/operating/classification-sort.vue"),
+        meta: {
+          title: "运营分类排序",
+          sideBarItem: "classificationManagement",
+          hidden: true,
+        },
+      },
+      {
+        path: "edit-classification",
+        name: "editClassification",
+        component: () => import("../views/operating/edit-classification.vue"),
+        meta: {
+          title: "编辑运营分类",
+          sideBarItem: "classificationManagement",
+          hidden: true,
         },
       },
       {

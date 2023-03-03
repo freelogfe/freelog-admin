@@ -1,7 +1,7 @@
-<!-- 编辑资源类型 -->
+<!-- 编辑运营分类 -->
 <template>
   <edit-template>
-    <template v-slot:title>{{ mode === "create" ? "创建资源类型" : "编辑资源类型" }}</template>
+    <template v-slot:title>{{ mode === "create" ? "创建运营分类" : "编辑运营分类" }}</template>
 
     <template v-slot:barRight>
       <el-button type="primary" @click="save()">{{ mode === "create" ? "创建" : "保存" }}</el-button>
@@ -13,50 +13,32 @@
         <span class="desc">系统自动分配</span>
       </form-item>
       <form-item label="名称">
-        <el-input
-          style="width: 400px"
-          v-model="formData.name"
-          placeholder="请输入名称"
-          clearable
-          :disabled="mode === 'update'"
-        />
+        <el-input style="width: 400px" v-model="formData.name" placeholder="请输入名称" clearable />
       </form-item>
       <form-item label="父类">
-        <div class="cascader-panel" :class="{ disabled: mode === 'update' }">
+        <div class="cascader-panel">
           <div class="list" v-for="list in parentOptions" :key="list.level">
             <div
               class="item"
               :class="{ active: list.checked === item.code }"
               v-for="item in list.list"
               :key="item.code"
-              @click="selectParentType(item, list.level, true)"
+              @click="selectParentType(item, list.level)"
             >
               {{ item.name }}
-              <el-icon v-if="item.children.length"><ArrowRight /></el-icon>
             </div>
           </div>
         </div>
       </form-item>
-      <form-item label="关联文件格式（选填）">
-        <el-input
-          style="width: 400px"
-          v-model="formData.formatsStr"
-          placeholder="输入限制上传文件的扩展名，用英文逗号分隔"
-          clearable
-        />
-        <span class="desc">格式“.扩展名”，用英文逗号（“,”）分隔</span>
-      </form-item>
-      <form-item label="标准属性（选填）">
+      <form-item label="映射来源">
         <div class="btn-box">
-          <div class="text-btn" @click="importParentType()">
-            <el-icon><bottom /></el-icon>导入父类属性
-          </div>
           <div class="text-btn" @click="openResourceList()">
-            <el-icon><plus /></el-icon>添加属性
+            <el-icon><plus /></el-icon>添加来源
           </div>
         </div>
         <div id="sortableList" class="property-list">
-          <div class="property-item" :data-id="item.key" v-for="(item, index) in formData.attrsArr" :key="item.key">
+          <div class="property-item" :data-id="item" v-for="(item, index) in formData.sourcesArr" :key="item.identity">
+            <el-icon class="handle"><DCaret /></el-icon>
             {{ item.name }}
             <el-icon class="delete-btn" @click="deletePropertyItem(index)"><close /></el-icon>
           </div>
@@ -73,11 +55,9 @@
       </form-item>
       <form-item label="是否启用">
         <el-radio-group v-model="formData.status">
-          <el-radio :label="1">
-            启用<span class="desc">在用户端资源类型选择器中显示，用户在创建资源是可以直接选择此资源类型</span>
-          </el-radio>
+          <el-radio :label="1"> 启用<span class="desc">在资源市场分类筛选器中显示</span> </el-radio>
           <el-radio style="margin-top: 10px" :label="2">
-            停用<span class="desc">在用户端资源类型选择器中隐藏</span>
+            停用<span class="desc">在资源市场分类筛选器中隐藏</span>
           </el-radio>
         </el-radio-group>
       </form-item>
@@ -152,12 +132,12 @@
 
 <script lang="ts">
 import { nextTick, reactive, ref, toRefs } from "vue";
-import { ResourceService } from "@/api/request";
+import { ActivitiesService, ResourceService } from "@/api/request";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElTable } from "element-plus";
-import { CreateOrEditResourceTypeParams, ResourcePropertyListParams } from "@/typings/params";
+import { CreateOrEditClassificationParams, ResourcePropertyListParams } from "@/typings/params";
 import Sortable from "sortablejs";
-import { ArrowRight, Bottom, Plus, Close } from "@element-plus/icons-vue";
+import { Plus, DCaret, Close } from "@element-plus/icons-vue";
 import { ResourceProperty } from "@/typings/object";
 
 /** 父类选项 */
@@ -168,18 +148,16 @@ interface ParentType {
   children: ParentType[];
 }
 
-/** 资源类型编辑数据 */
-interface MyCreateOrEditResourceTypeParams extends CreateOrEditResourceTypeParams {
-  formatsStr: string;
+/** 运营分类编辑数据 */
+interface MyCreateOrEditClassificationParams extends CreateOrEditClassificationParams {
   parentCodeArr: string[];
-  attrsArr: { name: string; key: string }[];
+  sourcesArr: { name: string; identity: string; type: number }[];
 }
 
 export default {
   components: {
-    ArrowRight,
-    Bottom,
     Plus,
+    DCaret,
     Close,
   },
 
@@ -192,55 +170,48 @@ export default {
     const data = reactive({
       loading: false,
       mode: "create" as "create" | "update",
-      formData: {} as MyCreateOrEditResourceTypeParams,
+      formData: {} as MyCreateOrEditClassificationParams,
       parentOptions: [] as any[],
       resourcePropertySearchData: { currentPage: 1, limit: 20, group: 1 } as ResourcePropertyListParams,
       resourcePropertyData: {
         keywords: "",
-        list: [] as ResourceProperty[],
+        list: [] as { name: string; identity: string; type: number }[],
         total: 0,
         showSelected: false,
       },
-      selectedResourcePropertyData: [] as { key: string; name: string }[],
+      selectedResourcePropertyData: [] as { name: string; identity: string; type: number }[],
       resourcePropertyPopupShow: false,
     });
 
     const methods = {
-      /** 获取资源类型数据 */
+      /** 获取运营分类数据 */
       async getData() {
         const { code } = query.value;
         if (code) {
           // 编辑
           data.mode = "update";
-          const result = await ResourceService.getResourceTypeData(code);
+          const result = await ActivitiesService.getClassificationData(code);
           const { errcode } = result.data;
           if (errcode === 0) {
-            const { formats, attrs } = result.data.data;
+            const { sources } = result.data.data;
             data.formData = result.data.data;
-            data.formData.formatsStr = formats.join();
-            data.formData.attrsArr = [...attrs];
+            data.formData.sourcesArr = [...sources];
           }
         } else {
           // 新建
           data.mode = "create";
-          data.formData.formatsStr = "";
-          data.formData.attrsArr = [];
+          data.formData.sourcesArr = [];
         }
 
         this.initParentList();
 
         setTimeout(() => {
           const sortable = new Sortable(document.getElementById("sortableList"), {
-            animation: 150,
+            // 拖拽处
+            handle: ".handle",
             // 结束拖拽
             onEnd() {
-              const newKeyArr: string[] = sortable.toArray();
-              const newAttrsArr: { name: string; key: string }[] = [];
-              newKeyArr.forEach((key) => {
-                const attr = data.formData.attrsArr.find((item) => item.key === key);
-                if (attr) newAttrsArr.push(attr);
-              });
-              data.formData.attrsArr = newAttrsArr;
+              data.formData.sourcesArr = sortable.toArray();
             },
           });
         }, 100);
@@ -248,7 +219,7 @@ export default {
 
       /** 初始化父类选项数据 */
       async initParentList() {
-        const result = await ResourceService.getResourceTypeGroupList("");
+        const result = await ActivitiesService.getClassificationGroupList("");
         const { errcode } = result.data;
         if (errcode === 0) {
           const defaultOption: ParentType = { code: "", name: "无", children: [], parentCodeArr: [""] };
@@ -263,9 +234,7 @@ export default {
       },
 
       /** 选择父类 */
-      selectParentType(item: ParentType, level: number, manual = false) {
-        if (data.mode === "update" && manual) return;
-
+      selectParentType(item: ParentType, level: number) {
         data.parentOptions[level].checked = item.code;
         data.parentOptions.splice(level + 1);
 
@@ -275,41 +244,15 @@ export default {
         }
 
         if (!item.children.length) return;
-
+        
         data.parentOptions.push({ level: level + 1, list: item.children });
-      },
-
-      /** 导入父类属性 */
-      async importParentType() {
-        if (data.parentOptions[0].checked === undefined) {
-          ElMessage("请选择父类");
-          return;
-        }
-
-        let code = "";
-        const parentTypeChecked = data.parentOptions.map((item) => item.checked);
-        for (let i = parentTypeChecked.length - 1; i >= 0; i--) {
-          if (parentTypeChecked[i] !== undefined) {
-            code = parentTypeChecked[i];
-            break;
-          }
-        }
-        const result = await ResourceService.getAttributesOfResourceType(code);
-        const { errcode } = result.data;
-        if (errcode === 0) {
-          result.data.data.forEach((item: { name: string; key: string }) => {
-            const index = data.formData.attrsArr.findIndex((attrs) => attrs.key === item.key);
-            if (index !== -1) return;
-            data.formData.attrsArr.push(item);
-          });
-        }
       },
 
       /** 打开资源属性列表 */
       openResourceList() {
         data.resourcePropertyPopupShow = true;
         this.getResourcePropertyList(true);
-        data.selectedResourcePropertyData = [...data.formData.attrsArr];
+        data.selectedResourcePropertyData = [...data.formData.sourcesArr];
       },
 
       /** 获取资源属性列表 */
@@ -337,7 +280,7 @@ export default {
           ? data.selectedResourcePropertyData
           : data.resourcePropertyData.list;
         list.forEach((row) => {
-          const index = data.selectedResourcePropertyData.findIndex((item) => item.key === row.key);
+          const index = data.selectedResourcePropertyData.findIndex((item) => item.identity === row.identity);
           nextTick(() => {
             tableRef.value!.toggleRowSelection(row, index !== -1);
           });
@@ -364,8 +307,8 @@ export default {
       },
 
       /** 选择资源属性表格项 */
-      selectResources(selected: ResourceProperty[], row: ResourceProperty) {
-        const index = data.selectedResourcePropertyData.findIndex((item) => item.key === row.key);
+      selectResources(selected: ResourceProperty[], row: { name: string; identity: string; type: number }) {
+        const index = data.selectedResourcePropertyData.findIndex((item) => item.identity === row.identity);
         if (index === -1) {
           data.selectedResourcePropertyData.push(row);
         } else {
@@ -377,7 +320,9 @@ export default {
       selectAllResources(selected: ResourceProperty[]) {
         const all = selected.length !== 0;
         data.resourcePropertyData.list.forEach((row) => {
-          const index = data.selectedResourcePropertyData.findIndex((selectedItem) => selectedItem.key === row.key);
+          const index = data.selectedResourcePropertyData.findIndex(
+            (selectedItem) => selectedItem.identity === row.identity
+          );
           if (all && index === -1) {
             data.selectedResourcePropertyData.push(row);
           } else if (!all && index !== -1) {
@@ -388,13 +333,13 @@ export default {
 
       /** 保存资源属性 */
       saveResourceProperty() {
-        data.formData.attrsArr = [...data.selectedResourcePropertyData];
+        data.formData.sourcesArr = [...data.selectedResourcePropertyData];
         data.resourcePropertyPopupShow = false;
       },
 
       /** 删除标准属性 */
       deletePropertyItem(index: number) {
-        data.formData.attrsArr?.splice(index, 1);
+        data.formData.sourcesArr?.splice(index, 1);
       },
 
       /**
@@ -404,9 +349,8 @@ export default {
       async save() {
         if (!validate()) return;
 
-        const { formatsStr, attrsArr } = data.formData;
-        if (formatsStr) data.formData.formats = formatsStr.split(",");
-        if (attrsArr) data.formData.attrs = attrsArr.map((item) => item.key);
+        const { sourcesArr } = data.formData;
+        if (sourcesArr) data.formData.sources = sourcesArr.map((item) => item.name);
         const parentTypeChecked = data.parentOptions.map((item) => item.checked);
         for (let i = parentTypeChecked.length - 1; i >= 0; i--) {
           if (parentTypeChecked[i] !== undefined) {
@@ -414,12 +358,12 @@ export default {
             break;
           }
         }
-        const result = await ResourceService.createOrEditResourceType(data.formData, data.mode);
+        const result = await ActivitiesService.createOrEditClassification(data.formData, data.mode);
         const { errcode } = result.data;
         if (errcode === 0) {
           const msg = data.mode === "create" ? "创建成功" : "保存成功";
           ElMessage.success(msg);
-          switchPage("/resource/type-management");
+          switchPage("/operating/classification-management");
         }
       },
     };
@@ -437,8 +381,9 @@ export default {
           list.splice(index, 1);
           return;
         }
+
         item.children.forEach((son: ParentType) => {
-          son.parentCodeArr = [...parentCodeArr, son.code];
+          son.parentCodeArr = [...item.parentCodeArr, son.code];
         });
         if (parentCode === code) {
           const checkedArr = parentCodeArr;
@@ -504,9 +449,6 @@ export default {
       height: 34px;
       line-height: 34px;
       padding: 0 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
       cursor: pointer;
 
       &:hover {
@@ -523,14 +465,6 @@ export default {
       border-left: 1px solid #e4e7ed;
     }
   }
-
-  &.disabled {
-    background-color: #f5f7fa;
-
-    .item {
-      cursor: not-allowed;
-    }
-  }
 }
 
 .btn-box {
@@ -545,10 +479,6 @@ export default {
     i {
       margin-right: 5px;
     }
-  }
-
-  .text-btn + .text-btn {
-    margin-left: 20px;
   }
 }
 

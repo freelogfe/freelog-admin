@@ -37,7 +37,7 @@
         <el-table-column label="属性键" min-width="200">
           <template #default="scope">{{ scope.row.key || "-" }}</template>
         </el-table-column>
-        <el-table-column label="关联资源类型" min-width="200">
+        <el-table-column label="关联资源数量" min-width="200">
           <template #default="scope">{{ scope.row.dependencies || "-" }}</template>
         </el-table-column>
         <el-table-column label="录入方式" min-width="200">
@@ -67,14 +67,10 @@
           <template #default="scope">{{ scope.row.key || "-" }}</template>
         </el-table-column>
         <el-table-column label="关联资源类型" min-width="200">
-          <template #default="scope">{{ scope.row.title || "-" }}</template>
+          <template #default="scope">{{ scope.row.resourceTypeName || "-" }}</template>
         </el-table-column>
         <el-table-column label="关联资源数量" min-width="200">
-          <template #default="scope">
-            <span class="text-btn" @click="switchPage('/resource/resource-management', { type: scope.row.name })">
-              {{ scope.row.createdResourceCount || "-" }}
-            </span>
-          </template>
+          <template #default="scope">{{ scope.row.count || "-" }}</template>
         </el-table-column>
         <el-table-column label="创建时间" min-width="200">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
@@ -132,7 +128,15 @@ export default {
         const result = await ResourceService.getResourcePropertyList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
-          const { dataList, totalItem } = result.data.data.resourceAttrs;
+          let dataList: ResourceProperty[] = [];
+          let totalItem = 0;
+          if (data.searchData.group === 1) {
+            dataList = result.data.data.resourceAttrs.dataList;
+            totalItem = result.data.data.resourceAttrs.totalItem;
+          } else if (data.searchData.group === 2) {
+            dataList = result.data.data.resourceAttrRecords;
+            totalItem = result.data.data.num;
+          }
 
           if (dataList.length === 0) {
             data.loading = false;
@@ -170,7 +174,13 @@ export default {
 
     watch(
       () => data.searchData.group,
-      () => {
+      (cur) => {
+        data.searchData = {
+          nameOrKey: "",
+          currentPage: 1,
+          limit: 20,
+          group: cur,
+        };
         methods.getData(true);
       }
     );

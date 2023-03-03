@@ -15,7 +15,7 @@
     </template>
 
     <template v-slot:barRight v-if="searchData.category === 1">
-      <el-button type="primary" @click="toEdit()">排序</el-button>
+      <el-button type="primary" @click="toSort()">排序</el-button>
       <el-button type="primary" @click="toEdit()">新增资源类型</el-button>
     </template>
 
@@ -64,7 +64,7 @@
           <template #default="scope">{{ scope.row.name || "-" }}</template>
         </el-table-column>
         <el-table-column label="父类" min-width="200">
-          <template #default="scope">{{ scope.row.parentCode || "-" }}</template>
+          <template #default="scope">{{ scope.row.parentName || "-" }}</template>
         </el-table-column>
         <el-table-column label="关联资源数量" min-width="200">
           <template #default="scope">
@@ -106,7 +106,7 @@
           <template #default="scope">{{ scope.row.name || "-" }}</template>
         </el-table-column>
         <el-table-column label="隶属类型" min-width="200">
-          <template #default="scope">{{ scope.row.code || "-" }}</template>
+          <template #default="scope">{{ scope.row.parentName || "-" }}</template>
         </el-table-column>
         <el-table-column label="关联资源数量" min-width="200">
           <template #default="scope">
@@ -116,7 +116,7 @@
           </template>
         </el-table-column>
         <el-table-column label="创建时间" min-width="200">
-          <template #default="scope">{{ formatDate(scope.row.startTime) }}</template>
+          <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
       </el-table>
     </template>
@@ -218,6 +218,11 @@ export default {
         this.getData();
       },
 
+      /** 跳转资源类型排序 */
+      toSort() {
+        switchPage("/resource/type-sort");
+      },
+
       /** 编辑资源类型 */
       toEdit(code?: string) {
         switchPage("/resource/edit-type", { code });
@@ -231,7 +236,7 @@ export default {
       /** 启用/停用操作 */
       operate(status: 1 | 2, code?: string) {
         ElMessageBox.confirm(
-          `确认${status === 1 ? "启用" : "停用"}此资源类型吗？`,
+          `确认${status === 1 ? "启用" : "停用"}${code ? "当前" : "所有已选"}资源类型吗？`,
           `${status === 1 ? "启用" : "停用"}资源类型`,
           {
             confirmButtonText: status === 1 ? "启用" : "停用",
@@ -251,7 +256,13 @@ export default {
 
     watch(
       () => data.searchData.category,
-      () => {
+      (cur) => {
+        data.searchData = {
+          codeOrName: "",
+          currentPage: 1,
+          limit: 20,
+          category: cur,
+        };
         methods.getData(true);
       }
     );

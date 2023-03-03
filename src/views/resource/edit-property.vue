@@ -1,10 +1,10 @@
 <!-- 编辑资源属性 -->
 <template>
   <edit-template>
-    <template v-slot:title>{{ mode === 'create' ? "编辑资源属性" : "创建资源属性" }}</template>
+    <template v-slot:title>{{ mode === 'create' ? "创建资源属性" : "编辑资源属性" }}</template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="save()">{{ mode === 'create' ? "保存" : "创建" }}</el-button>
+      <el-button type="primary" @click="save()">{{ mode === 'create' ? "创建" : "保存" }}</el-button>
     </template>
 
     <template v-slot:main>
@@ -79,7 +79,6 @@ export default {
           const result = await ResourceService.getResourcePropertyData(key);
           const { errcode } = result.data;
           if (errcode === 0) {
-            console.error(result.data)
             data.formData = result.data.data;
           }
         } else {

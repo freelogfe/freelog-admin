@@ -40,6 +40,8 @@ import {
   CreateOrEditResourceTypeParams,
   ResourcePropertyListParams,
   CreateOrEditResourcePropertyParams,
+  ClassificationListParams,
+  CreateOrEditClassificationParams,
 } from "@/typings/params";
 import Axios from "./http";
 
@@ -243,7 +245,7 @@ export class ResourceService {
     data: CreateOrEditResourceTypeParams,
     type: "create" | "update"
   ): Promise<HttpResponse> {
-    return Axios(`/v2/resources/types/${type}`, { method: "POST", data });
+    return Axios(`/v2/resources/types/${type}`, { method: "POST", data: { ...data, category: 1 } });
   }
 
   /** 获取资源类型的属性 */
@@ -251,9 +253,19 @@ export class ResourceService {
     return Axios("/v2/resources/types/getAttrsByCode", { method: "GET", params: { code } });
   }
 
+  /** 获取资源类型分组列表 */
+  static getResourceTypeGroupList(codeOrName: string): Promise<HttpResponse> {
+    return Axios("/v2/resources/types/listSimpleByGroup", { method: "GET", params: { codeOrName } });
+  }
+
+  /** 修改资源类型排序 */
+  static editResourceTypeSort(data: { code: string; priority: number }): Promise<HttpResponse> {
+    return Axios("/v2/resources/types/updatePriority", { method: "POST", data });
+  }
+
   /** 获取资源属性列表 */
   static getResourcePropertyList(params: ResourcePropertyListParams): Promise<HttpResponse> {
-    return Axios("/v2/resources/attrs/list", { method: "GET", params });
+    return Axios(`/v2/resources/${params.group === 1 ? "attrs" : "attr-records"}/list`, { method: "GET", params });
   }
 
   /** 查询资源属性数据 */
@@ -386,6 +398,52 @@ export class TransactionsService {
 
 /** Activities 类接口 */
 export class ActivitiesService {
+  /** 获取运营分类列表 */
+  static getClassificationList(params: ClassificationListParams): Promise<HttpResponse> {
+    return Axios("/v2/resources/operation-categories/list", { method: "GET", params });
+  }
+
+  /** 根据父类型获取子运营分类 */
+  static getClassificationListByParent(parentCode: string): Promise<HttpResponse> {
+    return Axios("/v2/resources/operation-categories/listSimpleByParentCode", {
+      method: "GET",
+      params: { parentCode },
+    });
+  }
+
+  /** 操作运营分类*/
+  static operateClassification(data: { codes: string[]; status: 1 | 2 }): Promise<HttpResponse> {
+    return Axios("/v2/resources/operation-categories/updateStatusBatch", { method: "POST", data });
+  }
+
+  /** 删除运营分类*/
+  static deleteClassification(code: string): Promise<HttpResponse> {
+    return Axios("/v2/resources/operation-categories/delete", { method: "POST", data: { code } });
+  }
+
+  /** 查询运营分类数据 */
+  static getClassificationData(code: string): Promise<HttpResponse> {
+    return Axios("/v2/resources/operation-categories/getInfoByCode", { method: "GET", params: { code } });
+  }
+
+  /** 创建/编辑运营分类 */
+  static createOrEditClassification(
+    data: CreateOrEditClassificationParams,
+    type: "create" | "update"
+  ): Promise<HttpResponse> {
+    return Axios(`/v2/resources/operation-categories/${type}`, { method: "POST", data });
+  }
+
+  /** 获取运营分类分组列表 */
+  static getClassificationGroupList(name: string): Promise<HttpResponse> {
+    return Axios("/v2/resources/operation-categories/listSimpleByGroup", { method: "GET", params: { name } });
+  }
+
+  /** 修改运营分类排序 */
+  static editClassificationSort(data: { code: string; priority: number }): Promise<HttpResponse> {
+    return Axios("/v2/resources/operation-categories/updatePriority", { method: "POST", data });
+  }
+
   /** 获取编辑精选列表 */
   static getChoicenessList(params: ChoicenessListParams): Promise<HttpResponse> {
     return Axios("/v2/resources/operations", {

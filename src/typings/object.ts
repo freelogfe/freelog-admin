@@ -145,6 +145,7 @@ export interface NodeTag {
 /** 资源类型数据 */
 export interface ResourceType {
   parentCode: string;
+  parentName: string;
   formats: string[];
   attrs: string[];
   resourceCount: number;
@@ -153,7 +154,7 @@ export interface ResourceType {
   priority: number;
   status: number;
   category: number;
-  startTime: string;
+  createDate: string;
 }
 
 /** 资源属性数据 */
@@ -165,6 +166,10 @@ export interface ResourceProperty {
   insertMode: number;
   group: number;
   dependencies: number;
+  resourceTypeCode: string;
+  resourceTypeName: string;
+  createDate: string;
+  count: number;
 }
 
 /** 展品数据 */
@@ -233,6 +238,19 @@ export interface TradeRecord {
   createDate: string;
   updateDate: string;
   tradeDetail: any[];
+}
+
+/** 运营分类数据 */
+export interface Classification {
+  parentCode: string;
+  parentName: string;
+  code: string;
+  name: string;
+  sources: string[];
+  resourceCount: number;
+  priority: number;
+  status: number;
+  startTime: string;
 }
 
 /** 操作编辑精选参数 */
