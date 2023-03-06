@@ -522,6 +522,23 @@ export default {
             resource.resourceNameAbbreviation = resource.resourceName.split("/")[1];
             resource.resourceVersions.reverse();
           });
+          const bannedIds = dataList
+            .filter((item: Resource) => item.status === 2)
+            .map((item: Resource) => item.resourceId)
+            .join(",");
+
+          if (bannedIds) {
+            const bannedResult = await ResourceService.getResourceRecordList({ resourceIds: bannedIds });
+            bannedResult.data.data.forEach(
+              (item: { resourceId: string; records: { reason: string; remark: string }[] }) => {
+                const resource: Resource = dataList.find(
+                  (resource: Resource) => resource.resourceId === item.resourceId
+                );
+                resource.reason = item.records[0].reason;
+                resource.remark = item.records[0].remark;
+              }
+            );
+          }
           data.resourceData = {
             keywords: data.resourceData.keywords,
             list: dataList,

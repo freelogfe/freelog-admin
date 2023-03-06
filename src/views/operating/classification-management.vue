@@ -43,17 +43,25 @@
         <el-table-column label="父类" min-width="200">
           <template #default="scope">{{ scope.row.parentName || "-" }}</template>
         </el-table-column>
-        <el-table-column label="映射来源" min-width="200">
+        <el-table-column label="映射来源" min-width="250">
           <template #default="scope">
             <div class="wrap-row">
               <div class="sources" v-for="item in scope.row.sources" :key="item.identity">
-                <el-icon class="type-icon" v-if="[1, 2].includes(item.type)">
-                  <grid />
-                </el-icon>
-                <el-icon class="type-icon" v-if="item.type === 3">
-                  <house />
-                </el-icon>
-                {{ item.name }}
+                <template v-if="[1, 2].includes(item.type)">
+                  <el-icon class="type-icon" v-if="[1, 2].includes(item.type)">
+                    <grid />
+                  </el-icon>
+                  {{
+                    item.parentChain
+                      .reverse()
+                      .map((item) => item.name)
+                      .join("/")
+                  }}
+                </template>
+                <template v-if="item.type === 3">
+                  <div class="tag-icon">#</div>
+                  {{ item.name }}
+                </template>
               </div>
             </div>
           </template>
@@ -113,7 +121,7 @@
 <script lang="ts">
 import { formatDate } from "../../utils/common";
 import { ActivitiesService } from "@/api/request";
-import { Grid, House, Operation, Edit, Close, Check, Delete } from "@element-plus/icons-vue";
+import { Grid, Operation, Edit, Close, Check, Delete } from "@element-plus/icons-vue";
 import { reactive, toRefs } from "vue";
 import { useMyRouter } from "@/utils/hooks";
 import { Classification } from "@/typings/object";
@@ -123,7 +131,6 @@ import { ElMessageBox } from "element-plus";
 export default {
   components: {
     Grid,
-    House,
     Operation,
     Close,
     Check,
@@ -267,11 +274,21 @@ export default {
   flex-wrap: wrap;
 
   .sources {
+    line-height: 24px;
     display: flex;
-    align-items: center;
-    margin-right: 10px;
+    margin-right: 20px;
 
     .type-icon {
+      color: #888;
+      font-size: 16px;
+      margin-right: 5px;
+      margin-top: 4px;
+    }
+
+    .tag-icon {
+      color: #888;
+      font-size: 18px;
+      font-weight: 800;
       margin-right: 5px;
     }
   }

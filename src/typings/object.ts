@@ -81,7 +81,7 @@ export interface Resource {
   baseUpcastResources: any[];
   signCount: number;
   collectCount: number;
-  status: 0 | 1 | 2 | 3;
+  status: 0 | 1 | 2 | 4;
   reason: string;
   remark: string;
   choiceness: boolean;
@@ -155,6 +155,7 @@ export interface ResourceType {
   status: number;
   category: number;
   createDate: string;
+  children?: ResourceType[];
 }
 
 /** 资源属性数据 */

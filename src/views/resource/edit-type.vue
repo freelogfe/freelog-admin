@@ -248,7 +248,7 @@ export default {
 
       /** 初始化父类选项数据 */
       async initParentList() {
-        const result = await ResourceService.getResourceTypeGroupList("");
+        const result = await ResourceService.getResourceTypeGroupList({ codeOrName: "" });
         const { errcode } = result.data;
         if (errcode === 0) {
           const defaultOption: ParentType = { code: "", name: "无", children: [], parentCodeArr: [""] };
@@ -570,12 +570,6 @@ export default {
     display: flex;
     align-items: center;
     cursor: default;
-
-    .handle {
-      color: #f9f9f9;
-      margin-right: 5px;
-      cursor: grab;
-    }
 
     .delete-btn {
       color: #999;

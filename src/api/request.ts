@@ -254,8 +254,8 @@ export class ResourceService {
   }
 
   /** 获取资源类型分组列表 */
-  static getResourceTypeGroupList(codeOrName: string): Promise<HttpResponse> {
-    return Axios("/v2/resources/types/listSimpleByGroup", { method: "GET", params: { codeOrName } });
+  static getResourceTypeGroupList(params: { codeOrName: string; category?: number }): Promise<HttpResponse> {
+    return Axios("/v2/resources/types/listSimpleByGroup", { method: "GET", params });
   }
 
   /** 修改资源类型排序 */

@@ -34,7 +34,7 @@
             v-model="searchData.type"
             placeholder="请选择类型"
             :options="resourceTypeList"
-            :props="{ checkStrictly: true, label: 'value' }"
+            :props="{ checkStrictly: true, label: 'name', value: 'code' }"
             clearable
           />
         </form-item>
@@ -318,10 +318,17 @@ import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox, ElTable } from "element-plus";
 import { ResourceService, ContractsService, ActivitiesService } from "@/api/request";
-import { dateRangeShortcuts, resourceTypeList } from "@/assets/data";
+import { dateRangeShortcuts } from "@/assets/data";
 import { Operation, Edit, Clock, Close, Check, Grid, Download } from "@element-plus/icons-vue";
 import { reactive, toRefs, computed, defineAsyncComponent, ref } from "vue";
-import { OperateChoicenessParams, Policy, Resource, ResourceTag, ResourceVersion } from "@/typings/object";
+import {
+  OperateChoicenessParams,
+  Policy,
+  Resource,
+  ResourceTag,
+  ResourceType,
+  ResourceVersion,
+} from "@/typings/object";
 import {
   ResourceListParams,
   OperateResourceParams,
@@ -379,6 +386,7 @@ export default {
       selectedData: [] as Resource[],
       resourceTagsList: [] as ResourceTag[],
       searchData: { currentPage: 1, limit: 20 } as MyResourceListParams,
+      resourceTypeList: [] as ResourceType[],
       versionData: {
         resourceId: "",
         activeIndex: 0,
@@ -717,6 +725,17 @@ export default {
       data.resourceTagsList = result.data.data.dataList.map((item: { tagName: string }) => item.tagName);
     };
 
+    /** 获取资源类型 */
+    const getResourceTypes = async () => {
+      data.loading = true;
+      const result = await ResourceService.getResourceTypeGroupList({ codeOrName: "" });
+      const { errcode } = result.data;
+      if (errcode === 0) {
+        data.resourceTypeList = result.data.data;
+        console.error(data.resourceTypeList);
+      }
+    };
+
     data.searchData.keywords = query.value.keywords;
     data.searchData.userId = query.value.userId;
     data.searchData.resourceId = query.value.resourceId;
@@ -724,9 +743,9 @@ export default {
     data.searchData.type = query.value.type;
     methods.getData(true);
     getResourceTags();
+    getResourceTypes();
 
     return {
-      resourceTypeList,
       dateRangeShortcuts,
       tableRef,
       ...assetsData,

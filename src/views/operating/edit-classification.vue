@@ -26,21 +26,40 @@
               @click="selectParentType(item, list.level)"
             >
               {{ item.name }}
+              <el-icon v-if="item.children.length"><ArrowRight /></el-icon>
             </div>
           </div>
         </div>
       </form-item>
       <form-item label="映射来源">
         <div class="btn-box">
-          <div class="text-btn" @click="openResourceList()">
+          <div class="text-btn" @click="openSourcesPopup()">
             <el-icon><plus /></el-icon>添加来源
           </div>
         </div>
         <div id="sortableList" class="property-list">
-          <div class="property-item" :data-id="item" v-for="(item, index) in formData.sourcesArr" :key="item.identity">
-            <el-icon class="handle"><DCaret /></el-icon>
-            {{ item.name }}
-            <el-icon class="delete-btn" @click="deletePropertyItem(index)"><close /></el-icon>
+          <div
+            class="property-item"
+            :data-id="item.identity"
+            v-for="(item, index) in formData.sourcesArr"
+            :key="item.identity"
+          >
+            <template v-if="[1, 2].includes(item.type)">
+              <el-icon class="type-icon" v-if="[1, 2].includes(item.type)">
+                <grid />
+              </el-icon>
+              {{
+                item.parentChain
+                  .reverse()
+                  .map((item) => item.name)
+                  .join("/")
+              }}
+            </template>
+            <template v-if="item.type === 3">
+              <div class="tag-icon">#</div>
+              {{ item.name }}
+            </template>
+            <el-icon class="delete-btn" @click="deleteSources(index)"><close /></el-icon>
           </div>
         </div>
       </form-item>
@@ -64,81 +83,160 @@
     </template>
   </edit-template>
 
-  <el-dialog v-model="resourcePropertyPopupShow" title="选择属性" width="1000px" @close="closeResourcePropertyPopup()">
-    <div class="filter-bar" v-if="!resourcePropertyData.showSelected">
-      <form-item label="关键字搜索">
+  <el-dialog v-model="sourcesPopupShow" title="选择映射来源" width="1200px" @close="closeSourcesPopup()">
+    <el-tabs v-model="popupSearchData.category">
+      <el-tab-pane label="基础资源类型" :name="1"></el-tab-pane>
+      <el-tab-pane label="自定义资源类型" :name="2"></el-tab-pane>
+      <el-tab-pane label="资源标签" :name="3"></el-tab-pane>
+    </el-tabs>
+    <div class="filter-bar" v-if="!popupData.showSelected">
+      <form-item label="关键字搜索" v-if="[1, 2].includes(popupSearchData.category)">
         <el-input
-          v-model="resourcePropertySearchData.nameOrKey"
-          placeholder="请输入属性名称、属性键"
+          v-model="popupSearchData.codeOrName"
+          placeholder="请输入类型编号、名称"
           clearable
-          @keyup.enter="getResourcePropertyList(true)"
+          @keyup.enter="getSourcesData()"
         />
       </form-item>
+      <template v-if="popupSearchData.category === 3">
+        <form-item label="关键字搜索">
+          <el-input
+            v-model="popupSearchData.keywords"
+            placeholder="请输入标签名"
+            clearable
+            @keyup.enter="getSourcesData()"
+          />
+        </form-item>
+        <form-item label="类型">
+          <el-select v-model="popupSearchData.tagType" placeholder="请选择类型" clearable>
+            <el-option v-for="item in tagTypeMapping" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </form-item>
+        <form-item label="操作权限">
+          <el-select v-model="popupSearchData.authority" placeholder="请选择操作权限" clearable>
+            <el-option v-for="item in authorityMapping" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </form-item>
+        <form-item label="资源类型">
+          <el-cascader
+            v-model="popupSearchData.type"
+            placeholder="请选择资源类型"
+            :options="resourceTypeList"
+            :props="{ label: 'value' }"
+            clearable
+          />
+        </form-item>
+      </template>
       <form-item>
-        <el-button type="primary" @click="getResourcePropertyList(true)">搜索</el-button>
+        <el-button type="primary" @click="getSourcesData()">搜索</el-button>
       </form-item>
+      <form-item>
+        <el-button @click="clearPopupSearch()">重置</el-button>
+      </form-item>
+    </div>
+
+    <div class="cascader-panel" v-show="[1, 2].includes(popupSearchData.category)">
+      <div class="list" v-for="list in resourcesTypeOptions" :key="list.level">
+        <div
+          class="item"
+          :class="{ active: selectedResourceType.map((item) => item.code).includes(item.code) }"
+          v-for="item in list.list"
+          :key="item.code"
+          @click="clickParentResourcesType(item, list.level)"
+        >
+          {{ item.name }}
+          <el-icon v-if="item.children.length"><ArrowRight /></el-icon>
+        </div>
+      </div>
     </div>
 
     <el-table
       ref="tableRef"
-      :data="resourcePropertyData.showSelected ? selectedResourcePropertyData : resourcePropertyData.list"
+      :data="popupData.showSelected ? selectedResourceTags : popupData.list"
       stripe
-      @select="selectResources"
-      @select-all="selectAllResources"
+      @select="selectResourceTags"
+      @select-all="selectAllResourceTags"
       border
       height="400"
+      v-show="popupSearchData.category === 3"
     >
       <el-table-column type="selection" align="center" />
-      <el-table-column label="属性名称" min-width="200">
-        <template #default="scope">{{ scope.row.name || "-" }}</template>
-      </el-table-column>
-      <el-table-column label="属性键" min-width="200">
-        <template #default="scope">{{ scope.row.key || "-" }}</template>
-      </el-table-column>
-      <el-table-column label="关联资源类型" min-width="200">
-        <template #default="scope">{{ scope.row.dependencies || "-" }}</template>
-      </el-table-column>
-      <el-table-column label="录入方式" min-width="200">
+      <el-table-column label="标签" property="tagName" min-width="100" show-overflow-tooltip />
+      <el-table-column property="count" label="使用次数" align="right" show-overflow-tooltip />
+      <el-table-column label="类型">
         <template #default="scope">
-          {{ insertModeMapping.find((item) => item.value === scope.row.insertMode).label }}
+          {{ typeMapping.find((item) => item.value === scope.row.tagType)!.label }}
+        </template>
+      </el-table-column>
+      <el-table-column label="操作权限">
+        <template #default="scope">
+          {{ authorityMapping.find((item) => item.value === scope.row.authority)!.label }}
+        </template>
+      </el-table-column>
+      <el-table-column label="适用类型">
+        <template #default="scope">
+          <span
+            v-if="
+              scope.row.resourceRangeType === 3 ||
+              (scope.row.resourceRangeType === 1 && scope.row.resourceRange[0] === '全部')
+            "
+            >所有</span
+          >
+          <span v-else-if="scope.row.resourceRangeType === 1">{{
+            scope.row.resourceRange.length ? scope.row.resourceRange.join("、") : "-"
+          }}</span>
         </template>
       </el-table-column>
     </el-table>
     <div class="pagination-box">
       <div class="selected-tip">
-        <template v-if="selectedResourcePropertyData.length">
-          <div>已选{{ selectedResourcePropertyData.length }}项</div>
+        <template v-if="selectedResourceTags.length">
+          <div>已选{{ selectedResourceTags.length }}项</div>
           <div class="text-btn" @click="switchShowSelected()">
-            {{ resourcePropertyData.showSelected ? "返回" : "查看所有已选" }}
+            {{ popupData.showSelected ? "返回" : "查看所有已选" }}
           </div>
         </template>
       </div>
 
       <el-pagination
         layout="total, prev, pager, next, jumper"
-        v-model:currentPage="resourcePropertySearchData.currentPage"
-        :total="resourcePropertyData.showSelected ? selectedResourcePropertyData.length : resourcePropertyData.total"
-        :page-size="resourcePropertySearchData.limit"
-        @current-change="changeResourcePage($event)"
-        v-if="!resourcePropertyData.showSelected"
+        v-model:currentPage="popupSearchData.currentPage"
+        :total="popupData.showSelected ? selectedResourceTags.length : popupData.total"
+        :page-size="popupSearchData.limit"
+        @current-change="changeSourcesPage($event)"
+        v-if="!popupData.showSelected && popupSearchData.category === 3"
       />
     </div>
     <div class="btns-area">
-      <el-button @click="closeResourcePropertyPopup()">取消</el-button>
-      <el-button type="primary" @click="saveResourceProperty()">保存</el-button>
+      <el-button @click="closeSourcesPopup()">取消</el-button>
+      <el-button type="primary" @click="saveSources()">保存</el-button>
     </div>
   </el-dialog>
 </template>
 
 <script lang="ts">
-import { nextTick, reactive, ref, toRefs } from "vue";
+import { nextTick, reactive, ref, toRefs, watch } from "vue";
 import { ActivitiesService, ResourceService } from "@/api/request";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElTable } from "element-plus";
-import { CreateOrEditClassificationParams, ResourcePropertyListParams } from "@/typings/params";
+import { CreateOrEditClassificationParams, ResourceTagListParams } from "@/typings/params";
 import Sortable from "sortablejs";
-import { Plus, DCaret, Close } from "@element-plus/icons-vue";
-import { ResourceProperty } from "@/typings/object";
+import { Grid, Plus, Close, ArrowRight } from "@element-plus/icons-vue";
+import { ResourceTag, ResourceType } from "@/typings/object";
+import { resourceTypeList } from "@/assets/data";
+
+/** 运营分类编辑数据 */
+interface MyCreateOrEditClassificationParams extends CreateOrEditClassificationParams {
+  parentCodeArr: string[];
+  sourcesArr: Sources[];
+}
+
+/** 弹窗参数 */
+export interface MyPopupSearchParams extends ResourceTagListParams {
+  category: number;
+  codeOrName?: string;
+  type?: string[];
+}
 
 /** 父类选项 */
 interface ParentType {
@@ -148,17 +246,25 @@ interface ParentType {
   children: ParentType[];
 }
 
-/** 运营分类编辑数据 */
-interface MyCreateOrEditClassificationParams extends CreateOrEditClassificationParams {
-  parentCodeArr: string[];
-  sourcesArr: { name: string; identity: string; type: number }[];
+/** 映射来源 */
+interface Sources {
+  identity: string;
+  type: number;
+  name: string;
+  parentChain?: { code: string; name: string }[];
+}
+
+/** 资源类型 */
+export interface MyResourceType extends ResourceType {
+  parentChain?: { code: string; name: string }[];
 }
 
 export default {
   components: {
+    Grid,
     Plus,
-    DCaret,
     Close,
+    ArrowRight,
   },
 
   setup() {
@@ -166,21 +272,35 @@ export default {
     const tableRef = ref<InstanceType<typeof ElTable>>();
     const assetsData = {
       insertModeMapping: [{ value: 1, label: "系统解析" }],
+      tagTypeMapping: [
+        { value: 1, label: "分类标签" },
+        { value: 2, label: "运营标签" },
+      ],
+      authorityMapping: [
+        { value: 1, label: "公开" },
+        { value: 2, label: "隐藏" },
+        { value: 3, label: "仅管理员可见" },
+      ],
+      typeMapping: [
+        { value: 1, label: "分类" },
+        { value: 2, label: "运营" },
+      ],
     };
     const data = reactive({
       loading: false,
       mode: "create" as "create" | "update",
       formData: {} as MyCreateOrEditClassificationParams,
       parentOptions: [] as any[],
-      resourcePropertySearchData: { currentPage: 1, limit: 20, group: 1 } as ResourcePropertyListParams,
-      resourcePropertyData: {
-        keywords: "",
-        list: [] as { name: string; identity: string; type: number }[],
+      popupSearchData: { currentPage: 1, limit: 20, category: 1 } as MyPopupSearchParams,
+      resourcesTypeOptions: [] as any[],
+      popupData: {
+        list: [] as ResourceTag[],
         total: 0,
         showSelected: false,
       },
-      selectedResourcePropertyData: [] as { name: string; identity: string; type: number }[],
-      resourcePropertyPopupShow: false,
+      selectedResourceType: [] as MyResourceType[],
+      selectedResourceTags: [] as ResourceTag[],
+      sourcesPopupShow: false,
     });
 
     const methods = {
@@ -207,11 +327,16 @@ export default {
 
         setTimeout(() => {
           const sortable = new Sortable(document.getElementById("sortableList"), {
-            // 拖拽处
-            handle: ".handle",
+            animation: 150,
             // 结束拖拽
             onEnd() {
-              data.formData.sourcesArr = sortable.toArray();
+              const newKeyArr: string[] = sortable.toArray();
+              const newAttrsArr: Sources[] = [];
+              newKeyArr.forEach((identity) => {
+                const attr = data.formData.sourcesArr.find((item) => item.identity === identity);
+                if (attr) newAttrsArr.push(attr);
+              });
+              data.formData.sourcesArr = newAttrsArr;
             },
           });
         }, 100);
@@ -244,101 +369,202 @@ export default {
         }
 
         if (!item.children.length) return;
-        
+
         data.parentOptions.push({ level: level + 1, list: item.children });
       },
 
-      /** 打开资源属性列表 */
-      openResourceList() {
-        data.resourcePropertyPopupShow = true;
-        this.getResourcePropertyList(true);
-        data.selectedResourcePropertyData = [...data.formData.sourcesArr];
+      /** 打开映射来源弹窗 */
+      openSourcesPopup() {
+        data.popupSearchData.category = 1;
+        data.sourcesPopupShow = true;
+        this.getSourcesData();
+        data.selectedResourceType = [];
+        data.selectedResourceTags = [];
       },
 
-      /** 获取资源属性列表 */
-      async getResourcePropertyList(init = false) {
-        if (init) data.resourcePropertySearchData.currentPage = 1;
-        const { currentPage, limit } = data.resourcePropertySearchData;
-        data.resourcePropertySearchData.skip = (currentPage - 1) * limit;
-        const result = await ResourceService.getResourcePropertyList(data.resourcePropertySearchData);
+      /** 获取资源标签数据 */
+      async getSourcesData() {
+        const { category } = data.popupSearchData;
+        if ([1, 2].includes(category)) {
+          this.getParentResourceTypeList();
+        } else if (category === 3) {
+          this.getResourceTagsData(true);
+        }
+      },
+
+      /** 初始化资源类型选项数据 */
+      async getParentResourceTypeList() {
+        const { codeOrName = "", category } = data.popupSearchData;
+        const result = await ResourceService.getResourceTypeGroupList({ codeOrName, category });
         const { errcode } = result.data;
         if (errcode === 0) {
-          const { dataList, totalItem } = result.data.data.resourceAttrs;
-          data.resourcePropertyData = {
-            keywords: data.resourcePropertyData.keywords,
+          const defaultOption: ParentType = { code: "", name: "所有类型", children: [], parentCodeArr: [""] };
+          const list = [defaultOption, ...result.data.data];
+          data.resourcesTypeOptions = [{ level: 0, list }];
+        }
+      },
+
+      /** 获取资源标签数据 */
+      async getResourceTagsData(init = false) {
+        if (init) data.popupSearchData.currentPage = 1;
+        const { currentPage, limit, type } = data.popupSearchData;
+        data.popupSearchData.skip = (currentPage - 1) * limit;
+        if (type) {
+          data.popupSearchData.resourceType = type ? type[type.length - 1] : "";
+        } else {
+          delete data.popupSearchData.resourceType;
+        }
+        const result = await ResourceService.getResourcesTagsList(data.popupSearchData);
+        const { errcode } = result.data;
+        if (errcode === 0) {
+          const { dataList, totalItem } = result.data.data;
+
+          const ids = dataList.map((item: ResourceTag) => item.tagId).join(",");
+          if (ids) {
+            const results = await ResourceService.getResourcesTagUseCount({
+              tagIds: ids,
+            });
+            dataList.forEach((tag: ResourceTag) => {
+              const { tagId } = tag;
+              tag.count = results.data.data.find(
+                (item: { tagId: string; count: number }) => item.tagId === tagId
+              ).count;
+            });
+          }
+
+          data.popupData = {
             list: dataList,
             total: totalItem,
             showSelected: false,
           };
-          this.updateResourceSelections();
+          this.updateSourcesSelections();
         }
       },
 
-      /** 更新资源属性列表选中状态 */
-      updateResourceSelections() {
-        const list = data.resourcePropertyData.showSelected
-          ? data.selectedResourcePropertyData
-          : data.resourcePropertyData.list;
+      /** 重置 */
+      clearPopupSearch() {
+        const { category } = data.popupSearchData;
+        data.popupSearchData = {
+          currentPage: 1,
+          limit: 20,
+          category,
+        };
+        this.getSourcesData();
+      },
+
+      /** 更新映射来源列表选中状态 */
+      updateSourcesSelections() {
+        const list = data.popupData.showSelected ? data.selectedResourceTags : data.popupData.list;
         list.forEach((row) => {
-          const index = data.selectedResourcePropertyData.findIndex((item) => item.identity === row.identity);
+          const index = data.selectedResourceTags.findIndex((item) => item.tagId === row.tagId);
           nextTick(() => {
             tableRef.value!.toggleRowSelection(row, index !== -1);
           });
         });
       },
 
-      /** 切换资源属性表格页码 */
-      changeResourcePage(value: number) {
-        data.resourcePropertySearchData.currentPage = value;
-        this.getResourcePropertyList();
+      /** 切换映射来源表格页码 */
+      changeSourcesPage(value: number) {
+        data.popupSearchData.currentPage = value;
+        this.getResourceTagsData();
       },
 
-      /** 关闭资源属性列表弹窗 */
-      closeResourcePropertyPopup() {
+      /** 关闭映射来源弹窗 */
+      closeSourcesPopup() {
         tableRef.value!.clearSelection();
-        data.resourcePropertyPopupShow = false;
-        data.selectedResourcePropertyData = [];
+        data.sourcesPopupShow = false;
+        data.selectedResourceType = [];
+        data.selectedResourceTags = [];
       },
 
-      /** 切换资源属性列表显示内容 */
-      switchShowSelected() {
-        data.resourcePropertyData.showSelected = !data.resourcePropertyData.showSelected;
-        this.updateResourceSelections();
-      },
+      /** 选择资源类型父类 */
+      clickParentResourcesType(item: MyResourceType, level: number) {
+        data.resourcesTypeOptions[level].checked = item.code;
+        data.resourcesTypeOptions.splice(level + 1);
 
-      /** 选择资源属性表格项 */
-      selectResources(selected: ResourceProperty[], row: { name: string; identity: string; type: number }) {
-        const index = data.selectedResourcePropertyData.findIndex((item) => item.identity === row.identity);
-        if (index === -1) {
-          data.selectedResourcePropertyData.push(row);
+        if (!item.code) {
+          data.resourcesTypeOptions.splice(1);
+          return;
+        }
+
+        if (item.children!.length) {
+          data.resourcesTypeOptions.push({ level: level + 1, list: item.children });
         } else {
-          data.selectedResourcePropertyData.splice(index, 1);
+          const index = data.selectedResourceType.findIndex((selected) => selected.code === item.code);
+          if (index === -1) {
+            const parentChain: { code: string; name: string }[] = [];
+            data.resourcesTypeOptions.forEach((group) => {
+              const checkedType = group.list.find((type: MyResourceType) => type.code === group.checked);
+              parentChain.push({ code: checkedType.code, name: checkedType.name });
+            });
+            data.selectedResourceType.push({ ...item, parentChain });
+          } else {
+            data.selectedResourceType.splice(index, 1);
+          }
         }
       },
 
-      /** 全选资源属性表格项 */
-      selectAllResources(selected: ResourceProperty[]) {
+      /** 切换资源标签列表显示内容 */
+      switchShowSelected() {
+        data.popupData.showSelected = !data.popupData.showSelected;
+        this.updateSourcesSelections();
+      },
+
+      /** 选择资源标签表格项 */
+      selectResourceTags(selected: ResourceTag[], row: ResourceTag) {
+        const index = data.selectedResourceTags.findIndex((item) => item.tagId === row.tagId);
+        if (index === -1) {
+          data.selectedResourceTags.push(row);
+        } else {
+          data.selectedResourceTags.splice(index, 1);
+        }
+      },
+
+      /** 全选资源标签表格项 */
+      selectAllResourceTags(selected: ResourceTag[]) {
         const all = selected.length !== 0;
-        data.resourcePropertyData.list.forEach((row) => {
-          const index = data.selectedResourcePropertyData.findIndex(
-            (selectedItem) => selectedItem.identity === row.identity
-          );
+        data.popupData.list.forEach((row) => {
+          const index = data.selectedResourceTags.findIndex((selectedItem) => selectedItem.tagId === row.tagId);
           if (all && index === -1) {
-            data.selectedResourcePropertyData.push(row);
+            data.selectedResourceTags.push(row);
           } else if (!all && index !== -1) {
-            data.selectedResourcePropertyData.splice(index, 1);
+            data.selectedResourceTags.splice(index, 1);
           }
         });
       },
 
-      /** 保存资源属性 */
-      saveResourceProperty() {
-        data.formData.sourcesArr = [...data.selectedResourcePropertyData];
-        data.resourcePropertyPopupShow = false;
+      /** 保存映射来源 */
+      saveSources() {
+        const { category } = data.popupSearchData;
+        if ([1, 2].includes(category)) {
+          data.selectedResourceType.forEach((selected) => {
+            const index = data.formData.sourcesArr.findIndex((item) => selected.code === item.identity);
+            if (index !== -1) return;
+
+            data.formData.sourcesArr.push({
+              identity: selected.code,
+              name: selected.name,
+              type: category,
+              parentChain: selected.parentChain,
+            });
+          });
+        } else if (category === 3) {
+          data.selectedResourceTags.forEach((selected) => {
+            const index = data.formData.sourcesArr.findIndex((item) => selected.tagId === item.identity);
+            if (index !== -1) return;
+
+            data.formData.sourcesArr.push({
+              identity: selected.tagId,
+              name: selected.tagName,
+              type: 3,
+            });
+          });
+        }
+        data.sourcesPopupShow = false;
       },
 
-      /** 删除标准属性 */
-      deletePropertyItem(index: number) {
+      /** 删除映射来源*/
+      deleteSources(index: number) {
         data.formData.sourcesArr?.splice(index, 1);
       },
 
@@ -350,7 +576,7 @@ export default {
         if (!validate()) return;
 
         const { sourcesArr } = data.formData;
-        if (sourcesArr) data.formData.sources = sourcesArr.map((item) => item.name);
+        if (sourcesArr) data.formData.sources = sourcesArr;
         const parentTypeChecked = data.parentOptions.map((item) => item.checked);
         for (let i = parentTypeChecked.length - 1; i >= 0; i--) {
           if (parentTypeChecked[i] !== undefined) {
@@ -415,9 +641,24 @@ export default {
       return true;
     };
 
+    watch(
+      () => data.popupSearchData.category,
+      (cur) => {
+        data.popupSearchData = {
+          currentPage: 1,
+          limit: 20,
+          category: cur,
+        };
+        data.selectedResourceType = [];
+        data.selectedResourceTags = [];
+        methods.getSourcesData();
+      }
+    );
+
     methods.getData();
 
     return {
+      resourceTypeList,
       tableRef,
       ...assetsData,
       ...toRefs(data),
@@ -449,6 +690,9 @@ export default {
       height: 34px;
       line-height: 34px;
       padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       cursor: pointer;
 
       &:hover {
@@ -463,6 +707,14 @@ export default {
 
     & + .list {
       border-left: 1px solid #e4e7ed;
+    }
+  }
+
+  &.disabled {
+    background-color: #f5f7fa;
+
+    .item {
+      cursor: not-allowed;
     }
   }
 }
@@ -501,10 +753,17 @@ export default {
     align-items: center;
     cursor: default;
 
-    .handle {
-      color: #f9f9f9;
+    .type-icon {
+      color: #888;
+      font-size: 16px;
       margin-right: 5px;
-      cursor: grab;
+    }
+
+    .tag-icon {
+      color: #888;
+      font-size: 18px;
+      font-weight: 800;
+      margin-right: 5px;
     }
 
     .delete-btn {

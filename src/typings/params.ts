@@ -270,7 +270,7 @@ export interface CreateOrEditClassificationParams {
   code?: string;
   name: string;
   parentCode: string;
-  sources: string[];
+  sources: { identity: string; type: number }[];
   priority: number;
   status: 1 | 2;
   startTime?: string;
