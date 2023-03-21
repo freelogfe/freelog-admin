@@ -30,7 +30,7 @@
             v-model="searchData.type"
             placeholder="请选择资源类型"
             :options="resourceTypeList"
-            :props="{ label: 'value' }"
+            :props="{ label: 'name', value: 'name' }"
             clearable
           />
         </form-item>
@@ -139,10 +139,10 @@
       <form-item v-show="operateData.resourceRangeType === 1">
         <el-tree
           ref="resourceTypeTree"
-          :data="[{ value: '全部', children: resourceTypeList }]"
-          node-key="value"
+          :data="[{ name: '全部', children: resourceTypeList }]"
+          node-key="name"
           :default-expanded-keys="['全部']"
-          :props="{ label: 'value' }"
+          :props="{ label: 'name' }"
           show-checkbox
         />
       </form-item>
@@ -161,9 +161,8 @@ import { useMyRouter } from "@/utils/hooks";
 import { ResourceService } from "@/api/request";
 import { Operation, Edit } from "@element-plus/icons-vue";
 import { ElMessage, ElTree } from "element-plus";
-import { ResourceTag } from "@/typings/object";
+import { ResourceTag, ResourceType } from "@/typings/object";
 import { OperateResourceTagParams, ResourceTagListParams } from "@/typings/params";
-import { resourceTypeList } from "@/assets/data";
 
 /** 获取资源标签参数 */
 export interface MyResourceTagListParams extends ResourceTagListParams {
@@ -204,6 +203,7 @@ export default {
       total: 0,
       selectedData: [] as ResourceTag[],
       searchData: { currentPage: 1, limit: 20 } as MyResourceTagListParams,
+      resourceTypeList: [] as ResourceType[],
       operateData: {} as OperateResourceTagParams,
       tagPopupShow: false,
     });
@@ -336,10 +336,19 @@ export default {
       return true;
     };
 
+    /** 获取资源类型 */
+    const getResourceTypes = async () => {
+      const result = await ResourceService.getResourceTypeGroupList({ codeOrName: "" });
+      const { errcode } = result.data;
+      if (errcode === 0) {
+        data.resourceTypeList = result.data.data;
+      }
+    };
+
     methods.getData(true);
+    getResourceTypes();
 
     return {
-      resourceTypeList,
       ...assetsData,
       ...toRefs(data),
       resourceTypeTree,

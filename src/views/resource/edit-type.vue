@@ -394,7 +394,7 @@ export default {
 
       /** 删除标准属性 */
       deletePropertyItem(index: number) {
-        data.formData.attrsArr?.splice(index, 1);
+        data.formData.attrsArr.splice(index, 1);
       },
 
       /**

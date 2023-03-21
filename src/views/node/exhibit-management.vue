@@ -26,7 +26,7 @@
             v-model="searchData.type"
             placeholder="请选择资源类型"
             :options="resourceTypeList"
-            :props="{ checkStrictly: true, label: 'value' }"
+            :props="{ checkStrictly: true, label: 'name', value: 'name' }"
             clearable
           />
         </form-item>
@@ -159,10 +159,10 @@
 import { defineAsyncComponent, reactive, toRefs } from "vue";
 import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
-import { ContractsService, NodeService } from "@/api/request";
-import { dateRangeShortcuts, resourceTypeList } from "@/assets/data";
+import { ContractsService, NodeService, ResourceService } from "@/api/request";
+import { dateRangeShortcuts } from "@/assets/data";
 import { Operation, Grid } from "@element-plus/icons-vue";
-import { Exhibit, Policy } from "@/typings/object";
+import { Exhibit, Policy, ResourceType } from "@/typings/object";
 import { ExhibitListParams } from "@/typings/params";
 
 interface MyExhibitListParams extends ExhibitListParams {
@@ -196,6 +196,7 @@ export default {
       tableData: [] as Exhibit[],
       total: 0,
       searchData: { currentPage: 1, limit: 20 } as MyExhibitListParams,
+      resourceTypeList: [] as ResourceType[],
       policyData: [] as Policy[],
       policyPopupShow: false,
     });
@@ -277,12 +278,21 @@ export default {
       },
     };
 
+    /** 获取资源类型 */
+    const getResourceTypes = async () => {
+      const result = await ResourceService.getResourceTypeGroupList({ codeOrName: "" });
+      const { errcode } = result.data;
+      if (errcode === 0) {
+        data.resourceTypeList = result.data.data;
+      }
+    };
+
     data.searchData.nodeId = query.value.nodeId;
     data.searchData.presentableId = query.value.presentableId;
     methods.getData(true);
+    getResourceTypes();
 
     return {
-      resourceTypeList,
       dateRangeShortcuts,
       ...assetsData,
       ...toRefs(data),

@@ -32,7 +32,7 @@
             v-model="searchData.type"
             placeholder="请选择类型"
             :options="resourceTypeList"
-            :props="{ checkStrictly: true, label: 'value' }"
+            :props="{ checkStrictly: true, label: 'name', value: 'name' }"
             clearable
           />
         </form-item>
@@ -343,10 +343,9 @@
 import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ResourceService, ContractsService, ActivitiesService } from "@/api/request";
-import { resourceTypeList } from "@/assets/data";
 import { Operation, Close, Document, Download, Grid, Clock } from "@element-plus/icons-vue";
 import { reactive, toRefs, computed, defineAsyncComponent, ref, nextTick } from "vue";
-import { OperateChoicenessParams, Policy, Resource, ResourceVersion } from "@/typings/object";
+import { OperateChoicenessParams, Policy, Resource, ResourceType, ResourceVersion } from "@/typings/object";
 import { ChoicenessListParams, ResourceListParams } from "@/typings/params";
 import { ElMessageBox, ElTable } from "element-plus";
 import { ElMessage } from "element-plus/lib/components";
@@ -384,6 +383,7 @@ export default {
       total: 0,
       selectedData: [] as Resource[],
       searchData: { currentPage: 1, limit: 20 } as MyChoicenessListParams,
+      resourceTypeList: [] as ResourceType[],
       versionData: {
         resourceId: "",
         activeIndex: 0,
@@ -679,10 +679,19 @@ export default {
       },
     };
 
+    /** 获取资源类型 */
+    const getResourceTypes = async () => {
+      const result = await ResourceService.getResourceTypeGroupList({ codeOrName: "" });
+      const { errcode } = result.data;
+      if (errcode === 0) {
+        data.resourceTypeList = result.data.data;
+      }
+    };
+
     methods.getData(true);
+    getResourceTypes();
 
     return {
-      resourceTypeList,
       tableRef,
       ...assetsData,
       ...toRefs(data),

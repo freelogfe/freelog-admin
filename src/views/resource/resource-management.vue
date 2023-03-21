@@ -34,7 +34,7 @@
             v-model="searchData.type"
             placeholder="请选择类型"
             :options="resourceTypeList"
-            :props="{ checkStrictly: true, label: 'name', value: 'code' }"
+            :props="{ checkStrictly: true, label: 'name', value: 'name' }"
             clearable
           />
         </form-item>
@@ -422,6 +422,7 @@ export default {
         } else {
           delete data.searchData.resourceType;
         }
+
         const result = await ResourceService.getResourceList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
@@ -727,12 +728,10 @@ export default {
 
     /** 获取资源类型 */
     const getResourceTypes = async () => {
-      data.loading = true;
       const result = await ResourceService.getResourceTypeGroupList({ codeOrName: "" });
       const { errcode } = result.data;
       if (errcode === 0) {
         data.resourceTypeList = result.data.data;
-        console.error(data.resourceTypeList);
       }
     };
 
@@ -740,7 +739,7 @@ export default {
     data.searchData.userId = query.value.userId;
     data.searchData.resourceId = query.value.resourceId;
     if (query.value.tag) data.searchData.selectedTags = [query.value.tag];
-    data.searchData.type = query.value.type;
+    data.searchData.type = query.value.type ? query.value.type.split(',') : null;
     methods.getData(true);
     getResourceTags();
     getResourceTypes();

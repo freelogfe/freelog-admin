@@ -122,7 +122,7 @@
             v-model="popupSearchData.type"
             placeholder="请选择资源类型"
             :options="resourceTypeList"
-            :props="{ label: 'value' }"
+            :props="{ label: 'name', value: 'name' }"
             clearable
           />
         </form-item>
@@ -223,7 +223,6 @@ import { CreateOrEditClassificationParams, ResourceTagListParams } from "@/typin
 import Sortable from "sortablejs";
 import { Grid, Plus, Close, ArrowRight } from "@element-plus/icons-vue";
 import { ResourceTag, ResourceType } from "@/typings/object";
-import { resourceTypeList } from "@/assets/data";
 
 /** 运营分类编辑数据 */
 interface MyCreateOrEditClassificationParams extends CreateOrEditClassificationParams {
@@ -292,6 +291,7 @@ export default {
       formData: {} as MyCreateOrEditClassificationParams,
       parentOptions: [] as any[],
       popupSearchData: { currentPage: 1, limit: 20, category: 1 } as MyPopupSearchParams,
+      resourceTypeList: [] as ResourceType[],
       resourcesTypeOptions: [] as any[],
       popupData: {
         list: [] as ResourceTag[],
@@ -483,6 +483,7 @@ export default {
         data.resourcesTypeOptions.splice(level + 1);
 
         if (!item.code) {
+          // 
           data.resourcesTypeOptions.splice(1);
           return;
         }
@@ -565,7 +566,7 @@ export default {
 
       /** 删除映射来源*/
       deleteSources(index: number) {
-        data.formData.sourcesArr?.splice(index, 1);
+        data.formData.sourcesArr.splice(index, 1);
       },
 
       /**
@@ -641,6 +642,15 @@ export default {
       return true;
     };
 
+    /** 获取资源类型 */
+    const getResourceTypes = async () => {
+      const result = await ResourceService.getResourceTypeGroupList({ codeOrName: "" });
+      const { errcode } = result.data;
+      if (errcode === 0) {
+        data.resourceTypeList = result.data.data;
+      }
+    };
+
     watch(
       () => data.popupSearchData.category,
       (cur) => {
@@ -656,9 +666,9 @@ export default {
     );
 
     methods.getData();
+    getResourceTypes();
 
     return {
-      resourceTypeList,
       tableRef,
       ...assetsData,
       ...toRefs(data),
