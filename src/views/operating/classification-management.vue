@@ -46,17 +46,26 @@
         <el-table-column label="映射来源" min-width="250">
           <template #default="scope">
             <div class="wrap-row">
-              <div class="sources" v-for="item in scope.row.sources" :key="item.identity">
-                <template v-if="[1, 2].includes(item.type)">
-                  <el-icon class="type-icon" v-if="[1, 2].includes(item.type)">
-                    <grid />
-                  </el-icon>
-                  {{
-                    item.parentChain
-                      .reverse()
-                      .map((item) => item.name)
-                      .join("/")
-                  }}
+              <div
+                class="sources"
+                :class="{ special: [4, 5, 6, 7].includes(item.type) }"
+                v-for="item in scope.row.sources"
+                :key="item.identity"
+              >
+                <template v-if="[1, 2, 4, 5, 6, 7].includes(item.type)">
+                  <el-icon class="type-icon"><grid /></el-icon>
+                  <span v-if="item.type === 4">所有基础类型</span>
+                  <span v-else-if="item.type === 5">{{ item.name }}/所有基础类型</span>
+                  <span v-else-if="item.type === 6">所有自定义类型</span>
+                  <span v-else-if="item.type === 7">{{ item.name }}/所有自定义类型</span>
+                  <span v-else>
+                    {{
+                      item.parentChain
+                        .reverse()
+                        .map((item) => item.name)
+                        .join("/")
+                    }}
+                  </span>
                 </template>
                 <template v-if="item.type === 3">
                   <div class="tag-icon">#</div>
@@ -277,6 +286,14 @@ export default {
     line-height: 24px;
     display: flex;
     margin-right: 20px;
+
+    &.special {
+      color: #9090ff;
+
+      .type-icon {
+        color: #9090ff;
+      }
+    }
 
     .type-icon {
       color: #888;

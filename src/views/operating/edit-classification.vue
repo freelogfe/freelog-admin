@@ -40,20 +40,27 @@
         <div id="sortableList" class="property-list">
           <div
             class="property-item"
+            :class="{ special: [4, 5, 6, 7].includes(item.type) }"
             :data-id="item.identity"
             v-for="(item, index) in formData.sourcesArr"
             :key="item.identity"
           >
-            <template v-if="[1, 2].includes(item.type)">
-              <el-icon class="type-icon" v-if="[1, 2].includes(item.type)">
+            <template v-if="[1, 2, 4, 5, 6, 7].includes(item.type)">
+              <el-icon class="type-icon">
                 <grid />
               </el-icon>
-              {{
-                item.parentChain
-                  .reverse()
-                  .map((item) => item.name)
-                  .join("/")
-              }}
+              <span v-if="item.type === 4">所有基础类型</span>
+              <span v-else-if="item.type === 5">{{ item.name }}/所有基础类型</span>
+              <span v-else-if="item.type === 6">所有自定义类型</span>
+              <span v-else-if="item.type === 7">{{ item.name }}/所有自定义类型</span>
+              <span v-else>
+                {{
+                  item.parentChain
+                    .reverse()
+                    .map((item) => item.name)
+                    .join("/")
+                }}
+              </span>
             </template>
             <template v-if="item.type === 3">
               <div class="tag-icon">#</div>
@@ -135,11 +142,15 @@
       </form-item>
     </div>
 
-    <div class="cascader-panel" v-show="[1, 2].includes(popupSearchData.category)">
+    <div class="cascader-panel in-popup" v-show="[1, 2].includes(popupSearchData.category)">
       <div class="list" v-for="list in resourcesTypeOptions" :key="list.level">
         <div
           class="item"
-          :class="{ active: selectedResourceType.map((item) => item.code).includes(item.code) }"
+          :class="{
+            active: selectedResourceType
+              .map((selected) => selected.code + selected.name)
+              .includes(item.code + item.name),
+          }"
           v-for="item in list.list"
           :key="item.code"
           @click="clickParentResourcesType(item, list.level)"
@@ -243,6 +254,8 @@ interface ParentType {
   name: string;
   parentCodeArr: string[];
   children: ParentType[];
+  parentChain: { code: string; name: string }[];
+  category?: number;
 }
 
 /** 映射来源 */
@@ -250,12 +263,12 @@ interface Sources {
   identity: string;
   type: number;
   name: string;
-  parentChain?: { code: string; name: string }[];
+  parentChain: { code: string; name: string }[];
 }
 
 /** 资源类型 */
 export interface MyResourceType extends ResourceType {
-  parentChain?: { code: string; name: string }[];
+  parentChain: { code: string; name: string }[];
 }
 
 export default {
@@ -347,7 +360,13 @@ export default {
         const result = await ActivitiesService.getClassificationGroupList("");
         const { errcode } = result.data;
         if (errcode === 0) {
-          const defaultOption: ParentType = { code: "", name: "无", children: [], parentCodeArr: [""] };
+          const defaultOption: ParentType = {
+            code: "",
+            name: "无",
+            children: [],
+            parentCodeArr: [""],
+            parentChain: [],
+          };
 
           result.data.data.forEach((item: ParentType) => {
             item.parentCodeArr = [item.code];
@@ -398,7 +417,14 @@ export default {
         const result = await ResourceService.getResourceTypeGroupList({ codeOrName, category });
         const { errcode } = result.data;
         if (errcode === 0) {
-          const defaultOption: ParentType = { code: "", name: "所有类型", children: [], parentCodeArr: [""] };
+          const defaultOption: ParentType = {
+            code: "",
+            name: "所有类型",
+            children: [],
+            parentCodeArr: [""],
+            parentChain: [{ code: "", name: "所有类型" }],
+            category,
+          };
           const list = [defaultOption, ...result.data.data];
           data.resourcesTypeOptions = [{ level: 0, list }];
         }
@@ -482,25 +508,58 @@ export default {
         data.resourcesTypeOptions[level].checked = item.code;
         data.resourcesTypeOptions.splice(level + 1);
 
-        if (!item.code) {
-          // 
-          data.resourcesTypeOptions.splice(1);
-          return;
-        }
-
         if (item.children!.length) {
-          data.resourcesTypeOptions.push({ level: level + 1, list: item.children });
+          // 选择非叶子类型
+          const defaultOption: ParentType = {
+            code: item.code,
+            name: "所有子类型",
+            children: [],
+            parentCodeArr: [""],
+            parentChain: [
+              { code: item.code, name: item.name },
+              { code: item.code, name: "所有子类型" },
+            ],
+            category: data.popupSearchData.category,
+          };
+          const list = [defaultOption, ...(item.children || [])];
+          data.resourcesTypeOptions.push({ level: level + 1, list });
         } else {
-          const index = data.selectedResourceType.findIndex((selected) => selected.code === item.code);
-          if (index === -1) {
-            const parentChain: { code: string; name: string }[] = [];
-            data.resourcesTypeOptions.forEach((group) => {
-              const checkedType = group.list.find((type: MyResourceType) => type.code === group.checked);
-              parentChain.push({ code: checkedType.code, name: checkedType.name });
-            });
-            data.selectedResourceType.push({ ...item, parentChain });
+          if (item.name === "所有类型") {
+            // 选择【所有类型】
+            data.selectedResourceType = [item];
+          } else if (item.name === "所有子类型") {
+            // 选择【所有子类型】
+            /** 清除已选的同父类子类型 */
+            for (let i = data.selectedResourceType.length - 1; i >= 0; i--) {
+              if (item.code === data.selectedResourceType[i].parentCode) {
+                data.selectedResourceType.splice(i, 1);
+              }
+            }
+            data.selectedResourceType.push(item);
           } else {
-            data.selectedResourceType.splice(index, 1);
+            // 选择常规叶子类型
+            /** 清除已选的【所有类型】 */
+            const allTypeIndex = data.selectedResourceType.findIndex((selected) => selected.name === "所有类型");
+            if (allTypeIndex !== -1) data.selectedResourceType.splice(allTypeIndex, 1);
+            /** 清除已选的【所有子类型】 */
+            const allSubTypeIndex = data.selectedResourceType.findIndex(
+              (selected) => selected.name === "所有子类型" && item.parentCode === selected.code
+            );
+            if (allSubTypeIndex !== -1) data.selectedResourceType.splice(allTypeIndex, 1);
+
+            const index = data.selectedResourceType.findIndex((selected) => selected.code === item.code);
+            if (index === -1) {
+              // 非选中状态
+              const parentChain: { code: string; name: string }[] = [];
+              data.resourcesTypeOptions.forEach((group) => {
+                const checkedType = group.list.find((type: MyResourceType) => type.code === group.checked);
+                parentChain.push({ code: checkedType.code, name: checkedType.name });
+              });
+              data.selectedResourceType.push({ ...item, parentChain });
+            } else {
+              // 已选中状态
+              data.selectedResourceType.splice(index, 1);
+            }
           }
         }
       },
@@ -539,16 +598,26 @@ export default {
         const { category } = data.popupSearchData;
         if ([1, 2].includes(category)) {
           data.selectedResourceType.forEach((selected) => {
-            const index = data.formData.sourcesArr.findIndex((item) => selected.code === item.identity);
+            let type = category;
+            let name = selected.name;
+            if (selected.name === "所有类型") type = category === 1 ? 4 : 6;
+            if (selected.name === "所有子类型") {
+              type = category === 1 ? 5 : 7;
+              name = selected.parentChain[selected.parentChain.length - 2].name;
+            }
+            const index = data.formData.sourcesArr.findIndex(
+              (item) => selected.code === item.identity && type === item.type
+            );
             if (index !== -1) return;
-
+            
             data.formData.sourcesArr.push({
               identity: selected.code,
-              name: selected.name,
-              type: category,
-              parentChain: selected.parentChain,
+              name,
+              type,
+              parentChain: selected.parentChain || [],
             });
           });
+          console.error(data.formData.sourcesArr);
         } else if (category === 3) {
           data.selectedResourceTags.forEach((selected) => {
             const index = data.formData.sourcesArr.findIndex((item) => selected.tagId === item.identity);
@@ -558,6 +627,7 @@ export default {
               identity: selected.tagId,
               name: selected.tagName,
               type: 3,
+              parentChain: [],
             });
           });
         }
@@ -689,6 +759,10 @@ export default {
   border-radius: 4px;
   display: flex;
 
+  &.in-popup .list {
+    height: 400px;
+  }
+
   .list {
     height: 200px;
     overflow-y: auto;
@@ -762,6 +836,14 @@ export default {
     display: flex;
     align-items: center;
     cursor: default;
+
+    &.special {
+      color: #9090ff;
+
+      .type-icon {
+        color: #9090ff;
+      }
+    }
 
     .type-icon {
       color: #888;
