@@ -38,7 +38,7 @@
         </form-item>
         <form-item label="状态">
           <el-select v-model="searchData.status" placeholder="请选择状态" clearable>
-            <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
+            <el-option v-for="item in statusMapping" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </form-item>
       </div>
@@ -113,11 +113,11 @@
               effect="dark"
               :content="`${scope.row.reason}${scope.row.remark ? '（' + scope.row.remark + '）' : ''}`"
               placement="top"
-              v-if="[2, 3].includes(scope.row.status)"
+              v-if="scope.row.status === 2"
             >
-              {{ statusMapping.find((item: any) => item.value === scope.row.status).label }}
+              {{ statusMapping.find((item: any) => item.value === scope.row.status)!.label }}
             </el-tooltip>
-            <span v-else>{{ statusMapping.find((item: any) => item.value === scope.row.status).label }}</span>
+            <span v-else>{{ statusMapping.find((item: any) => item.value === scope.row.status)!.label }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="100">
@@ -142,12 +142,7 @@
             >
               <document />
             </el-icon>
-            <el-icon
-              class="icon-btn"
-              title="移除"
-              @click="operateChoiceness('PUT', scope.row.resourceId)"
-              v-if="![2, 3].includes(scope.row.status)"
-            >
+            <el-icon class="icon-btn" title="移除" @click="operateChoiceness('PUT', scope.row.resourceId)">
               <close />
             </el-icon>
           </template>
@@ -259,11 +254,11 @@
             effect="dark"
             :content="`${scope.row.reason}${scope.row.remark ? '（' + scope.row.remark + '）' : ''}`"
             placement="top"
-            v-if="[2, 3].includes(scope.row.status)"
+            v-if="scope.row.status === 2"
           >
-            {{ statusMapping.find((item: any) => item.value === scope.row.status).label }}
+            {{ statusMapping.find((item: any) => item.value === scope.row.status)!.label }}
           </el-tooltip>
-          <span v-else>{{ statusMapping.find((item: any) => item.value === scope.row.status).label }}</span>
+          <span v-else>{{ statusMapping.find((item: any) => item.value === scope.row.status)!.label }}</span>
         </template>
       </el-table-column>
     </el-table>
@@ -378,16 +373,11 @@ export default {
     const { query, switchPage, openPage } = useMyRouter();
     const tableRef = ref<InstanceType<typeof ElTable>>();
     const assetsData = {
-      statusOptions: [
-        { value: "0", label: "下线" },
-        { value: "1", label: "上线" },
-        { value: "2,3", label: "禁用" },
-      ],
       statusMapping: [
-        { value: 0, label: "下线" },
-        { value: 1, label: "上线" },
-        { value: 2, label: "禁用" },
-        { value: 3, label: "禁用" },
+        { value: 0, label: "待发行" },
+        { value: 1, label: "上架" },
+        { value: 2, label: "冻结" },
+        { value: 4, label: "下架" },
       ],
     };
     const data = reactive({
