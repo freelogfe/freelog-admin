@@ -151,6 +151,7 @@ export default {
           const { activities, num } = result.data.data;
 
           if (activities.length === 0) {
+            data.total = 0;
             data.loading = false;
             return;
           }

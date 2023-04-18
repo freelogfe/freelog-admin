@@ -181,12 +181,14 @@ export default {
         if (init) data.searchData.currentPage = 1;
         const { currentPage, limit } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
+        if (!data.searchData.parentCode) delete data.searchData.parentCode;
         const result = await ResourceService.getResourceTypeList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
           const { dataList, totalItem } = result.data.data.resourceTypes;
 
           if (dataList.length === 0) {
+            data.total = 0;
             data.loading = false;
             return;
           }

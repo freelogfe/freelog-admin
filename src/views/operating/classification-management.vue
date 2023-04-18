@@ -78,17 +78,14 @@
         <el-table-column label="关联资源数量" min-width="200">
           <template #default="scope">{{ scope.row.resourceCount || "-" }}</template>
         </el-table-column>
-        <el-table-column label="状态">
+        <el-table-column label="状态" min-width="250">
           <template #default="scope">
-            <el-tooltip
-              effect="dark"
-              :content="`将于${formatDate(scope.row.startTime)}启用`"
-              placement="top"
-              v-if="scope.row.status === 2"
-            >
-              {{ statusMapping.find((item) => item.value === scope.row.status).label }}
-            </el-tooltip>
-            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status).label }}</span>
+            <div>
+              <div>{{ statusMapping.find((item) => item.value === scope.row.status)!.label }}</div>
+              <div v-if="scope.row.status === 2 && scope.row.startTime">
+                将于 {{ formatDate(scope.row.startTime) }} 启用
+              </div>
+            </div>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="100">
@@ -178,6 +175,7 @@ export default {
           const { dataList, totalItem } = result.data.data.operationCategories;
 
           if (dataList.length === 0) {
+            data.total = 0;
             data.loading = false;
             return;
           }

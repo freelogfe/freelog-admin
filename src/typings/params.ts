@@ -178,6 +178,8 @@ export interface CreateOrEditResourcePropertyParams {
   insertMode: number;
   format: 1 | 2 | 3 | 4 | 5;
   note?: string;
+  formatUnit: string;
+  autoConvert: boolean;
 }
 
 /** 节点列表参数 */

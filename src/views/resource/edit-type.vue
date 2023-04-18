@@ -43,6 +43,7 @@
           v-model="formData.formatsStr"
           placeholder="输入限制上传文件的扩展名，用英文逗号分隔"
           clearable
+          @input="formData.formatsStr = formData.formatsStr.replace('，', ',')"
         />
         <span class="desc">格式“.扩展名”，用英文逗号（“,”）分隔</span>
       </form-item>
@@ -68,6 +69,7 @@
           v-model="formData.priority"
           placeholder="请输入展示序号"
           controls-position="right"
+          :min="1"
         />
         <span class="desc">序号越小，展示优先级越高</span>
       </form-item>
@@ -405,7 +407,7 @@ export default {
         if (!validate()) return;
 
         const { formatsStr, attrsArr } = data.formData;
-        if (formatsStr) data.formData.formats = formatsStr.split(",");
+        data.formData.formats = formatsStr.split(",");
         if (attrsArr) data.formData.attrs = attrsArr.map((item) => item.key);
         const parentTypeChecked = data.parentOptions.map((item) => item.checked);
         for (let i = parentTypeChecked.length - 1; i >= 0; i--) {

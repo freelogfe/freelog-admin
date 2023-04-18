@@ -129,12 +129,14 @@ export default {
         if (init) data.searchData.currentPage = 1;
         const { currentPage, limit } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
+        if (!data.searchData.rewardType) delete data.searchData.rewardType;
         const result = await ActivitiesService.getRewardList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
           const { rewardConfigs, num } = result.data.data;
 
           if (rewardConfigs.length === 0) {
+            data.total = 0;
             data.loading = false;
             return;
           }

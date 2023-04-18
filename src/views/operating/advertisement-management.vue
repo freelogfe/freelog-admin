@@ -176,6 +176,7 @@ export default {
           const { ads, num } = result.data.data;
 
           if (ads.length === 0) {
+            data.total = 0;
             data.loading = false;
             return;
           }
@@ -184,10 +185,6 @@ export default {
           data.total = num;
           data.loading = false;
         }
-      },
-
-      aaa(a: any) {
-        console.error(a);
       },
 
       /** 重置 */

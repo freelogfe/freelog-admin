@@ -76,12 +76,34 @@
           v-model="formData.priority"
           placeholder="请输入展示序号"
           controls-position="right"
+          :min="1"
         />
         <span class="desc">序号越小，展示优先级越高</span>
       </form-item>
       <form-item label="是否启用">
-        <el-radio-group v-model="formData.status">
-          <el-radio :label="1"> 启用<span class="desc">在资源市场分类筛选器中显示</span> </el-radio>
+        <el-radio-group
+          v-model="formData.status"
+          @change="
+            formData.setStartTime = false;
+            formData.myStartTime = null;
+          "
+        >
+          <el-radio :label="1">启用<span class="desc">在资源市场分类筛选器中显示</span></el-radio>
+          <template v-if="formData.status === 1">
+            <el-checkbox
+              style="margin-left: 20px"
+              v-model="formData.setStartTime"
+              label="设置启用时间"
+              @change="formData.myStartTime = null"
+            />
+            <el-date-picker
+              style="margin-left: 20px"
+              v-model="formData.myStartTime"
+              type="datetime"
+              placeholder="请选择启用时间"
+              v-if="formData.setStartTime"
+            />
+          </template>
           <el-radio style="margin-top: 10px" :label="2">
             停用<span class="desc">在资源市场分类筛选器中隐藏</span>
           </el-radio>
@@ -234,11 +256,14 @@ import { CreateOrEditClassificationParams, ResourceTagListParams } from "@/typin
 import Sortable from "sortablejs";
 import { Grid, Plus, Close, ArrowRight } from "@element-plus/icons-vue";
 import { ResourceTag, ResourceType } from "@/typings/object";
+import { formatDate } from "@/utils/common";
 
 /** 运营分类编辑数据 */
 interface MyCreateOrEditClassificationParams extends CreateOrEditClassificationParams {
   parentCodeArr: string[];
   sourcesArr: Sources[];
+  setStartTime: boolean;
+  myStartTime: string | null;
 }
 
 /** 弹窗参数 */
@@ -326,9 +351,13 @@ export default {
           const result = await ActivitiesService.getClassificationData(code);
           const { errcode } = result.data;
           if (errcode === 0) {
-            const { sources } = result.data.data;
+            const { sources, startTime } = result.data.data;
             data.formData = result.data.data;
             data.formData.sourcesArr = [...sources];
+            if (startTime) {
+              data.formData.setStartTime = true;
+              data.formData.myStartTime = startTime;
+            }
           }
         } else {
           // 新建
@@ -609,7 +638,7 @@ export default {
               (item) => selected.code === item.identity && type === item.type
             );
             if (index !== -1) return;
-            
+
             data.formData.sourcesArr.push({
               identity: selected.code,
               name,
@@ -646,8 +675,10 @@ export default {
       async save() {
         if (!validate()) return;
 
-        const { sourcesArr } = data.formData;
+        const { sourcesArr, status, setStartTime, myStartTime } = data.formData;
         if (sourcesArr) data.formData.sources = sourcesArr;
+        if (status === 1 && setStartTime && myStartTime) data.formData.startTime = formatDate(myStartTime);
+        if (status === 1 && !setStartTime) delete data.formData.startTime;
         const parentTypeChecked = data.parentOptions.map((item) => item.checked);
         for (let i = parentTypeChecked.length - 1; i >= 0; i--) {
           if (parentTypeChecked[i] !== undefined) {
@@ -695,7 +726,7 @@ export default {
 
     /** 表单验证 */
     const validate = () => {
-      const { name, priority, status } = data.formData;
+      const { name, priority, status, setStartTime, myStartTime } = data.formData;
       if (!name) {
         ElMessage("请输入名称");
         return false;
@@ -707,6 +738,9 @@ export default {
         return false;
       } else if (!status) {
         ElMessage("请选择是否启用");
+        return false;
+      } else if (status === 1 && setStartTime && !myStartTime) {
+        ElMessage("请选择启用时间");
         return false;
       }
       return true;

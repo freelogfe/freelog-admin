@@ -1,10 +1,10 @@
 <!-- 编辑资源属性 -->
 <template>
   <edit-template>
-    <template v-slot:title>{{ mode === 'create' ? "创建资源属性" : "编辑资源属性" }}</template>
+    <template v-slot:title>{{ mode === "create" ? "创建资源属性" : "编辑资源属性" }}</template>
 
     <template v-slot:barRight>
-      <el-button type="primary" @click="save()">{{ mode === 'create' ? "创建" : "保存" }}</el-button>
+      <el-button type="primary" @click="save()">{{ mode === "create" ? "创建" : "保存" }}</el-button>
     </template>
 
     <template v-slot:main>
@@ -35,9 +35,24 @@
         </el-select>
       </form-item>
       <form-item label="属性值格式">
-        <el-select style="width: 400px" placeholder="请选择属性值格式" v-model="formData.format" clearable>
+        <el-select
+          style="width: 400px"
+          placeholder="请选择属性值格式"
+          v-model="formData.format"
+          clearable
+          @change="
+            formData.formatUnit = '';
+            formData.autoConvert = false;
+          "
+        >
           <el-option v-for="item in formatList" :key="item.value" :value="item.value" :label="item.label" />
         </el-select>
+      </form-item>
+      <form-item label="单位" v-if="formData.format === 2">
+        <el-select placeholder="请选择单位" v-model="formData.formatUnit" clearable>
+          <el-option v-for="item in formatUnitList" :key="item.value" :value="item.value" :label="item.label" />
+        </el-select>
+        <el-checkbox style="margin-left: 20px" v-model="formData.autoConvert" label="自动换算单位词头" />
       </form-item>
     </template>
   </edit-template>
@@ -61,6 +76,15 @@ export default {
         { value: 3, label: "时间" },
         { value: 4, label: "日期" },
         { value: 5, label: "日期和时间" },
+      ],
+      formatUnitList: [
+        { value: "byte/b", label: "byte(b)" },
+        { value: "pixel/px", label: "pixel(px)" },
+        { value: "millisecond/ms", label: "millisecond(ms)" },
+        { value: "Pixels Per Inch/ppi", label: "Pixels Per Inch(ppi)" },
+        { value: "frame per second/fps", label: "frame per second(fps)" },
+        { value: "beats per minute/bpm", label: "beats per minute(bpm)" },
+        { value: "bits per second/bps", label: "bits per second(bps)" },
       ],
     };
     const data = reactive({
@@ -106,7 +130,7 @@ export default {
 
     /** 表单验证 */
     const validate = () => {
-      const { name, key, insertMode, format } = data.formData;
+      const { name, key, insertMode, format, formatUnit } = data.formData;
       if (!name) {
         ElMessage("请输入名称");
         return false;
@@ -118,6 +142,9 @@ export default {
         return false;
       } else if (!format) {
         ElMessage("请选择属性值格式");
+        return false;
+      } else if (format === 2 && !formatUnit) {
+        ElMessage("请选择单位");
         return false;
       }
       return true;

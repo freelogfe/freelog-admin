@@ -191,6 +191,7 @@ export default {
           const { dataList, totalItem } = result.data.data;
 
           if (dataList.length === 0) {
+            data.total = 0;
             data.loading = false;
             return;
           }
