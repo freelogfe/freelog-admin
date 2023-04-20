@@ -9,7 +9,7 @@
             v-model="searchData.keywords"
             :placeholder="
               searchData.keywordsType
-                ? '请输入' + keywordsTypeList.find((item) => item.value === searchData.keywordsType).label
+                ? '请输入' + keywordsTypeList.find((item) => item.value === searchData.keywordsType)!.label
                 : '请先选择关键字类型'
             "
             clearable
@@ -76,7 +76,7 @@
         </el-table-column>
         <el-table-column label="类型">
           <template #default="scope">
-            {{ subjectTypeList.find((item) => item.value === scope.row.subjectType).label }}
+            {{ subjectTypeList.find((item) => item.value === scope.row.subjectType)!.label }}
           </template>
         </el-table-column>
         <el-table-column property="contractName" label="所签授权策略" min-width="150" show-overflow-tooltip />
@@ -127,19 +127,12 @@
         </el-table-column>
         <el-table-column label="状态">
           <template #default="scope">
-            {{ statusMapping.find((item) => item.value === scope.row.myStatus).label }}
+            {{ statusMapping.find((item) => item.value === scope.row.myStatus)!.label }}
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon class="icon-btn" title="详情" @click="viewDetail(scope.row)">
-              <document />
-            </el-icon>
+            <i class="icon-btn admin icon-detail" title="详情" @click="viewDetail(scope.row)" />
           </template>
         </el-table-column>
       </el-table>
@@ -178,7 +171,7 @@
                   inactive: item.serviceStates === 128,
                 }"
               >
-                {{ index === 0 && detailData.myStatus === 6 ? "已终止" : authStatusMapping[item.serviceStates] }}
+                {{ index === 0 && detailData.myStatus === 6 ? "已终止" : authStatusMapping[item.serviceStates as 1|2|3|128] }}
               </div>
               <div class="time">{{ item.time }}</div>
             </div>
@@ -206,7 +199,6 @@ import { dateRange, formatDate } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ContractsService, NodeService, ResourceService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
-import { Operation, Document } from "@element-plus/icons-vue";
 import { computed, defineAsyncComponent, reactive, toRefs } from "vue";
 import { Contract } from "@/typings/object";
 import { HttpResponse, ContractListParams } from "@/typings/params";
@@ -219,8 +211,6 @@ interface MyContractListParams extends ContractListParams {
 export default {
   components: {
     "subject-name": defineAsyncComponent(() => import("@/components/subject-name.vue")),
-    Operation,
-    Document,
   },
 
   setup() {
@@ -262,7 +252,7 @@ export default {
       detailPopupShow: false,
       detailTabActive: "tab1",
     });
-    const detailData = computed(() => {
+    const detailData: any = computed(() => {
       const { tableData, detailId } = data;
       return tableData.find((item) => item.contractId === detailId) || {};
     });

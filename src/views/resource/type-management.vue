@@ -80,25 +80,24 @@
         </el-table-column>
         <el-table-column label="状态">
           <template #default="scope">
-            {{ statusMapping.find((item) => item.value === scope.row.status).label }}
+            {{ statusMapping.find((item) => item.value === scope.row.status)!.label }}
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="70">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon class="icon-btn" title="停用" @click="operate(2, scope.row.code)" v-if="scope.row.status === 1">
-              <close />
-            </el-icon>
-            <el-icon class="icon-btn" title="启用" @click="operate(1, scope.row.code)" v-if="scope.row.status === 2">
-              <check />
-            </el-icon>
-            <el-icon class="icon-btn" title="编辑" @click="toEdit(scope.row.code)">
-              <edit />
-            </el-icon>
+            <i
+              class="icon-btn admin icon-stop"
+              title="停用"
+              @click="operate(2, scope.row.code)"
+              v-if="scope.row.status === 1"
+            />
+            <i
+              class="icon-btn admin icon-restore"
+              title="启用"
+              @click="operate(1, scope.row.code)"
+              v-if="scope.row.status === 2"
+            />
+            <i class="icon-btn admin icon-edit" title="编辑" @click="toEdit(scope.row.code)" />
           </template>
         </el-table-column>
       </el-table>
@@ -141,7 +140,6 @@
 <script lang="ts">
 import { formatDate } from "../../utils/common";
 import { ResourceService } from "@/api/request";
-import { Operation, Edit, Close, Check } from "@element-plus/icons-vue";
 import { reactive, toRefs, watch } from "vue";
 import { useMyRouter } from "@/utils/hooks";
 import { ResourceType } from "@/typings/object";
@@ -149,13 +147,6 @@ import { ResourceTypeListParams } from "@/typings/params";
 import { ElMessageBox } from "element-plus";
 
 export default {
-  components: {
-    Operation,
-    Close,
-    Check,
-    Edit,
-  },
-
   setup() {
     const { switchPage, openPage } = useMyRouter();
     const assetsData = {

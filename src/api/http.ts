@@ -5,6 +5,9 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import qs from "qs";
 import { ElMessage } from "element-plus";
+import Cookie from "@/utils/cookie";
+import store from "../store";
+import router from "../router";
 
 const service = axios.create({
   baseURL: process.env.NODE_ENV === "development" ? "/api" : process.env.VUE_APP_BASE_API,
@@ -96,6 +99,11 @@ service.interceptors.response.use(
     if (response.data.errcode !== 0 && response.data.msg) {
       // 请求出错，将服务器报错抛出
       ElMessage.error(response.data.msg);
+    }
+    if (response.data.errcode === 3) {
+      if (process.env.NODE_ENV === "development") Cookie.clear(["uid", "authInfo"]);
+      store.commit("setData", { key: "userData", value: null });
+      router.push({ path: "/login", query: { redirect: router.currentRoute.value.fullPath } });
     }
     return response;
   },

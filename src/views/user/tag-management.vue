@@ -41,22 +41,13 @@
         <el-table-column property="totalSetCount" label="用户数" align="right" min-width="100" show-overflow-tooltip />
         <el-table-column label="类型" min-width="100" show-overflow-tooltip>
           <template #default="scope">
-            {{ typeMapping.find((item) => item.value === scope.row.type).label }}
+            {{ typeMapping.find((item) => item.value === scope.row.type)!.label }}
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="70">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon class="icon-btn" title="编辑" @click="openTagPopup(scope.row)">
-              <edit />
-            </el-icon>
-            <el-icon class="icon-btn" title="删除" @click="deleteTag([scope.row])">
-              <delete />
-            </el-icon>
+            <i class="icon-btn admin icon-edit" title="编辑" @click="openTagPopup(scope.row)" />
+            <i class="icon-btn admin icon-delete" title="删除" @click="deleteTag([scope.row])" />
           </template>
         </el-table-column>
       </el-table>
@@ -78,7 +69,6 @@ import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { UserService } from "@/api/request";
-import { Operation, Edit, Delete } from "@element-plus/icons-vue";
 import { UserTag } from "@/typings/object";
 
 /** 编辑标签参数 */
@@ -88,12 +78,6 @@ interface EditTag {
 }
 
 export default {
-  components: {
-    Operation,
-    Edit,
-    Delete,
-  },
-
   setup() {
     const { switchPage } = useMyRouter();
     const assetsData = {

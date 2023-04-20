@@ -56,7 +56,7 @@
           <template #default="scope">
             <div class="table-cell-item">
               <span>{{ scope.row.code }}</span>
-              <el-icon class="icon-btn" title="复制" @click="copy(scope.row.code)"><copy-document /></el-icon>
+              <i class="icon-btn admin icon-copy" title="复制" @click="copy(scope.row.code)" />
             </div>
           </template>
         </el-table-column>
@@ -82,7 +82,7 @@
                 {{ scope.row.limitCount - scope.row.usedCount }}/{{ scope.row.limitCount }}
               </span>
               <span v-else>不限</span>
-              <el-icon class="icon-btn" title="查看使用记录" @click="viewRecord(scope.row.code)"><document /></el-icon>
+              <i class="icon-btn admin icon-history" title="查看使用记录" @click="viewRecord(scope.row.code)" />
             </div>
           </template>
         </el-table-column>
@@ -109,22 +109,23 @@
         </el-table-column>
         <el-table-column label="状态">
           <template #default="scope">
-            {{ statusMapping.find((item) => item.value === scope.row.status).label }}
+            {{ statusMapping.find((item) => item.value === scope.row.status)!.label }}
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon class="icon-btn" title="禁用" @click="operate(1, scope.row.code)" v-if="scope.row.status === 0">
-              <close />
-            </el-icon>
-            <el-icon class="icon-btn" title="解禁" @click="operate(0, scope.row.code)" v-if="scope.row.status === 1">
-              <check />
-            </el-icon>
+            <i
+              class="icon-btn admin icon-stop"
+              title="禁用"
+              @click="operate(1, scope.row.code)"
+              v-if="scope.row.status === 0"
+            />
+            <i
+              class="icon-btn admin icon-restore"
+              title="解禁"
+              @click="operate(0, scope.row.code)"
+              v-if="scope.row.status === 1"
+            />
           </template>
         </el-table-column>
       </el-table>
@@ -247,7 +248,6 @@
 import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Operation, CopyDocument, Document, Close, Check } from "@element-plus/icons-vue";
 import { reactive, toRefs, nextTick } from "vue";
 import { dateRangeShortcuts } from "@/assets/data";
 import { UserService } from "@/api/request";
@@ -263,14 +263,6 @@ interface MyCreateCodeParams extends CreateCodeParams {
 }
 
 export default {
-  components: {
-    Operation,
-    CopyDocument,
-    Document,
-    Close,
-    Check,
-  },
-
   setup() {
     const { switchPage } = useMyRouter();
     const assetsData = {

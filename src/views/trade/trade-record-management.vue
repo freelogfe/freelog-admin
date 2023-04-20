@@ -104,18 +104,11 @@
           <template #default="scope">{{ abs(scope.row.transactionAmount) }}</template>
         </el-table-column>
         <el-table-column label="状态">
-          <template #default="scope">{{ statusList.find((item) => item.value === scope.row.status).label }}</template>
+          <template #default="scope">{{ statusList.find((item) => item.value === scope.row.status)!.label }}</template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon class="icon-btn" title="查看交易明细" @click="viewTradeDetail(scope.row)">
-              <document />
-            </el-icon>
+            <i class="icon-btn admin icon-detail" title="查看交易明细" @click="viewTradeDetail(scope.row)" />
           </template>
         </el-table-column>
       </el-table>
@@ -152,7 +145,7 @@
         <template #default="scope">{{ scope.row.afterBalance }}</template>
       </el-table-column>
       <el-table-column label="交易状态" width="100">
-        <template #default="scope">{{ statusList.find((item) => item.value === scope.row.status).label }}</template>
+        <template #default="scope">{{ statusList.find((item) => item.value === scope.row.status)!.label }}</template>
       </el-table-column>
     </el-table>
   </el-dialog>
@@ -164,7 +157,6 @@ import { dateRange, formatDate } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { TransactionsService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
-import { Operation, Document } from "@element-plus/icons-vue";
 import { TradeRecord } from "@/typings/object";
 import { TradeListParams } from "@/typings/params";
 
@@ -174,11 +166,6 @@ interface MyTradeListParams extends TradeListParams {
 }
 
 export default {
-  components: {
-    Operation,
-    Document,
-  },
-
   setup() {
     const { query, switchPage } = useMyRouter();
     const assetsData = {
@@ -200,7 +187,7 @@ export default {
       tradeDetailId: "",
       tradeDetailPopupShow: false,
     });
-    const tradeDetailData = computed(() => {
+    const tradeDetailData: any = computed(() => {
       const { tradeDetailId, tableData } = data;
       return tableData.find((item) => item.recordId === tradeDetailId) || {};
     });

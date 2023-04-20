@@ -67,9 +67,7 @@
                 {{ item.tag }}
               </el-tag>
             </div>
-            <el-icon class="icon-btn" title="管理标签" @click="setTag(scope.row)">
-              <edit />
-            </el-icon>
+            <i class="icon-btn admin icon-edit" title="管理标签" @click="setTag(scope.row)" />
           </template>
         </el-table-column>
         <el-table-column label="最近登录" min-width="160">
@@ -116,9 +114,12 @@
           <template #default="scope">
             <div class="table-cell-item">
               <span>{{ scope.row.mobile || "-" }}</span>
-              <el-icon class="icon-btn" title="复制" @click="copy(scope.row.mobile)" v-if="scope.row.mobile">
-                <copy-document />
-              </el-icon>
+              <i
+                class="icon-btn admin icon-copy"
+                title="复制"
+                @click="copy(scope.row.mobile)"
+                v-if="scope.row.mobile"
+              />
             </div>
           </template>
         </el-table-column>
@@ -126,9 +127,7 @@
           <template #default="scope">
             <div class="table-cell-item">
               <span>{{ scope.row.email || "-" }}</span>
-              <el-icon class="icon-btn" title="复制" @click="copy(scope.row.email)" v-if="scope.row.email">
-                <copy-document />
-              </el-icon>
+              <i class="icon-btn admin icon-copy" title="复制" @click="copy(scope.row.email)" v-if="scope.row.email" />
             </div>
           </template>
         </el-table-column>
@@ -143,28 +142,32 @@
               placement="top"
               v-if="scope.row.status === 1"
             >
-              {{ statusMapping.find((item) => item.value === scope.row.status).label }}
+              {{ statusMapping.find((item) => item.value === scope.row.status)!.label }}
             </el-tooltip>
-            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status).label }}</span>
+            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status)!.label }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
             <div class="operate-btns">
-              <el-icon class="icon-btn" title="冻结" @click="freeze(scope.row.userId)" v-if="scope.row.status === 0">
-                <close />
-              </el-icon>
-              <el-icon class="icon-btn" title="恢复" @click="restore(scope.row.userId)" v-if="scope.row.status === 1">
-                <check />
-              </el-icon>
-              <el-icon class="icon-btn" title="审核" @click="audit(scope.row.username)" v-if="scope.row.status === 2">
-                <checked />
-              </el-icon>
+              <i
+                class="icon-btn admin icon-freeze"
+                title="冻结"
+                @click="freeze(scope.row.userId)"
+                v-if="scope.row.status === 0"
+              />
+              <i
+                class="icon-btn admin icon-restore"
+                title="恢复"
+                @click="restore(scope.row.userId)"
+                v-if="scope.row.status === 1"
+              />
+              <i
+                class="icon-btn admin icon-audit"
+                title="审核"
+                @click="audit(scope.row.username)"
+                v-if="scope.row.status === 2"
+              />
             </div>
           </template>
         </el-table-column>
@@ -200,7 +203,7 @@
     </template>
   </el-dialog>
 
-  <el-dialog v-model="freezePopupShow" title="冻结账户" min-width="800px">
+  <el-dialog v-model="freezePopupShow" title="冻结账户" width="800px">
     <form-item label="冻结原因">
       <el-radio-group v-model="operateData.reason">
         <el-radio label="抄袭、侵权"></el-radio>
@@ -229,7 +232,6 @@
 <script lang="ts">
 import { nextTick, reactive, toRefs } from "vue";
 import { formatDate, relativeTime, dateRange } from "../../utils/common";
-import { Edit, Operation, CopyDocument, Close, Check, Checked } from "@element-plus/icons-vue";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { ContractsService, NodeService, ResourceService, UserService } from "@/api/request";
@@ -251,15 +253,6 @@ interface SetTagData {
 }
 
 export default {
-  components: {
-    Edit,
-    Operation,
-    CopyDocument,
-    Close,
-    Check,
-    Checked,
-  },
-
   setup() {
     const { query, switchPage } = useMyRouter();
     const assetsData = {

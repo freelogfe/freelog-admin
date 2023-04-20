@@ -6,7 +6,9 @@
     <template v-slot:status v-if="query.id">{{ statusTip }}</template>
 
     <template v-slot:barRight>
-      <el-button type="danger" @click="operate(4)" v-if="query.id && [1, 2].includes(formData.status)">停用</el-button>
+      <el-button type="danger" @click="operate(4)" v-if="query.id && [1, 2].includes(formData.status as number)">
+        停用
+      </el-button>
       <el-button type="success" @click="operate(0)" v-if="query.id && formData.status === 4">启用</el-button>
       <el-button type="primary" @click="save()">{{ query.id ? "保存" : "创建" }}</el-button>
     </template>
@@ -27,8 +29,8 @@
         <el-radio-group
           v-model="formData.persist"
           @change="
-            formData.startTime = null;
-            formData.limitTime = null;
+            formData.startTime = undefined;
+            formData.limitTime = undefined;
           "
         >
           <el-radio :label="true">长期投放</el-radio>
@@ -55,7 +57,7 @@
           with-credentials
         >
           <img class="cover" v-if="formData.cover" :src="formData.cover" />
-          <el-icon class="plus-icon" v-else><Plus /></el-icon>
+          <i class="admin icon-plus" v-else />
         </el-upload>
       </form-item>
       <form-item label="点击跳转至">
@@ -107,7 +109,6 @@ import { ActivitiesService } from "@/api/request";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage } from "element-plus";
 import { differenceTime } from "@/utils/common";
-import { Plus } from "@element-plus/icons-vue";
 import { CreateOrEditAdsParams } from "@/typings/params";
 import { Activity } from "@/typings/object";
 
@@ -117,10 +118,6 @@ export interface MyCreateOrEditAds extends CreateOrEditAdsParams {
 }
 
 export default {
-  components: {
-    Plus,
-  },
-
   setup() {
     const { query, switchPage } = useMyRouter();
     const assetsData = {
@@ -370,10 +367,13 @@ export default {
     width: 150px;
   }
 
-  .plus-icon {
+  .admin {
     width: 150px;
     height: 150px;
     font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 </style>

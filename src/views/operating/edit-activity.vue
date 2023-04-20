@@ -38,13 +38,13 @@
         <el-radio-group
           v-model="formData.persist"
           @change="
-            formData.startTime = null;
-            formData.limitTime = null;
+            formData.startTime = undefined;
+            formData.limitTime = undefined;
           "
         >
-          <el-radio :label="true" :disabled="query.id && !formData.isDraft && statusTip !== '未发布'"
-            >长期活动</el-radio
-          >
+          <el-radio :label="true" :disabled="query.id && !formData.isDraft && statusTip !== '未发布'">
+            长期活动
+          </el-radio>
           <el-radio :label="false">限期活动</el-radio>
         </el-radio-group>
         <template v-if="!formData.persist">
@@ -75,7 +75,7 @@
           :disabled="statusTip === '已结束'"
         >
           <img class="cover" v-if="formData.cover" :src="formData.cover" />
-          <el-icon class="plus-icon" v-else><Plus /></el-icon>
+          <i class="admin icon-plus" v-else />
         </el-upload>
       </form-item>
       <form-item label="活动页链接">
@@ -111,7 +111,6 @@ import { ActivitiesService } from "@/api/request";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage } from "element-plus";
 import { formatDate, differenceTime } from "@/utils/common";
-import { Plus } from "@element-plus/icons-vue";
 import { CreateOrEditActivityParams } from "@/typings/params";
 
 /** 活动编辑数据 */
@@ -122,10 +121,6 @@ export interface MyCreateOrEditActivity extends CreateOrEditActivityParams {
 }
 
 export default {
-  components: {
-    Plus,
-  },
-
   setup() {
     const { query, switchPage } = useMyRouter();
     const asstesData = {
@@ -325,10 +320,13 @@ export default {
     width: 150px;
   }
 
-  .plus-icon {
+  .admin {
     width: 150px;
     height: 150px;
     font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 </style>

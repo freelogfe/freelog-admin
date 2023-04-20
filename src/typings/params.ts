@@ -276,6 +276,7 @@ export interface CreateOrEditClassificationParams {
   priority: number;
   status: 1 | 2;
   startTime?: string;
+  limitTime?: string;
 }
 
 /** 编辑精选列表参数 */

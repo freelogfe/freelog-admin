@@ -7,7 +7,7 @@
           <el-table-column property="title" label="奖励名称" min-width="150" />
           <el-table-column label="奖励类型" min-width="100">
             <template #default="scope">
-              {{ rewardTypeMapping.find((item: any) => item.value === scope.row.rewardType).label }}
+              {{ rewardTypeMapping.find((item: any) => item.value === scope.row.rewardType)!.label }}
             </template>
           </el-table-column>
           <el-table-column label="有效期" min-width="250">
@@ -19,18 +19,19 @@
             <template #default="scope">{{ getStatus(scope.row) }}</template>
           </el-table-column>
           <el-table-column fixed="right" width="40">
-            <template #header>
-              <el-icon class="operation-icon" title="操作">
-                <operation />
-              </el-icon>
-            </template>
             <template #default="scope">
-              <el-icon class="icon-btn" title="恢复" @click="operateReward(scope.row)" v-if="scope.row.status === 2">
-                <check />
-              </el-icon>
-              <el-icon class="icon-btn" title="暂停" @click="operateReward(scope.row)" v-if="scope.row.status === 1">
-                <close />
-              </el-icon>
+              <i
+                class="icon-btn admin icon-stop"
+                title="暂停"
+                @click="operateReward(scope.row)"
+                v-if="scope.row.status === 1"
+              />
+              <i
+                class="icon-btn admin icon-restore"
+                title="恢复"
+                @click="operateReward(scope.row)"
+                v-if="scope.row.status === 2"
+              />
             </template>
           </el-table-column>
         </el-table>
@@ -88,7 +89,7 @@
 
     <template v-slot:table>
       <el-table ref="tableRef" :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
-        <el-table-column type="selection" :selectable="(row) => row.tag === 1" />
+        <el-table-column type="selection" :selectable="(row: any) => row.tag === 1" />
         <el-table-column property="id" label="记录编号" min-width="250" />
         <el-table-column label="关联信息" min-width="250">
           <template #default="scope">
@@ -113,19 +114,12 @@
         <el-table-column property="rewardNum" label="发放额度（元）" min-width="250" />
         <el-table-column label="发放状态">
           <template #default="scope">
-            {{ recordTagMapping.find((item: any) => item.value === scope.row.tag).label }}
+            {{ recordTagMapping.find((item: any) => item.value === scope.row.tag)!.label }}
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon class="icon-btn" title="审核" @click="audit(scope.row.id)" v-if="scope.row.tag === 1">
-              <check />
-            </el-icon>
+            <i class="icon-btn admin icon-audit" title="审核" @click="audit(scope.row.id)" v-if="scope.row.tag === 1" />
           </template>
         </el-table-column>
       </el-table>
@@ -158,7 +152,6 @@
 import { formatDate } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ActivitiesService } from "@/api/request";
-import { Operation, Check, Close } from "@element-plus/icons-vue";
 import { defineAsyncComponent, reactive, ref, toRefs } from "vue";
 import { Reward, RewardRecord } from "@/typings/object";
 import { ElMessage, ElMessageBox, ElTable } from "element-plus/lib/components";
@@ -167,9 +160,6 @@ import { RewardRecordListParams } from "@/typings/params";
 export default {
   components: {
     "subject-name": defineAsyncComponent(() => import("@/components/subject-name.vue")),
-    Operation,
-    Check,
-    Close,
   },
 
   setup() {

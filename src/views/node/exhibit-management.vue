@@ -102,25 +102,18 @@
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
         <el-table-column label="状态">
-          <template #default="scope">{{
-            statusMapping.find((item) => item.value === scope.row.onlineStatus).label
-          }}</template>
+          <template #default="scope">
+            {{ statusMapping.find((item) => item.value === scope.row.onlineStatus)!.label }}
+          </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon
-              class="icon-btn"
+            <i
+              class="icon-btn admin icon-strategy"
               title="查看授权策略"
               @click="viewPolicy(scope.row)"
               v-if="scope.row.policies.length"
-            >
-              <grid />
-            </el-icon>
+            />
           </template>
         </el-table-column>
       </el-table>
@@ -161,7 +154,6 @@ import { dateRange, formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ContractsService, NodeService, ResourceService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
-import { Operation, Grid } from "@element-plus/icons-vue";
 import { Exhibit, Policy, ResourceType } from "@/typings/object";
 import { ExhibitListParams } from "@/typings/params";
 
@@ -173,8 +165,6 @@ interface MyExhibitListParams extends ExhibitListParams {
 export default {
   components: {
     "subject-name": defineAsyncComponent(() => import("@/components/subject-name.vue")),
-    Operation,
-    Grid,
   },
 
   setup() {

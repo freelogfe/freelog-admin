@@ -7,7 +7,7 @@
         <el-form-item prop="loginName">
           <el-input v-model="loginData.loginName" placeholder="用户名" autofocus @keyup.enter="login()">
             <template #prefix>
-              <el-icon><user-filled /></el-icon>
+              <i class="admin icon-user" />
             </template>
           </el-input>
         </el-form-item>
@@ -20,7 +20,7 @@
             @keyup.enter="login()"
           >
             <template #prefix>
-              <el-icon><lock /></el-icon>
+              <i class="admin icon-password" />
             </template>
           </el-input>
         </el-form-item>
@@ -36,7 +36,6 @@
 
 <script lang="ts">
 import { useMyRouter } from "@/utils/hooks";
-import { UserFilled, Lock } from "@element-plus/icons-vue";
 import { ref, reactive, toRefs } from "vue";
 import { ElForm, ElMessage } from "element-plus";
 import { PassportService } from "@/api/request";
@@ -46,11 +45,6 @@ import { LoginParams } from "@/typings/params";
 type FormInstance = InstanceType<typeof ElForm>;
 
 export default {
-  components: {
-    UserFilled,
-    Lock,
-  },
-
   setup() {
     const { query, replacePage, openPage } = useMyRouter();
     const ruleFormRef = ref<FormInstance>();
@@ -154,13 +148,16 @@ export default {
 
     :deep .el-input__inner {
       height: 40px;
+      padding-left: 50px;
     }
 
     :deep .el-input__prefix-inner {
       display: flex;
       align-items: center;
       font-size: 20px;
-      margin-left: -5px;
+      margin-left: 5px;
+      color: #000;
+      font-weight: bold;
     }
 
     .btns {

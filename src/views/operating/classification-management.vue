@@ -53,7 +53,7 @@
                 :key="item.identity"
               >
                 <template v-if="[1, 2, 4, 5, 6, 7].includes(item.type)">
-                  <el-icon class="type-icon"><grid /></el-icon>
+                  <i class="admin icon-type" />
                   <span v-if="item.type === 4">所有基础类型</span>
                   <span v-else-if="item.type === 5">{{ item.name }}/所有基础类型</span>
                   <span v-else-if="item.type === 6">所有自定义类型</span>
@@ -62,13 +62,13 @@
                     {{
                       item.parentChain
                         .reverse()
-                        .map((item) => item.name)
+                        .map((item: any) => item.name)
                         .join("/")
                     }}
                   </span>
                 </template>
                 <template v-if="item.type === 3">
-                  <div class="tag-icon">#</div>
+                  <i class="admin icon-tag" />
                   {{ item.name }}
                 </template>
               </div>
@@ -82,6 +82,9 @@
           <template #default="scope">
             <div>
               <div>{{ statusMapping.find((item) => item.value === scope.row.status)!.label }}</div>
+              <div v-if="scope.row.status === 1 && scope.row.limitTime">
+                将于 {{ formatDate(scope.row.limitTime) }} 停用
+              </div>
               <div v-if="scope.row.status === 2 && scope.row.startTime">
                 将于 {{ formatDate(scope.row.startTime) }} 启用
               </div>
@@ -89,24 +92,21 @@
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="100">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon class="icon-btn" title="停用" @click="operate(2, scope.row.code)" v-if="scope.row.status === 1">
-              <close />
-            </el-icon>
-            <el-icon class="icon-btn" title="启用" @click="operate(1, scope.row.code)" v-if="scope.row.status === 2">
-              <check />
-            </el-icon>
-            <el-icon class="icon-btn" title="编辑" @click="toEdit(scope.row.code)">
-              <edit />
-            </el-icon>
-            <el-icon class="icon-btn" title="删除" @click="deleteClassification(scope.row.code)">
-              <delete />
-            </el-icon>
+            <i
+              class="icon-btn admin icon-stop"
+              title="停用"
+              @click="operate(2, scope.row.code)"
+              v-if="scope.row.status === 1"
+            />
+            <i
+              class="icon-btn admin icon-enable"
+              title="启用"
+              @click="operate(1, scope.row.code)"
+              v-if="scope.row.status === 2"
+            />
+            <i class="icon-btn admin icon-edit" title="编辑" @click="toEdit(scope.row.code)" />
+            <i class="icon-btn admin icon-delete" title="删除" @click="deleteClassification(scope.row.code)" />
           </template>
         </el-table-column>
       </el-table>
@@ -127,7 +127,6 @@
 <script lang="ts">
 import { formatDate } from "../../utils/common";
 import { ActivitiesService } from "@/api/request";
-import { Grid, Operation, Edit, Close, Check, Delete } from "@element-plus/icons-vue";
 import { reactive, toRefs } from "vue";
 import { useMyRouter } from "@/utils/hooks";
 import { Classification } from "@/typings/object";
@@ -135,15 +134,6 @@ import { ClassificationListParams } from "@/typings/params";
 import { ElMessageBox } from "element-plus";
 
 export default {
-  components: {
-    Grid,
-    Operation,
-    Close,
-    Check,
-    Edit,
-    Delete,
-  },
-
   setup() {
     const { switchPage, openPage } = useMyRouter();
     const assetsData = {
@@ -167,8 +157,9 @@ export default {
         data.tableData = [];
         data.loading = true;
         if (init) data.searchData.currentPage = 1;
-        const { currentPage, limit } = data.searchData;
+        const { currentPage, limit, parentCode } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
+        if (!parentCode) delete data.searchData.parentCode;
         const result = await ActivitiesService.getClassificationList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
@@ -288,22 +279,13 @@ export default {
     &.special {
       color: #9090ff;
 
-      .type-icon {
+      .admin {
         color: #9090ff;
       }
     }
 
-    .type-icon {
-      color: #888;
+    .admin {
       font-size: 16px;
-      margin-right: 5px;
-      margin-top: 4px;
-    }
-
-    .tag-icon {
-      color: #888;
-      font-size: 18px;
-      font-weight: 800;
       margin-right: 5px;
     }
   }

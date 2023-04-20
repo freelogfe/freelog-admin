@@ -93,14 +93,12 @@
           <template #default="scope">
             <div class="table-cell-item">
               <span>{{ scope.row.latestVersion || "-" }}</span>
-              <el-icon
-                class="icon-btn"
+              <i
+                class="icon-btn admin icon-history"
                 title="查看历史记录"
                 @click="viewHistory(scope.row)"
                 v-if="scope.row.resourceVersions.length"
-              >
-                <clock />
-              </el-icon>
+              />
             </div>
           </template>
         </el-table-column>
@@ -115,36 +113,29 @@
               placement="top"
               v-if="scope.row.status === 2"
             >
-              {{ statusMapping.find((item: any) => item.value === scope.row.status).label }}
+              {{ statusMapping.find((item: any) => item.value === scope.row.status)!.label }}
             </el-tooltip>
-            <span v-else>{{ statusMapping.find((item: any) => item.value === scope.row.status).label }}</span>
+            <span v-else>{{ statusMapping.find((item: any) => item.value === scope.row.status)!.label }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="100">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon
-              class="icon-btn"
+            <i
+              class="icon-btn admin icon-strategy"
               title="查看授权策略"
               @click="viewPolicy(scope.row)"
               v-if="scope.row.policies.length"
-            >
-              <grid />
-            </el-icon>
-            <el-icon
-              class="icon-btn"
+            />
+            <i
+              class="icon-btn admin icon-detail"
               title="查看更多信息"
               @click="switchPage('/resource/resource-management', { resourceId: scope.row.resourceId })"
-            >
-              <document />
-            </el-icon>
-            <el-icon class="icon-btn" title="移除" @click="operateChoiceness('PUT', scope.row.resourceId)">
-              <close />
-            </el-icon>
+            />
+            <i
+              class="icon-btn admin icon-delete"
+              title="移除"
+              @click="operateChoiceness('PUT', scope.row.resourceId)"
+            />
           </template>
         </el-table-column>
       </el-table>
@@ -234,14 +225,12 @@
         <template #default="scope">
           <div class="table-cell-item">
             <span>{{ scope.row.latestVersion || "-" }}</span>
-            <el-icon
-              class="icon-btn"
+            <i
+              class="icon-btn admin icon-history"
               title="查看历史记录"
               @click="viewHistory(scope.row)"
               v-if="scope.row.resourceVersions.length"
-            >
-              <clock />
-            </el-icon>
+            />
           </div>
         </template>
       </el-table-column>
@@ -256,9 +245,9 @@
             placement="top"
             v-if="scope.row.status === 2"
           >
-            {{ statusMapping.find((item: any) => item.value === scope.row.status).label }}
+            {{ statusMapping.find((item: any) => item.value === scope.row.status)!.label }}
           </el-tooltip>
-          <span v-else>{{ statusMapping.find((item: any) => item.value === scope.row.status).label }}</span>
+          <span v-else>{{ statusMapping.find((item: any) => item.value === scope.row.status)!.label }}</span>
         </template>
       </el-table-column>
     </el-table>
@@ -300,7 +289,7 @@
           <div class="version">
             <div class="version-name" :title="item.version">{{ item.version }}</div>
             <a class="icon-btn" title="下载" :href="getFileUrl(item.versionId)" download @click.stop>
-              <el-icon><download /></el-icon>
+              <i class="admin icon-download" />
             </a>
           </div>
           <div class="create-date">{{ relativeTime(item.createDate) }}</div>
@@ -343,7 +332,6 @@
 import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ResourceService, ContractsService, ActivitiesService } from "@/api/request";
-import { Operation, Close, Document, Download, Grid, Clock } from "@element-plus/icons-vue";
 import { reactive, toRefs, computed, defineAsyncComponent, ref, nextTick } from "vue";
 import { OperateChoicenessParams, Policy, Resource, ResourceType, ResourceVersion } from "@/typings/object";
 import { ChoicenessListParams, ResourceListParams } from "@/typings/params";
@@ -358,12 +346,6 @@ export interface MyChoicenessListParams extends ChoicenessListParams {
 export default {
   components: {
     "my-markdown": defineAsyncComponent(() => import("@/components/markdown.vue")),
-    Operation,
-    Close,
-    Grid,
-    Document,
-    Download,
-    Clock,
   },
 
   setup() {
@@ -569,7 +551,7 @@ export default {
 
       /** 关闭资源列表弹窗 */
       closeResourcePopup() {
-        tableRef.value!.clearSelection();
+        tableRef.value?.clearSelection();
         data.resourcePopupShow = false;
         data.selectedResourceData = [];
       },

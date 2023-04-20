@@ -91,9 +91,7 @@
                 {{ item }}
               </el-tag>
             </div>
-            <el-icon class="icon-btn" title="管理标签" @click="setTag(scope.row)">
-              <edit />
-            </el-icon>
+            <i class="icon-btn admin icon-edit" title="管理标签" @click="setTag(scope.row)" />
           </template>
         </el-table-column>
         <el-table-column label="封面" min-width="120">
@@ -130,14 +128,12 @@
           <template #default="scope">
             <div class="table-cell-item">
               <span>{{ scope.row.latestVersion || "-" }}</span>
-              <el-icon
-                class="icon-btn"
+              <i
+                class="icon-btn admin icon-history"
                 title="查看历史记录"
                 @click="viewHistory(scope.row)"
                 v-if="scope.row.resourceVersions.length"
-              >
-                <clock />
-              </el-icon>
+              />
             </div>
           </template>
         </el-table-column>
@@ -155,37 +151,31 @@
               placement="top"
               v-if="scope.row.status === 2"
             >
-              {{ statusMapping.find((item) => item.value === scope.row.status).label }}
+              {{ statusMapping.find((item) => item.value === scope.row.status)!.label }}
             </el-tooltip>
-            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status).label }}</span>
+            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status)!.label }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="70">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon
-              class="icon-btn"
+            <i
+              class="icon-btn admin icon-strategy"
               title="查看授权策略"
               @click="viewPolicy(scope.row)"
               v-if="scope.row.policies.length"
-            >
-              <grid />
-            </el-icon>
-            <el-icon
-              class="icon-btn"
+            />
+            <i
+              class="icon-btn admin icon-stop"
               title="封禁"
               @click="banResources(scope.row.resourceId)"
               v-if="scope.row.status !== 2"
-            >
-              <close />
-            </el-icon>
-            <el-icon class="icon-btn" title="解禁" @click="restore(scope.row.resourceId)" v-if="scope.row.status === 2">
-              <check />
-            </el-icon>
+            />
+            <i
+              class="icon-btn admin icon-restore"
+              title="解禁"
+              @click="restore(scope.row.resourceId)"
+              v-if="scope.row.status === 2"
+            />
           </template>
         </el-table-column>
       </el-table>
@@ -273,8 +263,8 @@
         >
           <div class="version">
             <div class="version-name" :title="item.version">{{ item.version }}</div>
-            <a class="icon-btn" title="下载" :href="getFileUrl(item.versionId)" download @click.stop>
-              <el-icon><download /></el-icon>
+            <a :href="getFileUrl(item.versionId)" download @click.stop>
+              <i class="icon-btn admin icon-download" title="下载" />
             </a>
           </div>
           <div class="create-date">{{ relativeTime(item.createDate) }}</div>
@@ -319,7 +309,6 @@ import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox, ElTable } from "element-plus";
 import { ResourceService, ContractsService, ActivitiesService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
-import { Operation, Edit, Clock, Close, Check, Grid, Download } from "@element-plus/icons-vue";
 import { reactive, toRefs, computed, defineAsyncComponent, ref } from "vue";
 import {
   OperateChoicenessParams,
@@ -353,13 +342,6 @@ export interface MySetResourceTagParams extends SetResourceTagParams {
 export default {
   components: {
     "my-markdown": defineAsyncComponent(() => import("@/components/markdown.vue")),
-    Operation,
-    Edit,
-    Clock,
-    Close,
-    Check,
-    Grid,
-    Download,
   },
 
   setup() {
@@ -740,7 +722,7 @@ export default {
     data.searchData.userId = query.value.userId;
     data.searchData.resourceId = query.value.resourceId;
     if (query.value.tag) data.searchData.selectedTags = [query.value.tag];
-    data.searchData.type = query.value.type ? query.value.type.split(',') : null;
+    data.searchData.type = query.value.type ? query.value.type.split(",") : null;
     methods.getData(true);
     getResourceTags();
     getResourceTypes();

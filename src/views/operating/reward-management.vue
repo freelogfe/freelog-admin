@@ -40,28 +40,25 @@
           <template #default="scope">{{ getStatus(scope.row) }}</template>
         </el-table-column>
         <el-table-column fixed="right" width="100">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon
-              class="icon-btn"
+            <i
+              class="icon-btn admin icon-detail"
               title="查看发放记录"
               @click="switchPage('/operating/issue-record', { id: scope.row.id })"
-            >
-              <document />
-            </el-icon>
-            <el-icon class="icon-btn" title="恢复" @click="operateReward(scope.row)" v-if="scope.row.status === 2">
-              <check />
-            </el-icon>
-            <el-icon class="icon-btn" title="暂停" @click="operateReward(scope.row)" v-if="scope.row.status === 1">
-              <close />
-            </el-icon>
-            <el-icon class="icon-btn" title="编辑" @click="toEdit(scope.row.id)">
-              <edit />
-            </el-icon>
+            />
+            <i
+              class="icon-btn admin icon-stop"
+              title="暂停"
+              @click="operateReward(scope.row)"
+              v-if="scope.row.status === 1"
+            />
+            <i
+              class="icon-btn admin icon-restore"
+              title="恢复"
+              @click="operateReward(scope.row)"
+              v-if="scope.row.status === 2"
+            />
+            <i class="icon-btn admin icon-edit" title="编辑" @click="toEdit(scope.row.id)" />
           </template>
         </el-table-column>
       </el-table>
@@ -83,7 +80,6 @@
 import { formatDate } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ActivitiesService } from "@/api/request";
-import { Operation, Close, Document, Check, Edit } from "@element-plus/icons-vue";
 import { reactive, toRefs } from "vue";
 import { Reward } from "@/typings/object";
 import { RewardListParams } from "@/typings/params";
@@ -91,14 +87,6 @@ import { ElMessageBox } from "element-plus";
 import { ElMessage } from "element-plus/lib/components";
 
 export default {
-  components: {
-    Operation,
-    Check,
-    Close,
-    Document,
-    Edit,
-  },
-
   setup() {
     const { switchPage } = useMyRouter();
     const assetsData = {

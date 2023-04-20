@@ -42,19 +42,12 @@
         </el-table-column>
         <el-table-column label="录入方式" min-width="200">
           <template #default="scope">
-            {{ insertModeMapping.find((item) => item.value === scope.row.insertMode).label }}
+            {{ insertModeMapping.find((item) => item.value === scope.row.insertMode)!.label }}
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon class="icon-btn" title="编辑" @click="toEdit(scope.row.key)">
-              <edit />
-            </el-icon>
+            <i class="icon-btn admin icon-edit" title="编辑" @click="toEdit(scope.row.key)" />
           </template>
         </el-table-column>
       </el-table>
@@ -93,18 +86,12 @@
 <script lang="ts">
 import { formatDate } from "../../utils/common";
 import { ResourceService } from "@/api/request";
-import { Operation, Edit } from "@element-plus/icons-vue";
 import { reactive, toRefs, watch } from "vue";
 import { useMyRouter } from "@/utils/hooks";
 import { ResourceProperty } from "@/typings/object";
 import { ResourcePropertyListParams } from "@/typings/params";
 
 export default {
-  components: {
-    Operation,
-    Edit,
-  },
-
   setup() {
     const { switchPage } = useMyRouter();
     const assetsData = {

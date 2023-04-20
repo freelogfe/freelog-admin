@@ -26,47 +26,38 @@
               @click="selectParentType(item, list.level)"
             >
               {{ item.name }}
-              <el-icon v-if="item.children.length"><ArrowRight /></el-icon>
+              <i class="admin icon-triangle-arrowright" v-if="item.children.length" />
             </div>
           </div>
         </div>
       </form-item>
       <form-item label="映射来源">
         <div class="btn-box">
-          <div class="text-btn" @click="openSourcesPopup()">
-            <el-icon><plus /></el-icon>添加来源
-          </div>
+          <div class="text-btn" @click="openSourcesPopup()"><i class="admin icon-plus" />添加来源</div>
         </div>
         <div id="sortableList" class="property-list">
           <div
             class="property-item"
             :class="{ special: [4, 5, 6, 7].includes(item.type) }"
-            :data-id="item.identity"
+            :data-id="item.identity + item.name"
             v-for="(item, index) in formData.sourcesArr"
             :key="item.identity"
           >
             <template v-if="[1, 2, 4, 5, 6, 7].includes(item.type)">
-              <el-icon class="type-icon">
-                <grid />
-              </el-icon>
+              <i class="admin icon-type" />
               <span v-if="item.type === 4">所有基础类型</span>
               <span v-else-if="item.type === 5">{{ item.name }}/所有基础类型</span>
               <span v-else-if="item.type === 6">所有自定义类型</span>
               <span v-else-if="item.type === 7">{{ item.name }}/所有自定义类型</span>
               <span v-else>
-                {{
-                  item.parentChain
-                    .reverse()
-                    .map((item) => item.name)
-                    .join("/")
-                }}
+                {{ item.parentChain.map((item) => item.name).join("/") }}
               </span>
             </template>
             <template v-if="item.type === 3">
-              <div class="tag-icon">#</div>
+              <i class="admin icon-tag" />
               {{ item.name }}
             </template>
-            <el-icon class="delete-btn" @click="deleteSources(index)"><close /></el-icon>
+            <i class="delete-btn admin icon-X" @click="deleteSources(index)" />
           </div>
         </div>
       </form-item>
@@ -107,6 +98,21 @@
           <el-radio style="margin-top: 10px" :label="2">
             停用<span class="desc">在资源市场分类筛选器中隐藏</span>
           </el-radio>
+          <template v-if="formData.status === 2">
+            <el-checkbox
+              style="margin-left: 20px"
+              v-model="formData.setLimitTime"
+              label="设置停用时间"
+              @change="formData.myLimitTime = null"
+            />
+            <el-date-picker
+              style="margin-left: 20px"
+              v-model="formData.myLimitTime"
+              type="datetime"
+              placeholder="请选择停用时间"
+              v-if="formData.setLimitTime"
+            />
+          </template>
         </el-radio-group>
       </form-item>
     </template>
@@ -178,7 +184,7 @@
           @click="clickParentResourcesType(item, list.level)"
         >
           {{ item.name }}
-          <el-icon v-if="item.children.length"><ArrowRight /></el-icon>
+          <i class="admin icon-triangle-arrowright" v-if="item.children.length" />
         </div>
       </div>
     </div>
@@ -254,7 +260,6 @@ import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElTable } from "element-plus";
 import { CreateOrEditClassificationParams, ResourceTagListParams } from "@/typings/params";
 import Sortable from "sortablejs";
-import { Grid, Plus, Close, ArrowRight } from "@element-plus/icons-vue";
 import { ResourceTag, ResourceType } from "@/typings/object";
 import { formatDate } from "@/utils/common";
 
@@ -264,6 +269,8 @@ interface MyCreateOrEditClassificationParams extends CreateOrEditClassificationP
   sourcesArr: Sources[];
   setStartTime: boolean;
   myStartTime: string | null;
+  setLimitTime: boolean;
+  myLimitTime: string | null;
 }
 
 /** 弹窗参数 */
@@ -297,13 +304,6 @@ export interface MyResourceType extends ResourceType {
 }
 
 export default {
-  components: {
-    Grid,
-    Plus,
-    Close,
-    ArrowRight,
-  },
-
   setup() {
     const { query, switchPage } = useMyRouter();
     const tableRef = ref<InstanceType<typeof ElTable>>();
@@ -351,12 +351,19 @@ export default {
           const result = await ActivitiesService.getClassificationData(code);
           const { errcode } = result.data;
           if (errcode === 0) {
-            const { sources, startTime } = result.data.data;
+            const { sources, startTime, limitTime } = result.data.data;
             data.formData = result.data.data;
+            sources.forEach((item: Sources) => {
+              item.parentChain.reverse();
+            });
             data.formData.sourcesArr = [...sources];
             if (startTime) {
               data.formData.setStartTime = true;
               data.formData.myStartTime = startTime;
+            }
+            if (limitTime) {
+              data.formData.setLimitTime = true;
+              data.formData.myLimitTime = limitTime;
             }
           }
         } else {
@@ -375,7 +382,7 @@ export default {
               const newKeyArr: string[] = sortable.toArray();
               const newAttrsArr: Sources[] = [];
               newKeyArr.forEach((identity) => {
-                const attr = data.formData.sourcesArr.find((item) => item.identity === identity);
+                const attr = data.formData.sourcesArr.find((item) => identity === item.identity + item.name);
                 if (attr) newAttrsArr.push(attr);
               });
               data.formData.sourcesArr = newAttrsArr;
@@ -646,7 +653,6 @@ export default {
               parentChain: selected.parentChain || [],
             });
           });
-          console.error(data.formData.sourcesArr);
         } else if (category === 3) {
           data.selectedResourceTags.forEach((selected) => {
             const index = data.formData.sourcesArr.findIndex((item) => selected.tagId === item.identity);
@@ -675,10 +681,14 @@ export default {
       async save() {
         if (!validate()) return;
 
-        const { sourcesArr, status, setStartTime, myStartTime } = data.formData;
+        const { sourcesArr, status, setStartTime, myStartTime, setLimitTime, myLimitTime } = data.formData;
         if (sourcesArr) data.formData.sources = sourcesArr;
+        if (status === 1) delete data.formData.limitTime;
+        if (status === 2) delete data.formData.startTime;
         if (status === 1 && setStartTime && myStartTime) data.formData.startTime = formatDate(myStartTime);
         if (status === 1 && !setStartTime) delete data.formData.startTime;
+        if (status === 2 && setLimitTime && myLimitTime) data.formData.limitTime = formatDate(myLimitTime);
+        if (status === 2 && !setLimitTime) delete data.formData.limitTime;
         const parentTypeChecked = data.parentOptions.map((item) => item.checked);
         for (let i = parentTypeChecked.length - 1; i >= 0; i--) {
           if (parentTypeChecked[i] !== undefined) {
@@ -821,18 +831,14 @@ export default {
         color: #fff;
         background-color: #7bbdff;
       }
+
+      .admin {
+        font-size: 12px;
+      }
     }
 
     & + .list {
       border-left: 1px solid #e4e7ed;
-    }
-  }
-
-  &.disabled {
-    background-color: #f5f7fa;
-
-    .item {
-      cursor: not-allowed;
     }
   }
 }
@@ -846,7 +852,8 @@ export default {
     display: flex;
     align-items: center;
 
-    i {
+    .admin {
+      font-size: 14px;
       margin-right: 5px;
     }
   }
@@ -864,9 +871,12 @@ export default {
 
   .property-item {
     padding: 0 8px;
-    margin: 10px;
+    height: 26px;
+    margin: 8px;
     border-radius: 4px;
-    background: #ddd;
+    background: #ecf5ff;
+    border: 1px solid #d9ecff;
+    color: #606266;
     display: flex;
     align-items: center;
     cursor: default;
@@ -874,31 +884,31 @@ export default {
     &.special {
       color: #9090ff;
 
-      .type-icon {
+      .admin {
         color: #9090ff;
       }
     }
 
-    .type-icon {
-      color: #888;
+    .admin {
       font-size: 16px;
       margin-right: 5px;
     }
 
-    .tag-icon {
-      color: #888;
-      font-size: 18px;
-      font-weight: 800;
-      margin-right: 5px;
-    }
-
     .delete-btn {
-      color: #999;
-      margin-left: 5px;
+      font-size: 12px;
+      height: 18px;
+      width: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #409eff;
+      border-radius: 50%;
+      margin-left: 6px;
       cursor: pointer;
 
       &:hover {
-        color: #666;
+        color: #fff;
+        background: #409eff;
       }
     }
   }

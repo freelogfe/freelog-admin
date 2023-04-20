@@ -33,7 +33,7 @@
 
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
-        <el-table-column type="selection" :selectable="(row) => row.status === 0" />
+        <el-table-column type="selection" :selectable="(row: any) => row.status === 0" />
         <el-table-column label="申请日期" min-width="160">
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
@@ -51,21 +51,14 @@
         <el-table-column label="审核状态">
           <template #default="scope">
             <el-tooltip effect="dark" :content="scope.row.auditMsg" placement="top" v-if="scope.row.status === 2">
-              {{ statusMapping.find((item) => item.value === scope.row.status).label }}
+              {{ statusMapping.find((item) => item.value === scope.row.status)!.label }}
             </el-tooltip>
-            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status).label }}</span>
+            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status)!.label }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon class="icon-btn" title="审核" @click="audit(scope.row)" v-if="scope.row.status === 0">
-              <checked />
-            </el-icon>
+            <i class="icon-btn admin icon-audit" title="审核" @click="audit(scope.row)" v-if="scope.row.status === 0" />
           </template>
         </el-table-column>
       </el-table>
@@ -118,7 +111,6 @@ import { useMyRouter } from "@/utils/hooks";
 import { ElMessage } from "element-plus";
 import { UserService } from "@/api/request";
 import { reactive, toRefs, watch } from "vue";
-import { Operation, Checked } from "@element-plus/icons-vue";
 import { Qualifications } from "@/typings/object";
 import { AuditQualificationsParams, QualificationsListParams } from "@/typings/params";
 
@@ -137,11 +129,6 @@ interface MyAuditQualificationsParams extends AuditQualificationsParams {
 }
 
 export default {
-  components: {
-    Operation,
-    Checked,
-  },
-
   setup() {
     const { query, switchPage } = useMyRouter();
     const assetsData = {

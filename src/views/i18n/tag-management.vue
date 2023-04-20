@@ -36,18 +36,9 @@
           <template #default="scope">{{ scope.row.num }} keys</template>
         </el-table-column>
         <el-table-column fixed="right" width="70">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon class="icon-btn" title="编辑" @click="openTagPopup(scope.row)">
-              <edit />
-            </el-icon>
-            <el-icon class="icon-btn" title="删除" @click="deleteTag([scope.row])">
-              <delete />
-            </el-icon>
+            <i class="icon-btn admin icon-edit" title="编辑" @click="openTagPopup(scope.row)" />
+            <i class="icon-btn admin icon-delete" title="删除" @click="deleteTag([scope.row])" />
           </template>
         </el-table-column>
       </el-table>
@@ -79,17 +70,10 @@ import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { InternationalizationService } from "@/api/request";
-import { Operation, Edit, Delete } from "@element-plus/icons-vue";
 import { TranslationTag } from "@/typings/object";
 import { ListParams } from "@/typings/params";
 
 export default {
-  components: {
-    Operation,
-    Edit,
-    Delete,
-  },
-
   setup() {
     const { switchPage } = useMyRouter();
     const data = reactive({

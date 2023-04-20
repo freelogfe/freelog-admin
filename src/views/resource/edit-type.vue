@@ -32,7 +32,7 @@
               @click="selectParentType(item, list.level, true)"
             >
               {{ item.name }}
-              <el-icon v-if="item.children.length"><ArrowRight /></el-icon>
+              <i class="admin icon-triangle-arrowright" v-if="item.children.length" />
             </div>
           </div>
         </div>
@@ -49,17 +49,13 @@
       </form-item>
       <form-item label="标准属性（选填）">
         <div class="btn-box">
-          <div class="text-btn" @click="importParentType()">
-            <el-icon><bottom /></el-icon>导入父类属性
-          </div>
-          <div class="text-btn" @click="openResourceList()">
-            <el-icon><plus /></el-icon>添加属性
-          </div>
+          <div class="text-btn" @click="importParentType()"><i class="admin icon-import" />导入父类属性</div>
+          <div class="text-btn" @click="openResourceList()"><i class="admin icon-plus" />添加属性</div>
         </div>
         <div id="sortableList" class="property-list">
           <div class="property-item" :data-id="item.key" v-for="(item, index) in formData.attrsArr" :key="item.key">
             {{ item.name }}
-            <el-icon class="delete-btn" @click="deletePropertyItem(index)"><close /></el-icon>
+            <i class="delete-btn admin icon-X" @click="deletePropertyItem(index)" />
           </div>
         </div>
       </form-item>
@@ -122,7 +118,7 @@
       </el-table-column>
       <el-table-column label="录入方式" min-width="200">
         <template #default="scope">
-          {{ insertModeMapping.find((item) => item.value === scope.row.insertMode).label }}
+          {{ insertModeMapping.find((item) => item.value === scope.row.insertMode)!.label }}
         </template>
       </el-table-column>
     </el-table>
@@ -159,7 +155,6 @@ import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElTable } from "element-plus";
 import { CreateOrEditResourceTypeParams, ResourcePropertyListParams } from "@/typings/params";
 import Sortable from "sortablejs";
-import { ArrowRight, Bottom, Plus, Close } from "@element-plus/icons-vue";
 import { ResourceProperty } from "@/typings/object";
 
 /** 父类选项 */
@@ -178,13 +173,6 @@ interface MyCreateOrEditResourceTypeParams extends CreateOrEditResourceTypeParam
 }
 
 export default {
-  components: {
-    ArrowRight,
-    Bottom,
-    Plus,
-    Close,
-  },
-
   setup() {
     const { query, switchPage } = useMyRouter();
     const tableRef = ref<InstanceType<typeof ElTable>>();
@@ -519,6 +507,10 @@ export default {
         color: #fff;
         background-color: #7bbdff;
       }
+
+      .admin {
+        font-size: 12px;
+      }
     }
 
     & + .list {
@@ -544,7 +536,8 @@ export default {
     display: flex;
     align-items: center;
 
-    i {
+    .admin {
+      font-size: 14px;
       margin-right: 5px;
     }
   }
@@ -566,20 +559,31 @@ export default {
 
   .property-item {
     padding: 0 8px;
-    margin: 10px;
+    height: 26px;
+    margin: 8px;
     border-radius: 4px;
-    background: #ddd;
+    background: #ecf5ff;
+    border: 1px solid #d9ecff;
+    color: #409eff;
     display: flex;
     align-items: center;
     cursor: default;
 
     .delete-btn {
-      color: #999;
-      margin-left: 5px;
+      font-size: 12px;
+      height: 18px;
+      width: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #409eff;
+      border-radius: 50%;
+      margin-left: 6px;
       cursor: pointer;
 
       &:hover {
-        color: #666;
+        color: #fff;
+        background: #409eff;
       }
     }
   }

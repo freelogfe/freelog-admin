@@ -33,6 +33,7 @@ export interface Qualifications {
   createDate: string;
   occupation: string;
   city: string;
+  areaName: string;
   description: string;
   username: string;
   mobile: string;

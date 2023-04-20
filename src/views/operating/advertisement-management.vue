@@ -37,7 +37,7 @@
         </el-table-column>
         <el-table-column label="状态">
           <template #default="scope">
-            {{ statusOptions.find((item) => item.value === scope.row.status).label }}
+            {{ statusOptions.find((item) => item.value === scope.row.status)!.label }}
           </template>
         </el-table-column>
         <el-table-column label="曝光量">
@@ -97,15 +97,8 @@
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon class="icon-btn" title="编辑" @click="toEdit(scope.row._id)">
-              <edit />
-            </el-icon>
+            <i class="icon-btn admin icon-edit" title="编辑" @click="toEdit(scope.row._id)" />
           </template>
         </el-table-column>
       </el-table>
@@ -126,18 +119,12 @@
 <script lang="ts">
 import { formatDate } from "../../utils/common";
 import { ActivitiesService } from "@/api/request";
-import { Operation, Edit } from "@element-plus/icons-vue";
 import { reactive, toRefs } from "vue";
 import { useMyRouter } from "@/utils/hooks";
 import { AdsListParams } from "@/typings/params";
 import { Advertisement } from "@/typings/object";
 
 export default {
-  components: {
-    Operation,
-    Edit,
-  },
-
   setup() {
     const { switchPage, openPage } = useMyRouter();
     const assetsData = {

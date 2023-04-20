@@ -54,12 +54,12 @@
         <el-table-column property="count" label="使用次数" align="right" show-overflow-tooltip />
         <el-table-column label="类型">
           <template #default="scope">
-            {{ typeMapping.find((item) => item.value === scope.row.tagType).label }}
+            {{ typeMapping.find((item) => item.value === scope.row.tagType)!.label }}
           </template>
         </el-table-column>
         <el-table-column label="操作权限">
           <template #default="scope">
-            {{ authorityMapping.find((item) => item.value === scope.row.authority).label }}
+            {{ authorityMapping.find((item) => item.value === scope.row.authority)!.label }}
           </template>
         </el-table-column>
         <el-table-column label="适用类型">
@@ -77,15 +77,8 @@
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon class="icon-btn" title="编辑" @click="openTagPopup(scope.row)">
-              <edit />
-            </el-icon>
+            <i class="icon-btn admin icon-edit" title="编辑" @click="openTagPopup(scope.row)" />
           </template>
         </el-table-column>
       </el-table>
@@ -159,7 +152,6 @@ import { nextTick, reactive, ref, toRefs } from "vue";
 import { formatDate, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ResourceService } from "@/api/request";
-import { Operation, Edit } from "@element-plus/icons-vue";
 import { ElMessage, ElTree } from "element-plus";
 import { ResourceTag, ResourceType } from "@/typings/object";
 import { OperateResourceTagParams, ResourceTagListParams } from "@/typings/params";
@@ -169,12 +161,12 @@ export interface MyResourceTagListParams extends ResourceTagListParams {
   type?: string[];
 }
 
-export default {
-  components: {
-    Operation,
-    Edit,
-  },
+/** 资源标签操作参数 */
+export interface MyOperateResourceTagParams extends OperateResourceTagParams {
+  tagId?: string;
+}
 
+export default {
   setup() {
     const { switchPage } = useMyRouter();
     const assetsData = {
@@ -204,7 +196,7 @@ export default {
       selectedData: [] as ResourceTag[],
       searchData: { currentPage: 1, limit: 20 } as MyResourceTagListParams,
       resourceTypeList: [] as ResourceType[],
-      operateData: {} as OperateResourceTagParams,
+      operateData: {} as MyOperateResourceTagParams,
       tagPopupShow: false,
     });
     const resourceTypeTree = ref<InstanceType<typeof ElTree>>();

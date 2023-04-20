@@ -74,9 +74,7 @@
                 {{ item }}
               </el-tag>
             </div>
-            <el-icon class="icon-btn" title="管理标签" @click="setTag(scope.row)">
-              <edit />
-            </el-icon>
+            <i class="icon-btn admin icon-edit" title="管理标签" @click="setTag(scope.row)" />
           </template>
         </el-table-column>
         <el-table-column label="用户" min-width="200" show-overflow-tooltip>
@@ -114,34 +112,25 @@
               placement="top"
               v-if="[5, 6].includes(scope.row.status)"
             >
-              {{ statusMapping.find((item) => item.value === scope.row.status).label }}
+              {{ statusMapping.find((item) => item.value === scope.row.status)!.label }}
             </el-tooltip>
-            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status).label }}</span>
+            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status)!.label }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
-          <template #header>
-            <el-icon class="operation-icon" title="操作">
-              <operation />
-            </el-icon>
-          </template>
           <template #default="scope">
-            <el-icon
-              class="icon-btn"
+            <i
+              class="icon-btn admin icon-stop"
               title="封禁"
               @click="banNode(scope.row.nodeId)"
               v-if="![5, 6].includes(scope.row.status)"
-            >
-              <close />
-            </el-icon>
-            <el-icon
-              class="icon-btn"
+            />
+            <i
+              class="icon-btn admin icon-restore"
               title="解禁"
               @click="restore(scope.row.nodeId)"
               v-if="[5, 6].includes(scope.row.status)"
-            >
-              <check />
-            </el-icon>
+            />
           </template>
         </el-table-column>
       </el-table>
@@ -210,7 +199,6 @@ import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { NodeService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
-import { Operation, Edit, Close, Check } from "@element-plus/icons-vue";
 import { Node, NodeTag } from "@/typings/object";
 import { NodeListParams, OperateNodeParams, SetNodeTagParams } from "@/typings/params";
 
@@ -228,13 +216,6 @@ export interface MySetNodeTagParams extends SetNodeTagParams {
 }
 
 export default {
-  components: {
-    Operation,
-    Edit,
-    Close,
-    Check,
-  },
-
   setup() {
     const { query, switchPage, openPage } = useMyRouter();
     const assetsData = {

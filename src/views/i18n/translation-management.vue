@@ -100,7 +100,7 @@
           <el-table-column label="状态">
             <template #default="scope">
               <span v-if="scope.row.status !== 3">
-                {{ statusMapping.find((item) => item.value === scope.row.status).label }}
+                {{ statusMapping.find((item) => item.value === scope.row.status)!.label }}
               </span>
             </template>
           </el-table-column>
@@ -119,20 +119,25 @@
             <div class="item-form">
               <div class="form-item">
                 <div class="item-label">key</div>
-                <el-input v-model="editData.key" placeholder="请输入key" />
+                <el-input v-model="editData!.key" placeholder="请输入key" />
               </div>
               <div class="form-item">
                 <div class="item-label">默认译文 Chinese, China(zh-CN)</div>
-                <el-input v-model="editData.value.zh.content" :rows="6" type="textarea" placeholder="请输入中文译文" />
+                <el-input
+                  v-model="editData!.value.zh!.content"
+                  :rows="6"
+                  type="textarea"
+                  placeholder="请输入中文译文"
+                />
               </div>
               <div class="form-item">
                 <div class="item-label">备注</div>
-                <el-input v-model="editData.comment" placeholder="请输入备注" :rows="4" type="textarea" />
+                <el-input v-model="editData!.comment" placeholder="请输入备注" :rows="4" type="textarea" />
               </div>
               <div class="form-item">
                 <div class="item-label">标签</div>
                 <div class="tag-area">
-                  <el-select style="width: 100%" v-model="editData.tagIds" placeholder="请选择标签" multiple clearable>
+                  <el-select style="width: 100%" v-model="editData!.tagIds" placeholder="请选择标签" multiple clearable>
                     <el-option
                       v-for="item in translationTagsList"
                       :key="item._id"
@@ -157,13 +162,11 @@
             <div class="top-bar">
               <div class="item-info">
                 <div class="item-key">
-                  <span>{{ editData.key }}</span>
-                  <el-icon class="icon-btn" title="复制" @click="copy(editData.key)">
-                    <copy-document />
-                  </el-icon>
+                  <span>{{ editData!.key }}</span>
+                  <i class="icon-btn admin icon-copy" title="复制" @click="copy(editData!.key || '')" />
                 </div>
                 <div class="item-status">
-                  {{ statusMapping.find((item) => item.value === editData.status).label }}
+                  {{ statusMapping.find((item) => item.value === editData!.status)!.label }}
                 </div>
               </div>
               <div class="btns">
@@ -172,7 +175,7 @@
                 <el-button
                   type="success"
                   @click="save(true)"
-                  :disabled="!editData.value.zh.content || !editData.value.en.content"
+                  :disabled="!editData!.value.zh!.content || !editData!.value.en!.content"
                 >
                   保存并提交
                 </el-button>
@@ -184,7 +187,7 @@
                 <div class="form-item">
                   <div class="item-label">Chinese, China(zh-CN) 默认语言</div>
                   <el-input
-                    v-model="editData.value.zh.content"
+                    v-model="editData!.value.zh!.content"
                     :rows="6"
                     type="textarea"
                     placeholder="请输入中文译文"
@@ -193,7 +196,7 @@
                 <div class="form-item">
                   <div class="item-label">English, United States(en-US)</div>
                   <el-input
-                    v-model="editData.value.en.content"
+                    v-model="editData!.value.en!.content"
                     :rows="6"
                     type="textarea"
                     placeholder="请输入英文译文"
@@ -203,14 +206,14 @@
               <div class="form-row">
                 <div class="form-item">
                   <div class="item-label">备注</div>
-                  <el-input v-model="editData.comment" placeholder="请输入备注" :rows="4" type="textarea" />
+                  <el-input v-model="editData!.comment" placeholder="请输入备注" :rows="4" type="textarea" />
                 </div>
                 <div class="form-item">
                   <div class="item-label">标签</div>
                   <div class="tag-area">
                     <el-select
                       style="width: 100%"
-                      v-model="editData.tagIds"
+                      v-model="editData!.tagIds"
                       placeholder="请选择标签"
                       multiple
                       clearable
@@ -315,7 +318,7 @@ import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox, ElTable } from "element-plus";
 import { InternationalizationService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
-import { CopyDocument, UploadFilled, Document } from "@element-plus/icons-vue";
+import { UploadFilled, Document } from "@element-plus/icons-vue";
 import XLSX from "xlsx";
 import { Translation, TranslationTag } from "@/typings/object";
 import { CreateOrEditTranslationParams, TranslationListParams } from "@/typings/params";
@@ -350,7 +353,6 @@ export interface ImportData {
 
 export default {
   components: {
-    CopyDocument,
     UploadFilled,
     Document,
   },
@@ -738,7 +740,7 @@ export default {
       },
 
       /** 添加新标签 */
-      async newTag(type: "editData" | "setTagData") {
+      async newTag(type: "editData" | "setTagData" | "importData") {
         const { newTag } = data.setTagData;
         if (!newTag) return;
 
