@@ -551,7 +551,7 @@ export default {
 
       /** 关闭资源列表弹窗 */
       closeResourcePopup() {
-        tableRef.value?.clearSelection();
+        tableRef.value!.clearSelection();
         data.resourcePopupShow = false;
         data.selectedResourceData = [];
       },

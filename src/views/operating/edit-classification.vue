@@ -92,6 +92,7 @@
               v-model="formData.myStartTime"
               type="datetime"
               placeholder="请选择启用时间"
+              :disabled-date="disabledDate"
               v-if="formData.setStartTime"
             />
           </template>
@@ -110,6 +111,7 @@
               v-model="formData.myLimitTime"
               type="datetime"
               placeholder="请选择停用时间"
+              :disabled-date="disabledDate"
               v-if="formData.setLimitTime"
             />
           </template>
@@ -307,6 +309,9 @@ export default {
   setup() {
     const { query, switchPage } = useMyRouter();
     const tableRef = ref<InstanceType<typeof ElTable>>();
+    const disabledDate = (time: Date) => {
+      return time.getTime() <= Date.now();
+    };
     const assetsData = {
       insertModeMapping: [{ value: 1, label: "系统解析" }],
       tagTypeMapping: [
@@ -736,7 +741,7 @@ export default {
 
     /** 表单验证 */
     const validate = () => {
-      const { name, priority, status, setStartTime, myStartTime } = data.formData;
+      const { name, priority, status, setStartTime, myStartTime, setLimitTime, myLimitTime } = data.formData;
       if (!name) {
         ElMessage("请输入名称");
         return false;
@@ -752,6 +757,23 @@ export default {
       } else if (status === 1 && setStartTime && !myStartTime) {
         ElMessage("请选择启用时间");
         return false;
+      } else if (status === 2 && setLimitTime && !myLimitTime) {
+        ElMessage("请选择停用时间");
+        return false;
+      } else if (myStartTime) {
+        const startTime = new Date(myStartTime).getTime();
+        const now = Date.now();
+        if (startTime <= now) {
+          ElMessage("启用时间不可早于当前时间");
+          return false;
+        }
+      } else if (myLimitTime) {
+        const limitTime = new Date(myLimitTime).getTime();
+        const now = Date.now();
+        if (limitTime <= now) {
+          ElMessage("停用时间不可早于当前时间");
+          return false;
+        }
       }
       return true;
     };
@@ -784,6 +806,7 @@ export default {
 
     return {
       tableRef,
+      disabledDate,
       ...assetsData,
       ...toRefs(data),
       ...methods,
