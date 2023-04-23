@@ -53,14 +53,10 @@
         </el-table-column>
         <el-table-column property="count" label="使用次数" align="right" show-overflow-tooltip />
         <el-table-column label="类型">
-          <template #default="scope">
-            {{ typeMapping.find((item) => item.value === scope.row.tagType)!.label }}
-          </template>
+          <template #default="scope">{{ mappingMatching(typeMapping, scope.row.tagType) }}</template>
         </el-table-column>
         <el-table-column label="操作权限">
-          <template #default="scope">
-            {{ authorityMapping.find((item) => item.value === scope.row.authority)!.label }}
-          </template>
+          <template #default="scope">{{ mappingMatching(authorityMapping, scope.row.authority) }}</template>
         </el-table-column>
         <el-table-column label="适用类型">
           <template #default="scope">
@@ -149,7 +145,7 @@
 
 <script lang="ts">
 import { nextTick, reactive, ref, toRefs } from "vue";
-import { formatDate, relativeTime } from "../../utils/common";
+import { formatDate, mappingMatching, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ResourceService } from "@/api/request";
 import { ElMessage, ElTree } from "element-plus";
@@ -342,6 +338,7 @@ export default {
     getResourceTypes();
 
     return {
+      mappingMatching,
       ...assetsData,
       ...toRefs(data),
       resourceTypeTree,

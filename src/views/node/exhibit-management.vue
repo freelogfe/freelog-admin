@@ -102,9 +102,7 @@
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
         <el-table-column label="状态">
-          <template #default="scope">
-            {{ statusMapping.find((item) => item.value === scope.row.onlineStatus)!.label }}
-          </template>
+          <template #default="scope">{{ mappingMatching(statusMapping, scope.row.onlineStatus) }}</template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
           <template #default="scope">
@@ -150,7 +148,7 @@
 
 <script lang="ts">
 import { defineAsyncComponent, reactive, toRefs } from "vue";
-import { dateRange, formatDate, relativeTime } from "../../utils/common";
+import { dateRange, formatDate, mappingMatching, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ContractsService, NodeService, ResourceService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
@@ -284,6 +282,7 @@ export default {
     getResourceTypes();
 
     return {
+      mappingMatching,
       dateRangeShortcuts,
       ...assetsData,
       ...toRefs(data),

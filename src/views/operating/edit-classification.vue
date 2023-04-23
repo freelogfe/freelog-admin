@@ -77,6 +77,8 @@
           @change="
             formData.setStartTime = false;
             formData.myStartTime = null;
+            formData.setLimitTime = false;
+            formData.myLimitTime = null;
           "
         >
           <el-radio :label="1">启用<span class="desc">在资源市场分类筛选器中显示</span></el-radio>
@@ -92,7 +94,6 @@
               v-model="formData.myStartTime"
               type="datetime"
               placeholder="请选择启用时间"
-              :disabled-date="disabledDate"
               v-if="formData.setStartTime"
             />
           </template>
@@ -111,7 +112,6 @@
               v-model="formData.myLimitTime"
               type="datetime"
               placeholder="请选择停用时间"
-              :disabled-date="disabledDate"
               v-if="formData.setLimitTime"
             />
           </template>
@@ -205,14 +205,10 @@
       <el-table-column label="标签" property="tagName" min-width="100" show-overflow-tooltip />
       <el-table-column property="count" label="使用次数" align="right" show-overflow-tooltip />
       <el-table-column label="类型">
-        <template #default="scope">
-          {{ typeMapping.find((item) => item.value === scope.row.tagType)!.label }}
-        </template>
+        <template #default="scope">{{ mappingMatching(typeMapping, scope.row.tagType) }}</template>
       </el-table-column>
       <el-table-column label="操作权限">
-        <template #default="scope">
-          {{ authorityMapping.find((item) => item.value === scope.row.authority)!.label }}
-        </template>
+        <template #default="scope">{{ mappingMatching(authorityMapping, scope.row.authority) }}</template>
       </el-table-column>
       <el-table-column label="适用类型">
         <template #default="scope">
@@ -263,7 +259,7 @@ import { ElMessage, ElTable } from "element-plus";
 import { CreateOrEditClassificationParams, ResourceTagListParams } from "@/typings/params";
 import Sortable from "sortablejs";
 import { ResourceTag, ResourceType } from "@/typings/object";
-import { formatDate } from "@/utils/common";
+import { formatDate, mappingMatching } from "@/utils/common";
 
 /** 运营分类编辑数据 */
 interface MyCreateOrEditClassificationParams extends CreateOrEditClassificationParams {
@@ -309,9 +305,6 @@ export default {
   setup() {
     const { query, switchPage } = useMyRouter();
     const tableRef = ref<InstanceType<typeof ElTable>>();
-    const disabledDate = (time: Date) => {
-      return time.getTime() <= Date.now();
-    };
     const assetsData = {
       insertModeMapping: [{ value: 1, label: "系统解析" }],
       tagTypeMapping: [
@@ -805,8 +798,8 @@ export default {
     getResourceTypes();
 
     return {
+      mappingMatching,
       tableRef,
-      disabledDate,
       ...assetsData,
       ...toRefs(data),
       ...methods,

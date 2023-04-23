@@ -6,9 +6,7 @@
         <el-table :data="rewardData">
           <el-table-column property="title" label="奖励名称" min-width="150" />
           <el-table-column label="奖励类型" min-width="100">
-            <template #default="scope">
-              {{ rewardTypeMapping.find((item: any) => item.value === scope.row.rewardType)!.label }}
-            </template>
+            <template #default="scope">{{ mappingMatching(rewardTypeMapping, scope.row.rewardType) }}</template>
           </el-table-column>
           <el-table-column label="有效期" min-width="250">
             <template #default="scope">{{
@@ -113,9 +111,7 @@
         </el-table-column>
         <el-table-column property="rewardNum" label="发放额度（元）" min-width="250" />
         <el-table-column label="发放状态">
-          <template #default="scope">
-            {{ recordTagMapping.find((item: any) => item.value === scope.row.tag)!.label }}
-          </template>
+          <template #default="scope">{{ mappingMatching(recordTagMapping, scope.row.tag) }}</template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
           <template #default="scope">
@@ -149,7 +145,7 @@
 </template>
 
 <script lang="ts">
-import { formatDate } from "../../utils/common";
+import { formatDate, mappingMatching } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ActivitiesService } from "@/api/request";
 import { defineAsyncComponent, reactive, ref, toRefs } from "vue";
@@ -334,6 +330,7 @@ export default {
     methods.getRewardInfo();
 
     return {
+      mappingMatching,
       ...assetsData,
       tableRef,
       ...toRefs(data),

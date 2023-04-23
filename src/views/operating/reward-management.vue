@@ -27,9 +27,7 @@
       <el-table :data="tableData" stripe v-loading="loading">
         <el-table-column property="title" label="奖励名称" min-width="150" />
         <el-table-column label="奖励类型" min-width="100">
-          <template #default="scope">
-            {{ (rewardTypeMapping.find((item: any) => item.value === scope.row.rewardType)|| {label:''}).label }}
-          </template>
+          <template #default="scope">{{ mappingMatching(rewardTypeMapping, scope.row.rewardType) }}</template>
         </el-table-column>
         <el-table-column label="有效期" min-width="250">
           <template #default="scope">{{
@@ -77,7 +75,7 @@
 </template>
 
 <script lang="ts">
-import { formatDate } from "../../utils/common";
+import { formatDate, mappingMatching } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ActivitiesService } from "@/api/request";
 import { reactive, toRefs } from "vue";
@@ -203,6 +201,7 @@ export default {
     methods.getData(true);
 
     return {
+      mappingMatching,
       ...assetsData,
       ...toRefs(data),
       ...methods,

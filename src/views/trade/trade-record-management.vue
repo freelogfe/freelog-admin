@@ -58,7 +58,7 @@
         </form-item>
         <form-item label="交易状态">
           <el-select v-model="searchData.status" placeholder="请选择交易状态" clearable>
-            <el-option v-for="item in statusList" :key="item.value" :label="item.label" :value="item.value" />
+            <el-option v-for="item in statusMapping" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </form-item>
         <form-item label="交易编号">
@@ -104,7 +104,7 @@
           <template #default="scope">{{ abs(scope.row.transactionAmount) }}</template>
         </el-table-column>
         <el-table-column label="状态">
-          <template #default="scope">{{ statusList.find((item) => item.value === scope.row.status)!.label }}</template>
+          <template #default="scope">{{ mappingMatching(statusMapping, scope.row.status) }}</template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
           <template #default="scope">
@@ -145,7 +145,7 @@
         <template #default="scope">{{ scope.row.afterBalance }}</template>
       </el-table-column>
       <el-table-column label="交易状态" width="100">
-        <template #default="scope">{{ statusList.find((item) => item.value === scope.row.status)!.label }}</template>
+        <template #default="scope">{{ mappingMatching(statusMapping, scope.row.status) }}</template>
       </el-table-column>
     </el-table>
   </el-dialog>
@@ -153,7 +153,7 @@
 
 <script lang="ts">
 import { computed, reactive, toRefs } from "vue";
-import { dateRange, formatDate } from "../../utils/common";
+import { dateRange, formatDate, mappingMatching } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { TransactionsService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
@@ -173,7 +173,7 @@ export default {
         { value: 1, label: "转账" },
         { value: 2, label: "合约交易" },
       ],
-      statusList: [
+      statusMapping: [
         { value: 1, label: "交易确认中" },
         { value: 2, label: "交易成功" },
         { value: 3, label: "交易关闭" },
@@ -258,6 +258,7 @@ export default {
 
     return {
       dateRangeShortcuts,
+      mappingMatching,
       switchPage,
       ...assetsData,
       ...toRefs(data),

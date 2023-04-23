@@ -113,9 +113,9 @@
               placement="top"
               v-if="scope.row.status === 2"
             >
-              {{ statusMapping.find((item: any) => item.value === scope.row.status)!.label }}
+              {{ mappingMatching(statusMapping, scope.row.status) }}
             </el-tooltip>
-            <span v-else>{{ statusMapping.find((item: any) => item.value === scope.row.status)!.label }}</span>
+            <span v-else>{{ mappingMatching(statusMapping, scope.row.status) }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="100">
@@ -245,9 +245,9 @@
             placement="top"
             v-if="scope.row.status === 2"
           >
-            {{ statusMapping.find((item: any) => item.value === scope.row.status)!.label }}
+            {{ mappingMatching(statusMapping, scope.row.status) }}
           </el-tooltip>
-          <span v-else>{{ statusMapping.find((item: any) => item.value === scope.row.status)!.label }}</span>
+          <span v-else>{{ mappingMatching(statusMapping, scope.row.status) }}</span>
         </template>
       </el-table-column>
     </el-table>
@@ -329,7 +329,7 @@
 </template>
 
 <script lang="ts">
-import { formatDate, relativeTime } from "../../utils/common";
+import { formatDate, mappingMatching, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ResourceService, ContractsService, ActivitiesService } from "@/api/request";
 import { reactive, toRefs, computed, defineAsyncComponent, ref, nextTick } from "vue";
@@ -675,6 +675,7 @@ export default {
     getResourceTypes();
 
     return {
+      mappingMatching,
       tableRef,
       ...assetsData,
       ...toRefs(data),

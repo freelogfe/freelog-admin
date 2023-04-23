@@ -9,7 +9,7 @@
             v-model="searchData.keywords"
             :placeholder="
               searchData.keywordsType
-                ? '请输入' + keywordsTypeList.find((item) => item.value === searchData.keywordsType)!.label
+                ? '请输入' + mappingMatching(keywordsTypeList, searchData.keywordsType)
                 : '请先选择关键字类型'
             "
             clearable
@@ -75,9 +75,7 @@
           </template>
         </el-table-column>
         <el-table-column label="类型">
-          <template #default="scope">
-            {{ subjectTypeList.find((item) => item.value === scope.row.subjectType)!.label }}
-          </template>
+          <template #default="scope">{{ mappingMatching(subjectTypeList, scope.row.subjectType) }}</template>
         </el-table-column>
         <el-table-column property="contractName" label="所签授权策略" min-width="150" show-overflow-tooltip />
         <el-table-column label="供方" min-width="250">
@@ -126,9 +124,7 @@
           <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
         </el-table-column>
         <el-table-column label="状态">
-          <template #default="scope">
-            {{ statusMapping.find((item) => item.value === scope.row.myStatus)!.label }}
-          </template>
+          <template #default="scope">{{ mappingMatching(statusMapping, scope.row.myStatus) }}</template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
           <template #default="scope">
@@ -195,7 +191,7 @@
 </template>
 
 <script lang="ts">
-import { dateRange, formatDate } from "../../utils/common";
+import { dateRange, formatDate, mappingMatching } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ContractsService, NodeService, ResourceService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
@@ -374,6 +370,7 @@ export default {
     methods.getData(true);
 
     return {
+      mappingMatching,
       dateRangeShortcuts,
       ...assetsData,
       ...toRefs(data),

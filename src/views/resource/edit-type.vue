@@ -117,9 +117,7 @@
         <template #default="scope">{{ scope.row.dependencies || "-" }}</template>
       </el-table-column>
       <el-table-column label="录入方式" min-width="200">
-        <template #default="scope">
-          {{ insertModeMapping.find((item) => item.value === scope.row.insertMode)!.label }}
-        </template>
+        <template #default="scope">{{ mappingMatching(insertModeMapping, scope.row.insertMode) }}</template>
       </el-table-column>
     </el-table>
     <div class="pagination-box">
@@ -156,6 +154,7 @@ import { ElMessage, ElTable } from "element-plus";
 import { CreateOrEditResourceTypeParams, ResourcePropertyListParams } from "@/typings/params";
 import Sortable from "sortablejs";
 import { ResourceProperty } from "@/typings/object";
+import { mappingMatching } from "@/utils/common";
 
 /** 父类选项 */
 interface ParentType {
@@ -463,6 +462,7 @@ export default {
     methods.getData();
 
     return {
+      mappingMatching,
       tableRef,
       ...assetsData,
       ...toRefs(data),

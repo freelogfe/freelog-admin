@@ -40,9 +40,7 @@
         </el-table-column>
         <el-table-column property="totalSetCount" label="用户数" align="right" min-width="100" show-overflow-tooltip />
         <el-table-column label="类型" min-width="100" show-overflow-tooltip>
-          <template #default="scope">
-            {{ typeMapping.find((item) => item.value === scope.row.type)!.label }}
-          </template>
+          <template #default="scope">{{ mappingMatching(typeMapping, scope.row.type) }}</template>
         </el-table-column>
         <el-table-column fixed="right" width="70">
           <template #default="scope">
@@ -65,7 +63,7 @@
 
 <script lang="ts">
 import { reactive, toRefs } from "vue";
-import { formatDate, relativeTime } from "../../utils/common";
+import { formatDate, mappingMatching, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { UserService } from "@/api/request";
@@ -176,6 +174,7 @@ export default {
     methods.getData();
 
     return {
+      mappingMatching,
       ...assetsData,
       ...toRefs(data),
       ...methods,

@@ -110,11 +110,11 @@
               effect="dark"
               :content="`${scope.row.reason}${scope.row.remark ? '（' + scope.row.remark + '）' : ''}`"
               placement="top"
-              v-if="[5, 6].includes(scope.row.status)"
+              v-if="[4, 5, 6, 12].includes(scope.row.status)"
             >
-              {{ statusMapping.find((item) => item.value === scope.row.status)!.label }}
+              {{ mappingMatching(statusMapping, scope.row.status) }}
             </el-tooltip>
-            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status)!.label }}</span>
+            <span v-else>{{ mappingMatching(statusMapping, scope.row.status) }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
@@ -123,13 +123,13 @@
               class="icon-btn admin icon-stop"
               title="封禁"
               @click="banNode(scope.row.nodeId)"
-              v-if="![5, 6].includes(scope.row.status)"
+              v-if="![4, 5, 6, 12].includes(scope.row.status)"
             />
             <i
               class="icon-btn admin icon-restore"
               title="解禁"
               @click="restore(scope.row.nodeId)"
-              v-if="[5, 6].includes(scope.row.status)"
+              v-if="[4, 5, 6, 12].includes(scope.row.status)"
             />
           </template>
         </el-table-column>
@@ -194,7 +194,7 @@
 
 <script lang="ts">
 import { reactive, toRefs } from "vue";
-import { dateRange, formatDate, relativeTime } from "../../utils/common";
+import { dateRange, formatDate, mappingMatching, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { NodeService } from "@/api/request";
@@ -220,10 +220,13 @@ export default {
     const { query, switchPage, openPage } = useMyRouter();
     const assetsData = {
       statusMapping: [
-        { value: 1, label: "下线" },
-        { value: 2, label: "正常" },
+        { value: 1, label: "公开" },
+        { value: 2, label: "私密" },
+        { value: 4, label: "封停" },
         { value: 5, label: "封停" },
         { value: 6, label: "封停" },
+        { value: 8, label: "暂停运营" },
+        { value: 12, label: "封停" },
       ],
       domain: process.env.VUE_APP_BASE_API as string,
     };
@@ -281,7 +284,7 @@ export default {
           });
 
           const bannedIds = dataList
-            .filter((item: Node) => [5, 6].includes(item.status))
+            .filter((item: Node) => [4, 5, 6, 12].includes(item.status))
             .map((item: Node) => {
               return item.nodeId;
             })
@@ -488,6 +491,7 @@ export default {
     getNodeTags();
 
     return {
+      mappingMatching,
       dateRangeShortcuts,
       ...assetsData,
       ...toRefs(data),

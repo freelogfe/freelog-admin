@@ -51,9 +51,9 @@
         <el-table-column label="审核状态">
           <template #default="scope">
             <el-tooltip effect="dark" :content="scope.row.auditMsg" placement="top" v-if="scope.row.status === 2">
-              {{ statusMapping.find((item) => item.value === scope.row.status)!.label }}
+              {{ mappingMatching(statusMapping, scope.row.status) }}
             </el-tooltip>
-            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status)!.label }}</span>
+            <span v-else>{{ mappingMatching(statusMapping, scope.row.status) }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
@@ -106,7 +106,7 @@
 </template>
 
 <script lang="ts">
-import { formatDate, relativeTime } from "../../utils/common";
+import { formatDate, mappingMatching, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage } from "element-plus";
 import { UserService } from "@/api/request";
@@ -262,6 +262,7 @@ export default {
     methods.getData(true);
 
     return {
+      mappingMatching,
       ...assetsData,
       ...toRefs(data),
       ...methods,

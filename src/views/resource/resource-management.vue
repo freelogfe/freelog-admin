@@ -151,9 +151,9 @@
               placement="top"
               v-if="scope.row.status === 2"
             >
-              {{ statusMapping.find((item) => item.value === scope.row.status)!.label }}
+              {{ mappingMatching(statusMapping, scope.row.status) }}
             </el-tooltip>
-            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status)!.label }}</span>
+            <span v-else>{{ mappingMatching(statusMapping, scope.row.status) }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="70">
@@ -304,7 +304,7 @@
 </template>
 
 <script lang="ts">
-import { dateRange, formatDate, relativeTime } from "../../utils/common";
+import { dateRange, formatDate, mappingMatching, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox, ElTable } from "element-plus";
 import { ResourceService, ContractsService, ActivitiesService } from "@/api/request";
@@ -729,6 +729,7 @@ export default {
 
     return {
       dateRangeShortcuts,
+      mappingMatching,
       tableRef,
       ...assetsData,
       ...toRefs(data),

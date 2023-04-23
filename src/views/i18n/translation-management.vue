@@ -99,9 +99,7 @@
           </el-table-column>
           <el-table-column label="状态">
             <template #default="scope">
-              <span v-if="scope.row.status !== 3">
-                {{ statusMapping.find((item) => item.value === scope.row.status)!.label }}
-              </span>
+              <span v-if="scope.row.status !== 3">{{ mappingMatching(statusMapping, scope.row.status) }}</span>
             </template>
           </el-table-column>
         </el-table>
@@ -165,9 +163,7 @@
                   <span>{{ editData!.key }}</span>
                   <i class="icon-btn admin icon-copy" title="复制" @click="copy(editData!.key || '')" />
                 </div>
-                <div class="item-status">
-                  {{ statusMapping.find((item) => item.value === editData!.status)!.label }}
-                </div>
+                <div class="item-status">{{ mappingMatching(statusMapping, editData!.status) }}</div>
               </div>
               <div class="btns">
                 <el-button @click="cancel()">取消</el-button>
@@ -313,7 +309,7 @@
 
 <script lang="ts">
 import { nextTick, reactive, ref, toRefs } from "vue";
-import { formatDate, relativeTime } from "../../utils/common";
+import { formatDate, mappingMatching, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox, ElTable } from "element-plus";
 import { InternationalizationService } from "@/api/request";
@@ -820,6 +816,7 @@ export default {
 
     return {
       dateRangeShortcuts,
+      mappingMatching,
       ...assetsData,
       ...toRefs(data),
       tableRef,

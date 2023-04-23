@@ -119,3 +119,19 @@ export const dateRange = (dateRange: string[] | undefined | null) => {
 
   return [startDate, endDate];
 };
+
+/**
+ * 映射匹配
+ * @param dateRange
+ */
+export const mappingMatching = (mapping: any, value: number | undefined) => {
+  if (value === undefined) return "";
+
+  const result = mapping.find((item: { value: number; label: string }) => item.value === value);
+  if (result) {
+    return result.label;
+  } else {
+    console.error("无法查询对应映射，请联系开发人员更新相关映射规则");
+    return "";
+  }
+};

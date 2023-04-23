@@ -41,9 +41,7 @@
           <template #default="scope">{{ scope.row.dependencies || "-" }}</template>
         </el-table-column>
         <el-table-column label="录入方式" min-width="200">
-          <template #default="scope">
-            {{ insertModeMapping.find((item) => item.value === scope.row.insertMode)!.label }}
-          </template>
+          <template #default="scope">{{ mappingMatching(insertModeMapping, scope.row.insertMode) }}</template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
           <template #default="scope">
@@ -84,7 +82,7 @@
 </template>
 
 <script lang="ts">
-import { formatDate } from "../../utils/common";
+import { formatDate, mappingMatching } from "../../utils/common";
 import { ResourceService } from "@/api/request";
 import { reactive, toRefs, watch } from "vue";
 import { useMyRouter } from "@/utils/hooks";
@@ -176,6 +174,7 @@ export default {
     methods.getData(true);
 
     return {
+      mappingMatching,
       switchPage,
       ...assetsData,
       ...toRefs(data),

@@ -81,7 +81,7 @@
         <el-table-column label="状态" min-width="250">
           <template #default="scope">
             <div>
-              <div>{{ statusMapping.find((item) => item.value === scope.row.status)!.label }}</div>
+              <div>{{ mappingMatching(statusMapping, scope.row.status) }}</div>
               <div v-if="scope.row.status === 1 && scope.row.limitTime">
                 将于 {{ formatDate(scope.row.limitTime) }} 停用
               </div>
@@ -125,7 +125,7 @@
 </template>
 
 <script lang="ts">
-import { formatDate } from "../../utils/common";
+import { formatDate, mappingMatching } from "../../utils/common";
 import { ActivitiesService } from "@/api/request";
 import { reactive, toRefs } from "vue";
 import { useMyRouter } from "@/utils/hooks";
@@ -255,6 +255,7 @@ export default {
     methods.getParentList();
 
     return {
+      mappingMatching,
       openPage,
       ...assetsData,
       ...toRefs(data),

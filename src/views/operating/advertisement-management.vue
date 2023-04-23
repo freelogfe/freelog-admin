@@ -17,7 +17,7 @@
         </form-item>
         <form-item label="状态">
           <el-select v-model="searchData.status" placeholder="请选择状态" clearable>
-            <el-option v-for="item in statusOptions" :key="item.value" :value="item.value" :label="item.label" />
+            <el-option v-for="item in statusMapping" :key="item.value" :value="item.value" :label="item.label" />
           </el-select>
         </form-item>
       </div>
@@ -36,9 +36,7 @@
           <template #default="scope">{{ scope.row.title || "-" }}</template>
         </el-table-column>
         <el-table-column label="状态">
-          <template #default="scope">
-            {{ statusOptions.find((item) => item.value === scope.row.status)!.label }}
-          </template>
+          <template #default="scope">{{ mappingMatching(statusMapping, scope.row.status) }}</template>
         </el-table-column>
         <el-table-column label="曝光量">
           <template #default="scope">{{ scope.row.ev || "-" }}</template>
@@ -117,7 +115,7 @@
 </template>
 
 <script lang="ts">
-import { formatDate } from "../../utils/common";
+import { formatDate, mappingMatching } from "../../utils/common";
 import { ActivitiesService } from "@/api/request";
 import { reactive, toRefs } from "vue";
 import { useMyRouter } from "@/utils/hooks";
@@ -134,7 +132,7 @@ export default {
         { value: 3, label: "概览页，右侧Banner" },
         { value: 4, label: "发现页，顶部Banner" },
       ],
-      statusOptions: [
+      statusMapping: [
         { value: 1, label: "已排期" },
         { value: 2, label: "投放中" },
         { value: 3, label: "已结束" },
@@ -216,6 +214,7 @@ export default {
     methods.getData(true);
 
     return {
+      mappingMatching,
       openPage,
       ...assetsData,
       ...toRefs(data),

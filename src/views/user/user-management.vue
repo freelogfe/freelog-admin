@@ -142,9 +142,9 @@
               placement="top"
               v-if="scope.row.status === 1"
             >
-              {{ statusMapping.find((item) => item.value === scope.row.status)!.label }}
+              {{ mappingMatching(statusMapping, scope.row.status) }}
             </el-tooltip>
-            <span v-else>{{ statusMapping.find((item) => item.value === scope.row.status)!.label }}</span>
+            <span v-else>{{ mappingMatching(statusMapping, scope.row.status) }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
@@ -231,7 +231,7 @@
 
 <script lang="ts">
 import { nextTick, reactive, toRefs } from "vue";
-import { formatDate, relativeTime, dateRange } from "../../utils/common";
+import { formatDate, relativeTime, dateRange, mappingMatching } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { ContractsService, NodeService, ResourceService, UserService } from "@/api/request";
@@ -523,6 +523,7 @@ export default {
 
     return {
       dateRangeShortcuts,
+      mappingMatching,
       ...assetsData,
       ...toRefs(data),
       ...methods,

@@ -108,9 +108,7 @@
           </template>
         </el-table-column>
         <el-table-column label="状态">
-          <template #default="scope">
-            {{ statusMapping.find((item) => item.value === scope.row.status)!.label }}
-          </template>
+          <template #default="scope">{{ mappingMatching(statusMapping, scope.row.status) }}</template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
           <template #default="scope">
@@ -245,7 +243,7 @@
 </template>
 
 <script lang="ts">
-import { dateRange, formatDate, relativeTime } from "../../utils/common";
+import { dateRange, formatDate, mappingMatching, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { reactive, toRefs, nextTick } from "vue";
@@ -440,6 +438,7 @@ export default {
 
     return {
       dateRangeShortcuts,
+      mappingMatching,
       ...assetsData,
       ...toRefs(data),
       ...methods,

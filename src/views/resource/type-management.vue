@@ -79,9 +79,7 @@
           </template>
         </el-table-column>
         <el-table-column label="状态">
-          <template #default="scope">
-            {{ statusMapping.find((item) => item.value === scope.row.status)!.label }}
-          </template>
+          <template #default="scope">{{ mappingMatching(statusMapping, scope.row.status) }}</template>
         </el-table-column>
         <el-table-column fixed="right" width="70">
           <template #default="scope">
@@ -138,7 +136,7 @@
 </template>
 
 <script lang="ts">
-import { formatDate } from "../../utils/common";
+import { formatDate, mappingMatching } from "../../utils/common";
 import { ResourceService } from "@/api/request";
 import { reactive, toRefs, watch } from "vue";
 import { useMyRouter } from "@/utils/hooks";
@@ -269,6 +267,7 @@ export default {
     methods.getParentList();
 
     return {
+      mappingMatching,
       openPage,
       ...assetsData,
       ...toRefs(data),
