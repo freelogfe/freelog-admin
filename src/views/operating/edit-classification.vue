@@ -186,7 +186,10 @@
           @click="clickParentResourcesType(item, list.level)"
         >
           {{ item.name }}
-          <i class="admin icon-triangle-arrowright" v-if="item.children.length" />
+          <i
+            class="admin icon-triangle-arrowright"
+            v-if="item.children.length || (popupSearchData.category === 2 && item.code && list.level === 0)"
+          />
         </div>
       </div>
     </div>
@@ -438,15 +441,17 @@ export default {
       /** 获取资源标签数据 */
       async getSourcesData() {
         const { category } = data.popupSearchData;
-        if ([1, 2].includes(category)) {
-          this.getParentResourceTypeList();
+        if (category === 1) {
+          this.getBasicResourceTypeList();
+        } else if (category === 2) {
+          this.getCustomResourceTypeList();
         } else if (category === 3) {
           this.getResourceTagsData(true);
         }
       },
 
-      /** 初始化资源类型选项数据 */
-      async getParentResourceTypeList() {
+      /** 初始化基础资源类型选项数据 */
+      async getBasicResourceTypeList() {
         const { codeOrName = "", category } = data.popupSearchData;
         const result = await ResourceService.getResourceTypeGroupList({ codeOrName, category });
         const { errcode } = result.data;
@@ -462,6 +467,38 @@ export default {
           const list = [defaultOption, ...result.data.data];
           data.resourcesTypeOptions = [{ level: 0, list }];
         }
+      },
+
+      /** 初始化自定义资源类型选项数据 */
+      async getCustomResourceTypeList() {
+        const { codeOrName = "", category } = data.popupSearchData;
+        const basicResult = await ResourceService.getResourceTypeGroupList({ codeOrName, category: 1 });
+        if (basicResult.data.errcode !== 0) return;
+
+        const customResult = await ResourceService.getResourceTypeGroupList({ codeOrName, category });
+        if (basicResult.data.errcode !== 0) return;
+
+        const basicList = [...basicResult.data.data];
+        const customList = [...customResult.data.data];
+        for (let i = 0; i < basicList.length; i++) {
+          const index = customList.findIndex((custom) => custom.code === basicList[i].code);
+          if (index === -1) {
+            basicList[i].children = [];
+          } else {
+            basicList[i] = customList[index];
+          }
+        }
+
+        const defaultOption: ParentType = {
+          code: "",
+          name: "所有类型",
+          children: [],
+          parentCodeArr: [""],
+          parentChain: [{ code: "", name: "所有类型" }],
+          category,
+        };
+        const list = [defaultOption, ...basicList];
+        data.resourcesTypeOptions = [{ level: 0, list }];
       },
 
       /** 获取资源标签数据 */
@@ -542,8 +579,8 @@ export default {
         data.resourcesTypeOptions[level].checked = item.code;
         data.resourcesTypeOptions.splice(level + 1);
 
-        if (item.children!.length) {
-          // 选择非叶子类型
+        if (item.children!.length || (data.popupSearchData.category === 2 && item.code && level === 0)) {
+          // 选择非叶子类型 或 自定义类型第一级类型
           const defaultOption: ParentType = {
             code: item.code,
             name: "所有子类型",
