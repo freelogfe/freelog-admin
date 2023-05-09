@@ -58,14 +58,7 @@
                   <span v-else-if="item.type === 5">{{ item.name }}/所有基础类型</span>
                   <span v-else-if="item.type === 6">所有自定义类型</span>
                   <span v-else-if="item.type === 7">{{ item.name }}/所有自定义类型</span>
-                  <span v-else>
-                    {{
-                      item.parentChain
-                        .reverse()
-                        .map((item: any) => item.name)
-                        .join("/")
-                    }}
-                  </span>
+                  <span v-else>{{ getSourcesLine(item.parentChain) }}</span>
                 </template>
                 <template v-if="item.type === 3">
                   <i class="admin icon-tag" />
@@ -175,6 +168,16 @@ export default {
           data.total = totalItem;
           data.loading = false;
         }
+      },
+
+      /** 获取映射来源链 */
+      getSourcesLine(list: any[]) {
+        const result = [...list];
+
+        return result
+          .reverse()
+          .map((item: any) => item.name)
+          .join("/");
       },
 
       /** 获取父类选项数据 */
