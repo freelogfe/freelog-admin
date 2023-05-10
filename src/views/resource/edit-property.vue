@@ -50,7 +50,7 @@
       </form-item>
       <form-item label="单位" v-if="formData.format === 2">
         <el-select placeholder="请选择单位" v-model="formData.formatUnit" clearable>
-          <el-option v-for="item in formatUnitList" :key="item.value" :value="item.value" :label="item.label" />
+          <el-option v-for="item in formatUnitList" :key="item" :value="item" :label="item" />
         </el-select>
         <el-checkbox style="margin-left: 20px" v-model="formData.autoConvert" label="自动换算单位词头" />
       </form-item>
@@ -77,15 +77,7 @@ export default {
         { value: 4, label: "日期" },
         { value: 5, label: "日期和时间" },
       ],
-      formatUnitList: [
-        { value: "byte/b", label: "byte(b)" },
-        { value: "pixel/px", label: "pixel(px)" },
-        { value: "millisecond/ms", label: "millisecond(ms)" },
-        { value: "Pixels Per Inch/ppi", label: "Pixels Per Inch(ppi)" },
-        { value: "frame per second/fps", label: "frame per second(fps)" },
-        { value: "beats per minute/bpm", label: "beats per minute(bpm)" },
-        { value: "bits per second/bps", label: "bits per second(bps)" },
-      ],
+      formatUnitList: ["b", "px", "ms", "ppi", "fps", "bpm", "bps"],
     };
     const data = reactive({
       loading: false,

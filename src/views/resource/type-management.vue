@@ -71,7 +71,9 @@
             <span
               class="text-btn"
               @click="
-                switchPage('/resource/resource-management', { type: `${scope.row.parentName},${scope.row.name}` })
+                switchPage('/resource/resource-management', {
+                  type: scope.row.parentName ? `${scope.row.parentName},${scope.row.name}` : scope.row.name,
+                })
               "
             >
               {{ scope.row.resourceCount || "-" }}
@@ -112,7 +114,12 @@
         </el-table-column>
         <el-table-column label="关联资源数量" min-width="200">
           <template #default="scope">
-            <span class="text-btn" @click="switchPage('/resource/resource-management', { type: scope.row.name })">
+            <span
+              class="text-btn"
+              @click="
+                switchPage('/resource/resource-management', { type: `${scope.row.parentName},${scope.row.name}` })
+              "
+            >
               {{ scope.row.resourceCount || "-" }}
             </span>
           </template>
