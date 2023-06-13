@@ -73,7 +73,7 @@ export default {
       async getData() {
         data.tableData = [];
         data.loading = true;
-        const result = await ResourceService.getResourceTypeGroupList({ codeOrName: data.codeOrName });
+        const result = await ResourceService.getResourceTypeGroupList({ codeOrName: data.codeOrName, category: 1 });
         const { errcode } = result.data;
         if (errcode === 0) {
           dealAllPriority(result.data.data);
