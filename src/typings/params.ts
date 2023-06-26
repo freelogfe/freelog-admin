@@ -137,6 +137,7 @@ export interface ResourceTagListParams extends ListParams {
 export interface OperateResourceTagParams {
   tagIds?: string[];
   tagName?: string;
+  tagNote?: string;
   tagType?: number;
   resourceRange?: string[];
   resourceRangeType?: number;
@@ -176,10 +177,30 @@ export interface CreateOrEditResourcePropertyParams {
   name: string;
   key: string;
   insertMode: number;
-  format: 1 | 2 | 3 | 4 | 5;
+  format: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | null;
   note?: string;
   formatUnit: string;
   autoConvert: boolean;
+  contentRule: ContentRule;
+}
+
+/** 值验证规则 */
+interface ContentRule {
+  minLength?: string; // 字串最小长度
+  maxLength?: string; // 字串最大长度
+  min?: string; // 最小整数
+  max?: string; // 最大整数
+  minDecimal?: string; // 最小小数
+  maxDecimal?: string; // 最大小数
+  precision?: string; // 小数精度
+  startDateTime?: string; // 开始时间
+  limitDateTime?: string; // 结束时间
+  startDate?: string; // 开始时间
+  limitDate?: string; // 结束时间
+  myStartDateTime?: string; // 开始时间（用于表单）
+  myLimitDateTime?: string; // 结束时间（用于表单）
+  myStartDate?: string; // 开始时间（用于表单）
+  myLimitDate?: string; // 结束时间（用于表单）
 }
 
 /** 节点列表参数 */

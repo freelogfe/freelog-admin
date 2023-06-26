@@ -254,7 +254,11 @@ export class ResourceService {
   }
 
   /** 获取资源类型分组列表 */
-  static getResourceTypeGroupList(params: { codeOrName: string; category?: number }): Promise<HttpResponse> {
+  static getResourceTypeGroupList(params: {
+    codeOrName: string;
+    category?: number;
+    status?: 1 | 2;
+  }): Promise<HttpResponse> {
     return Axios("/v2/resources/types/listSimpleByGroup", { method: "GET", params });
   }
 
@@ -435,8 +439,8 @@ export class ActivitiesService {
   }
 
   /** 获取运营分类分组列表 */
-  static getClassificationGroupList(name: string): Promise<HttpResponse> {
-    return Axios("/v2/resources/operation-categories/listSimpleByGroup", { method: "GET", params: { name } });
+  static getClassificationGroupList(name: string, status?: 1 | 2): Promise<HttpResponse> {
+    return Axios("/v2/resources/operation-categories/listSimpleByGroup", { method: "GET", params: { name, status } });
   }
 
   /** 修改运营分类排序 */

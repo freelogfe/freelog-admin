@@ -99,6 +99,9 @@
         </div>
         <el-input v-model="operateData.tagName" placeholder="请输入标签" @keyup.enter="save()" v-else />
       </form-item>
+      <form-item label="标签说明">
+        <el-input v-model="operateData.tagNote" placeholder="请输入标签说明" @keyup.enter="save()" />
+      </form-item>
       <form-item label="标签类型">
         <el-select style="width: 100%" v-model="operateData.tagType" clearable placeholder="请选择标签类型">
           <el-option v-for="item in tagTypeMapping" :key="item.value" :label="item.label" :value="item.value" />

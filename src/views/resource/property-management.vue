@@ -93,7 +93,10 @@ export default {
   setup() {
     const { switchPage } = useMyRouter();
     const assetsData = {
-      insertModeMapping: [{ value: 1, label: "系统解析" }],
+      insertModeMapping: [
+        { value: 1, label: "系统解析" },
+        { value: 2, label: "手动录入" },
+      ],
     };
     const data = reactive({
       loading: false,

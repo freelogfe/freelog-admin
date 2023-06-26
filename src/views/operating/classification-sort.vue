@@ -70,7 +70,7 @@ export default {
       async getData() {
         data.tableData = [];
         data.loading = true;
-        const result = await ActivitiesService.getClassificationGroupList(data.name);
+        const result = await ActivitiesService.getClassificationGroupList(data.name, 1);
         const { errcode } = result.data;
         if (errcode === 0) {
           dealAllPriority(result.data.data);
