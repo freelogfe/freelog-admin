@@ -182,6 +182,7 @@ export interface CreateOrEditResourcePropertyParams {
   formatUnit: string;
   autoConvert: boolean;
   contentRule: ContentRule;
+  analyseMode: 1 | 2;
 }
 
 /** 值验证规则 */

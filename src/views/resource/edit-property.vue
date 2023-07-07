@@ -62,6 +62,11 @@
           </el-select>
           <el-checkbox style="margin-left: 20px" v-model="formData.autoConvert" label="自动换算单位词头" />
         </form-item>
+        <form-item label="属性值获取方式">
+          <el-select style="width: 400px" placeholder="请选择属性值获取方式" v-model="formData.analyseMode" clearable>
+            <el-option v-for="item in analyseModeList" :key="item.label" :value="item.value" :label="item.label" />
+          </el-select>
+        </form-item>
       </template>
 
       <template v-if="formData.insertMode === 2">
@@ -189,6 +194,10 @@ export default {
         { value: 5, label: "日期和时间" },
       ],
       formatUnitList: ["b", "px", "ms", "ppi", "fps", "bpm", "bps"],
+      analyseModeList: [
+        { value: 1, label: "默认" },
+        { value: 2, label: "从资源配置文件中获取条目数" },
+      ],
       inputList: [
         { value: 6, label: "单行文本" },
         { value: 7, label: "多行文本" },
