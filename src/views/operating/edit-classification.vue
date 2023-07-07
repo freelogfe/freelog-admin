@@ -924,7 +924,7 @@ export default {
 
   .property-item {
     padding: 0 8px;
-    height: 26px;
+    min-height: 26px;
     margin: 8px;
     border-radius: 4px;
     background: #ecf5ff;
@@ -948,6 +948,7 @@ export default {
     }
 
     .delete-btn {
+      flex-shrink: 0;
       font-size: 12px;
       height: 18px;
       width: 18px;
