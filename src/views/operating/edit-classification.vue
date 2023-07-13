@@ -174,23 +174,24 @@
 
     <div class="cascader-panel in-popup" v-show="[1, 2].includes(popupSearchData.category)">
       <div class="list" v-for="list in resourcesTypeOptions" :key="list.level">
-        <div
-          class="item"
-          :class="{
-            active: selectedResourceType
-              .map((selected) => selected.code + selected.name)
-              .includes(item.code + item.name),
-          }"
-          v-for="item in list.list"
-          :key="item.code"
-          @click="clickParentResourcesType(item, list.level)"
-        >
-          {{ item.name }}
-          <i
-            class="admin icon-triangle-arrowright"
-            v-if="item.children.length || (popupSearchData.category === 2 && item.code && list.level === 0)"
-          />
-        </div>
+        <template v-for="item in list.list" :key="item.code">
+          <div
+            class="item"
+            :class="{
+              active: selectedResourceType
+                .map((selected) => selected.code + selected.name)
+                .includes(item.code + item.name),
+            }"
+            @click="clickParentResourcesType(item, list.level)"
+            v-if="item.category === popupSearchData.category"
+          >
+            {{ item.name }}
+            <i
+              class="admin icon-triangle-arrowright"
+              v-if="item.children.length || (popupSearchData.category === 2 && item.code && list.level === 0)"
+            />
+          </div>
+        </template>
       </div>
     </div>
 
@@ -478,16 +479,9 @@ export default {
         const customResult = await ResourceService.getResourceTypeGroupList({ codeOrName, category });
         if (basicResult.data.errcode !== 0) return;
 
-        const basicList = [...basicResult.data.data];
+        const basicList = transferTypeWithChildren([...basicResult.data.data]);
         const customList = [...customResult.data.data];
-        for (let i = 0; i < basicList.length; i++) {
-          const index = customList.findIndex((custom) => custom.code === basicList[i].code);
-          if (index === -1) {
-            basicList[i].children = [];
-          } else {
-            basicList[i] = customList[index];
-          }
-        }
+        const typeList = concatTypes(basicList, customList);
 
         const defaultOption: ParentType = {
           code: "",
@@ -497,7 +491,7 @@ export default {
           parentChain: [{ code: "", name: "所有类型" }],
           category,
         };
-        const list = [defaultOption, ...basicList];
+        const list = [defaultOption, ...typeList];
         data.resourcesTypeOptions = [{ level: 0, list }];
       },
 
@@ -817,6 +811,35 @@ export default {
       }
     };
 
+    /** 转换资源类型中有子级的选项 */
+    const transferTypeWithChildren = (items: ParentType[], first = true) => {
+      items.forEach((item) => {
+        if (first) {
+          item.category = 2;
+        } else {
+          item.category = item.children.length ? 2 : 1;
+        }
+        if (item.children.length) item.children = transferTypeWithChildren(item.children, false);
+      });
+
+      return items;
+    };
+
+    /** 结合基础资源类型与自定义资源类型 */
+    const concatTypes = (basicItems: ParentType[], customItems: ParentType[]) => {
+      const items: ParentType[] = [...basicItems];
+      customItems.forEach((custom) => {
+        const index = items.findIndex((basic) => basic.code === custom.code);
+        if (index !== -1) {
+          items[index].children = concatTypes(items[index].children, custom.children);
+        } else {
+          items.push(custom);
+        }
+      });
+
+      return items;
+    };
+
     watch(
       () => data.popupSearchData.category,
       (cur) => {
@@ -868,13 +891,17 @@ export default {
     .item {
       width: 180px;
       color: #606266;
-      height: 34px;
+      min-height: 34px;
       line-height: 34px;
       padding: 0 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
+
+      & + .item {
+        margin-top: 2px;
+      }
 
       &:hover {
         background-color: #f5f7fa;
