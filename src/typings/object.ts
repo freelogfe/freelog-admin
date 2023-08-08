@@ -294,7 +294,8 @@ export interface RewardRecord {
   username: string;
   updateTime: string;
   rewardNum: number;
-  tag: 1 | 2 | 3 | 4;
+  tag: 1 | 2 | 3 | 4 | 5;
+  extra: { reason: string };
 }
 
 /** 广告数据 */

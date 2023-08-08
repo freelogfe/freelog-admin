@@ -186,14 +186,14 @@ export interface CreateOrEditResourcePropertyParams {
 }
 
 /** 值验证规则 */
-interface ContentRule {
-  minLength?: string; // 字串最小长度
-  maxLength?: string; // 字串最大长度
-  min?: string; // 最小整数
-  max?: string; // 最大整数
-  minDecimal?: string; // 最小小数
-  maxDecimal?: string; // 最大小数
-  precision?: string; // 小数精度
+export interface ContentRule {
+  minLength?: number; // 字串最小长度
+  maxLength?: number; // 字串最大长度
+  min?: number; // 最小整数
+  max?: number; // 最大整数
+  minDecimal?: number; // 最小小数
+  maxDecimal?: number; // 最大小数
+  precision?: number; // 小数精度
   startDateTime?: string; // 开始时间
   limitDateTime?: string; // 结束时间
   startDate?: string; // 开始时间

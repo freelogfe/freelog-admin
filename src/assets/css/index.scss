@@ -113,6 +113,24 @@ img {
   }
 }
 
+.number-input {
+  width: 200px !important;
+
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  .el-input__inner {
+    width: 200px;
+    text-align: center;
+  }
+}
+
 /* slide-down-scale */
 .slide-down-scale-enter-active,
 .slide-down-scale-leave-active {

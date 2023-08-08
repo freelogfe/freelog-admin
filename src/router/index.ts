@@ -261,9 +261,9 @@ const routes: Array<RouteRecordRaw> = [
     ],
   },
   {
-    path: "/operating",
-    name: "operating",
-    redirect: "/operating/activity-management",
+    path: "/operation",
+    name: "operation",
+    redirect: "/operation/activity-management",
     component: Layout,
     meta: {
       title: "运营",
@@ -273,7 +273,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: "classification-management",
         name: "classificationManagement",
-        component: () => import("../views/operating/classification-management.vue"),
+        component: () => import("../views/operation/classification-management.vue"),
         meta: {
           title: "运营分类管理",
           sideBarItem: "classificationManagement",
@@ -282,7 +282,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: "classification-sort",
         name: "classificationSort",
-        component: () => import("../views/operating/classification-sort.vue"),
+        component: () => import("../views/operation/classification-sort.vue"),
         meta: {
           title: "运营分类排序",
           sideBarItem: "classificationManagement",
@@ -292,7 +292,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: "edit-classification",
         name: "editClassification",
-        component: () => import("../views/operating/edit-classification.vue"),
+        component: () => import("../views/operation/edit-classification.vue"),
         meta: {
           title: "编辑运营分类",
           sideBarItem: "classificationManagement",
@@ -302,7 +302,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: "edit-choiceness",
         name: "editChoiceness",
-        component: () => import("../views/operating/edit-choiceness.vue"),
+        component: () => import("../views/operation/edit-choiceness.vue"),
         meta: {
           title: "编辑精选",
           sideBarItem: "editChoiceness",
@@ -311,7 +311,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: "activity-management",
         name: "activityManagement",
-        component: () => import("../views/operating/activity-management.vue"),
+        component: () => import("../views/operation/activity-management.vue"),
         meta: {
           title: "活动管理",
           sideBarItem: "activityManagement",
@@ -320,7 +320,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: "edit-activity",
         name: "editActivity",
-        component: () => import("../views/operating/edit-activity.vue"),
+        component: () => import("../views/operation/edit-activity.vue"),
         meta: {
           title: "编辑活动",
           sideBarItem: "activityManagement",
@@ -330,7 +330,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: "reward-management",
         name: "rewardManagement",
-        component: () => import("../views/operating/reward-management.vue"),
+        component: () => import("../views/operation/reward-management.vue"),
         meta: {
           title: "活动奖励管理",
           sideBarItem: "rewardManagement",
@@ -339,7 +339,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: "edit-reward",
         name: "editReward",
-        component: () => import("../views/operating/edit-reward.vue"),
+        component: () => import("../views/operation/edit-reward.vue"),
         meta: {
           title: "编辑奖励配置",
           sideBarItem: "rewardManagement",
@@ -349,7 +349,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: "issue-record",
         name: "issueRecord",
-        component: () => import("../views/operating/issue-record.vue"),
+        component: () => import("../views/operation/issue-record.vue"),
         meta: {
           title: "发放记录",
           sideBarItem: "rewardManagement",
@@ -359,7 +359,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: "advertisement-management",
         name: "advertisementManagement",
-        component: () => import("../views/operating/advertisement-management.vue"),
+        component: () => import("../views/operation/advertisement-management.vue"),
         meta: {
           title: "站内广告管理",
           sideBarItem: "advertisementsManagement",
@@ -368,7 +368,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: "edit-advertisement",
         name: "editAdvertisement",
-        component: () => import("../views/operating/edit-advertisement.vue"),
+        component: () => import("../views/operation/edit-advertisement.vue"),
         meta: {
           title: "编辑广告",
           sideBarItem: "advertisementsManagement",

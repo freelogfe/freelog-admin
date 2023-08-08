@@ -42,7 +42,7 @@
             <i
               class="icon-btn admin icon-detail"
               title="查看发放记录"
-              @click="switchPage('/operating/issue-record', { id: scope.row.id })"
+              @click="switchPage('/operation/issue-record', { id: scope.row.id })"
             />
             <i
               class="icon-btn admin icon-stop"
@@ -194,7 +194,7 @@ export default {
 
       /** 编辑奖励 */
       toEdit(id: string) {
-        switchPage("/operating/edit-reward", { id });
+        switchPage("/operation/edit-reward", { id });
       },
     };
 

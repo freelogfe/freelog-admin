@@ -65,6 +65,7 @@
 
     <template v-slot:barLeft v-if="selectedData.length">
       <el-button type="primary" @click="audit()">批量审核</el-button>
+      <el-button type="primary" @click="deduct()" v-if="![1, 3].includes(rewardData[0].rewardType)">批量扣除</el-button>
       <span class="selected-tip">已选中{{ selectedData.length }}条</span>
     </template>
 
@@ -87,7 +88,7 @@
 
     <template v-slot:table>
       <el-table ref="tableRef" :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
-        <el-table-column type="selection" :selectable="(row: any) => row.tag === 1" />
+        <el-table-column type="selection" :selectable="(row: any) => [1, 4].includes(row.tag)" />
         <el-table-column property="id" label="记录编号" min-width="250" />
         <el-table-column label="关联信息" min-width="250">
           <template #default="scope">
@@ -111,11 +112,22 @@
         </el-table-column>
         <el-table-column property="rewardNum" label="发放额度（元）" min-width="250" />
         <el-table-column label="发放状态">
-          <template #default="scope">{{ mappingMatching(recordTagMapping, scope.row.tag) }}</template>
+          <template #default="scope">
+            <el-tooltip effect="dark" :content="scope.row.extra.reason" placement="top" v-if="scope.row.tag === 5">
+              {{ mappingMatching(recordTagMapping, scope.row.tag) }}
+            </el-tooltip>
+            <span v-else>{{ mappingMatching(recordTagMapping, scope.row.tag) }}</span>
+          </template>
         </el-table-column>
         <el-table-column fixed="right" width="40">
           <template #default="scope">
             <i class="icon-btn admin icon-audit" title="审核" @click="audit(scope.row.id)" v-if="scope.row.tag === 1" />
+            <i
+              class="icon-btn admin icon-deduct"
+              title="扣除"
+              @click="deduct(scope.row.id)"
+              v-if="![1, 3].includes(rewardData[0].rewardType) && scope.row.tag === 4"
+            />
           </template>
         </el-table-column>
       </el-table>
@@ -133,13 +145,33 @@
   </list-template>
 
   <el-dialog v-model="auditPopupShow" title="奖励发放审核" width="400px">
-    <el-radio-group v-model="operateData.isPass">
+    <el-radio-group v-model="auditData.isPass">
       <el-radio :label="true">审核通过，允许发放</el-radio><br />
       <el-radio :label="false"><span class="refuse-tip">审核未通过，不予发放</span></el-radio>
     </el-radio-group>
     <template #footer>
       <el-button @click="auditPopupShow = false">取消</el-button>
-      <el-button type="primary" :disabled="operateData.isPass === null" @click="operateAuditConfirm()">确定</el-button>
+      <el-button type="primary" :disabled="auditData.isPass === null" @click="operateAuditConfirm()">确定</el-button>
+    </template>
+  </el-dialog>
+
+  <el-dialog v-model="deductPopupShow" title="奖励扣除原因" width="400px">
+    <el-radio-group v-model="deductData.reason" @change="deductData.otherReason = ''">
+      <el-radio label="不符合发放标准" /><br />
+      <el-radio label="存在违规行为" /><br />
+      <el-radio label="其他原因">
+        <el-input
+          style="width: 300px"
+          v-model="deductData.otherReason"
+          placeholder="其他原因"
+          clearable
+          @input="deductData.reason = '其他原因'"
+        />
+      </el-radio>
+    </el-radio-group>
+    <template #footer>
+      <el-button @click="deductPopupShow = false">取消</el-button>
+      <el-button type="primary" :disabled="!deductData.reason" @click="operateDeductConfirm()">确定</el-button>
     </template>
   </el-dialog>
 </template>
@@ -166,6 +198,7 @@ export default {
         { value: 2, label: "进行中" },
         { value: 3, label: "已结束" },
         { value: 4, label: "已停用" },
+        { value: 5, label: "已扣除" },
       ],
       rewardTypeMapping: [
         { value: 1, label: "羽币" },
@@ -177,6 +210,7 @@ export default {
         { value: 2, label: "已拒绝" },
         { value: 3, label: "待领取" },
         { value: 4, label: "已发放" },
+        { value: 5, label: "已扣除" },
       ],
     };
     const tableRef = ref<InstanceType<typeof ElTable>>();
@@ -189,8 +223,10 @@ export default {
       total: 0,
       searchData: { currentPage: 1, limit: 20 } as RewardRecordListParams,
       selectedData: [] as RewardRecord[],
-      operateData: { isPass: null as boolean | null, ids: [] as string[] },
+      auditData: { isPass: null as boolean | null, ids: [] as string[] },
       auditPopupShow: false,
+      deductData: { ids: [] as string[], reason: "", otherReason: "" },
+      deductPopupShow: false,
     });
 
     const methods = {
@@ -300,26 +336,59 @@ export default {
 
       /** 审核 */
       audit(id?: string) {
-        data.operateData.ids = id ? [id] : data.selectedData.map((item) => item.id);
+        data.auditData.ids = id ? [id] : data.selectedData.map((item) => item.id);
         data.auditPopupShow = true;
+      },
+
+      /** 扣除 */
+      deduct(id?: string) {
+        data.deductData.ids = id ? [id] : data.selectedData.map((item) => item.id);
+        data.deductPopupShow = true;
       },
 
       /** 操作审核 */
       async operateAuditConfirm() {
-        const { isPass } = data.operateData;
+        const { isPass } = data.auditData;
         if (isPass === null) return;
 
-        const result = await ActivitiesService.operateIssue(data.operateData as { isPass: boolean; ids: string[] });
+        const result = await ActivitiesService.operateIssue(data.auditData as { isPass: boolean; ids: string[] });
         const { errcode, msg } = result.data;
         if (errcode === 0) {
-          data.operateData.ids.forEach((id) => {
+          data.auditData.ids.forEach((id) => {
             const record = data.tableData.find((item) => item.id === id);
             if (record) record.tag = isPass ? 4 : 2;
           });
           tableRef.value!.clearSelection();
           ElMessage.success(`审核${isPass ? "通过" : "拒绝"}`);
           data.auditPopupShow = false;
-          data.operateData.isPass = null;
+          data.auditData.isPass = null;
+        } else {
+          ElMessage.error(msg);
+        }
+      },
+
+      /** 操作扣除 */
+      async operateDeductConfirm() {
+        const { ids, reason, otherReason } = data.deductData;
+        const params = {
+          ids,
+          reason: reason === "其他原因" ? otherReason : reason,
+        };
+        const result = await ActivitiesService.deductIssue(params);
+        const { errcode, msg } = result.data;
+        if (errcode === 0) {
+          data.deductData.ids.forEach((id) => {
+            const record = data.tableData.find((item) => item.id === id);
+            if (record) {
+              record.tag = 5;
+              record.extra.reason = params.reason;
+            }
+          });
+          tableRef.value!.clearSelection();
+          ElMessage.success("奖励扣除成功");
+          data.deductPopupShow = false;
+          data.deductData.reason = "";
+          data.deductData.otherReason = "";
         } else {
           ElMessage.error(msg);
         }

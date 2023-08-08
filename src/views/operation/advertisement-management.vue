@@ -190,7 +190,7 @@ export default {
 
       /** 编辑广告 */
       toEdit(id?: string) {
-        switchPage("/operating/edit-advertisement", { id });
+        switchPage("/operation/edit-advertisement", { id });
       },
 
       /** 获取百分比 */

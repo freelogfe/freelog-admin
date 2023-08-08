@@ -181,7 +181,7 @@ export default {
         if (errcode === 0) {
           const msg = type === 1 ? "保存成功" : "保存并发布成功";
           ElMessage.success(msg);
-          switchPage("/operating/activity-management");
+          switchPage("/operation/activity-management");
         }
       },
 

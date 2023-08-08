@@ -730,7 +730,7 @@ export default {
         if (errcode === 0) {
           const msg = data.mode === "create" ? "创建成功" : "保存成功";
           ElMessage.success(msg);
-          switchPage("/operating/classification-management");
+          switchPage("/operation/classification-management");
         }
       },
     };

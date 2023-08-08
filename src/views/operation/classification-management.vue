@@ -206,12 +206,12 @@ export default {
 
       /** 跳转运营分类排序 */
       toSort() {
-        switchPage("/operating/classification-sort");
+        switchPage("/operation/classification-sort");
       },
 
       /** 编辑运营分类 */
       toEdit(code?: string) {
-        switchPage("/operating/edit-classification", { code });
+        switchPage("/operation/edit-classification", { code });
       },
 
       /** 选择表格项 */

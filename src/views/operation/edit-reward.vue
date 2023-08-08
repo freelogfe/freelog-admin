@@ -74,7 +74,7 @@ export default {
         const { errcode } = result.data;
         if (errcode === 0) {
           ElMessage.success("保存成功");
-          switchPage("/operating/reward-management");
+          switchPage("/operation/reward-management");
         }
       },
     };

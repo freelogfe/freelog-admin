@@ -72,6 +72,15 @@ export const clearPending = () => {
 /** 请求拦截器 */
 service.interceptors.request.use(
   (config: AxiosRequestConfig) => {
+    const uid = Cookie.get("uid");
+    if (process.env.NODE_ENV === "development" && uid !== "50031" && config.url !== "/v2/passport/login") {
+      ElMessage.error("当前账号无权限，请重新登录");
+      clearPending();
+      if (process.env.NODE_ENV === "development") Cookie.clear(["uid", "authInfo"]);
+      store.commit("setData", { key: "userData", value: null });
+      router.push({ path: "/login", query: { redirect: router.currentRoute.value.fullPath } });
+    }
+
     // 在请求开始前，对之前的请求做检查取消操作
     removePending(config);
     // 将当前请求添加到 pending 中

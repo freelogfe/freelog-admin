@@ -185,7 +185,7 @@ export default {
 
       /** 编辑活动 */
       toEdit(id?: string) {
-        switchPage("/operating/edit-activity", { id });
+        switchPage("/operation/edit-activity", { id });
       },
     };
 

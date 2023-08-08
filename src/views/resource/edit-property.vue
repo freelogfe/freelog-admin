@@ -11,8 +11,8 @@
       <form-item label="名称">
         <el-input style="width: 400px" v-model="formData.name" placeholder="请输入名称" clearable />
       </form-item>
-      <form-item label="说明">
-        <el-input style="width: 400px" v-model="formData.note" placeholder="请输入说明（选填）" clearable />
+      <form-item label="说明（选填）">
+        <el-input style="width: 400px" v-model="formData.note" placeholder="请输入说明" clearable />
       </form-item>
       <form-item label="属性键">
         <el-input
@@ -42,7 +42,12 @@
       </form-item>
 
       <template v-if="formData.insertMode === 1">
-        <form-item label="属性值格式">
+        <form-item label="解析方式" style="margin-left: 50px">
+          <el-select style="width: 400px" placeholder="请选择属性值获取方式" v-model="formData.analyseMode" clearable>
+            <el-option v-for="item in analyseModeList" :key="item.label" :value="item.value" :label="item.label" />
+          </el-select>
+        </form-item>
+        <form-item label="属性值格式" style="margin-left: 50px">
           <el-select
             style="width: 400px"
             placeholder="请选择属性值格式"
@@ -56,21 +61,16 @@
             <el-option v-for="item in formatList" :key="item.value" :value="item.value" :label="item.label" />
           </el-select>
         </form-item>
-        <form-item label="单位" v-if="formData.format === 2">
+        <form-item label="单位（选填）" style="margin-left: 100px" v-if="formData.format === 2">
           <el-select placeholder="请选择单位" v-model="formData.formatUnit" clearable>
             <el-option v-for="item in formatUnitList" :key="item" :value="item" :label="item" />
           </el-select>
           <el-checkbox style="margin-left: 20px" v-model="formData.autoConvert" label="自动换算单位词头" />
         </form-item>
-        <form-item label="属性值获取方式">
-          <el-select style="width: 400px" placeholder="请选择属性值获取方式" v-model="formData.analyseMode" clearable>
-            <el-option v-for="item in analyseModeList" :key="item.label" :value="item.value" :label="item.label" />
-          </el-select>
-        </form-item>
       </template>
 
       <template v-if="formData.insertMode === 2">
-        <form-item label="属性值输入">
+        <form-item label="属性值输入" style="margin-left: 50px">
           <el-select
             style="width: 400px"
             placeholder="请选择属性值输入"
@@ -82,86 +82,87 @@
           </el-select>
         </form-item>
         <template v-if="[6, 7].includes(formData.format!)">
-          <form-item label="长度范围（选填）">
-            <el-input-number
-              style="width: 200px"
+          <form-item label="长度范围（选填）" style="margin-left: 100px">
+            <el-input
+              class="number-input"
+              type="number"
               v-model="formData.contentRule.minLength"
               placeholder="最小长度"
-              :precision="0"
-              :min="0"
-              :controls="false"
+              @blur="blurNumberInput('minLength', 0, 0)"
             />
             <span style="margin: 0 20px">-</span>
-            <el-input-number
-              style="width: 200px"
+            <el-input
+              class="number-input"
+              type="number"
               v-model="formData.contentRule.maxLength"
               placeholder="最大长度"
-              :precision="0"
-              :min="formData.contentRule.minLength"
-              :controls="false"
+              @blur="blurNumberInput('maxLength', 0, formData.contentRule.minLength || 0)"
             />
           </form-item>
         </template>
         <template v-if="formData.format === 5">
-          <form-item label="可选时间范围（选填）">
+          <form-item label="可选时间范围（选填）" style="margin-left: 100px">
             <el-date-picker v-model="formData.contentRule.myStartDateTime" type="datetime" placeholder="最早可选" />
             <span style="margin: 0 20px">-</span>
             <el-date-picker v-model="formData.contentRule.myLimitDateTime" type="datetime" placeholder="最晚可选" />
           </form-item>
         </template>
         <template v-if="formData.format === 4">
-          <form-item label="可选日期范围（选填）">
+          <form-item label="可选日期范围（选填）" style="margin-left: 100px">
             <el-date-picker v-model="formData.contentRule.myStartDate" placeholder="最早可选" />
             <span style="margin: 0 20px">-</span>
             <el-date-picker v-model="formData.contentRule.myLimitDate" placeholder="最晚可选" />
           </form-item>
         </template>
         <template v-if="formData.format === 8">
-          <form-item label="整数范围（选填）">
-            <el-input-number
-              style="width: 200px"
+          <form-item label="整数范围（选填）" style="margin-left: 100px">
+            <el-input
+              class="number-input"
+              type="number"
               v-model="formData.contentRule.min"
               placeholder="最小值"
-              :precision="0"
-              :controls="false"
+              @blur="blurNumberInput('min', 0, -Infinity)"
             />
             <span style="margin: 0 20px">-</span>
-            <el-input-number
-              style="width: 200px"
+            <el-input
+              class="number-input"
+              type="number"
               v-model="formData.contentRule.max"
               placeholder="最大值"
-              :precision="0"
-              :min="formData.contentRule.min"
-              :controls="false"
+              @blur="blurNumberInput('max', 0, formData.contentRule.min || -Infinity)"
             />
           </form-item>
         </template>
         <template v-if="formData.format === 9">
-          <form-item label="小数范围（选填）">
-            <el-input-number
-              style="width: 200px"
+          <form-item label="小数范围（选填）" style="margin-left: 100px">
+            <el-input
+              class="number-input"
+              type="number"
               v-model="formData.contentRule.minDecimal"
               placeholder="最小值"
-              :controls="false"
-              :precision="formData.contentRule.precision"
+              @blur="blurNumberInput('minDecimal', formData.contentRule.precision || 0, -Infinity)"
             />
             <span style="margin: 0 20px">-</span>
-            <el-input-number
-              style="width: 200px"
+            <el-input
+              class="number-input"
+              type="number"
               v-model="formData.contentRule.maxDecimal"
               placeholder="最大值"
-              :min="formData.contentRule.minDecimal"
-              :precision="formData.contentRule.precision"
-              :controls="false"
+              @blur="
+                blurNumberInput(
+                  'maxDecimal',
+                  formData.contentRule.precision || 0,
+                  formData.contentRule.minDecimal || -Infinity
+                )
+              "
             />
             <span style="margin: 0 20px"></span>
-            <el-input-number
-              style="width: 200px"
+            <el-input
+              class="number-input"
+              type="number"
               v-model="formData.contentRule.precision"
               placeholder="请输入小数位数"
-              :precision="0"
-              :min="0"
-              :controls="false"
+              @blur="blurNumberInput('precision', 0, 0)"
             />
           </form-item>
         </template>
@@ -175,7 +176,7 @@ import { reactive, toRefs } from "vue";
 import { ResourceService } from "@/api/request";
 import { useMyRouter } from "@/utils/hooks";
 import { ElMessage } from "element-plus";
-import { CreateOrEditResourcePropertyParams } from "@/typings/params";
+import { ContentRule, CreateOrEditResourcePropertyParams } from "@/typings/params";
 import { formatDate } from "@/utils/common";
 
 export default {
@@ -208,6 +209,7 @@ export default {
       ],
     };
     const data = reactive({
+      num: 0,
       loading: false,
       mode: "create" as "create" | "update",
       formData: {} as CreateOrEditResourcePropertyParams,
@@ -257,6 +259,32 @@ export default {
           const msg = data.mode === "create" ? "创建成功" : "保存成功";
           ElMessage.success(msg);
           switchPage("/resource/property-management");
+        }
+      },
+
+      /**
+       * 失焦数值输入框
+       * @param key 字段 key
+       * @param precision 精度
+       * @param min 最小值
+       */
+      blurNumberInput(key: keyof ContentRule, precision: number, min: number) {
+        const value = data.formData.contentRule[key];
+        if (!value) {
+          delete data.formData.contentRule[key];
+        } else {
+          const valueAsNumber = Number(value);
+          const minAsNumber = Number(min);
+          if (valueAsNumber < minAsNumber) {
+            (data.formData.contentRule[key] as any) = minAsNumber;
+          } else {
+            let result = valueAsNumber;
+            const precisionAsNumber = Number(precision);
+            result *= 10 ** precisionAsNumber;
+            result = Math.trunc(result);
+            result /= 10 ** precisionAsNumber;
+            (data.formData.contentRule[key] as any) = result;
+          }
         }
       },
     };
