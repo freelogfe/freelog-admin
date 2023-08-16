@@ -39,6 +39,9 @@ export default {
     showdown.setOption("openLinksInNewWindow", true);
     showdown.setOption("backslashEscapesHTMLTags", true);
     showdown.setOption("emoji", true);
+    showdown.setOption("splitAdjacentBlockquotes", true);
+    showdown.setOption("strikethrough", true);
+    showdown.setOption("simpleLineBreaks", true);
 
     const getContent = async () => {
       data.htmlContent = "";

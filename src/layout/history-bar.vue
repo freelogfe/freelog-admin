@@ -7,7 +7,7 @@
       :class="{ active: router.currentRoute.value.path === item.path }"
       v-for="item in routerHistory"
       :key="item.value"
-      @click="switchPage(item.fullPath)"
+      @click="toHistory(item)"
     >
       <span>{{ item.meta.title }}</span>
       <el-icon class="delete-btn" @click.stop="deleteHistory(item)" v-if="routerHistory.length > 1">
@@ -35,6 +35,11 @@ export default {
     const store = useStore();
     const { router, switchPage } = useMyRouter();
     const bar = ref();
+
+    // 跳转到指定历史页面
+    const toHistory = (item: RouteLocationNormalizedLoaded) => {
+      switchPage(item.fullPath, item.query);
+    };
 
     // 添加历史
     const addHistory = (current: RouteLocationNormalizedLoaded) => {
@@ -97,7 +102,7 @@ export default {
       { immediate: true, deep: true }
     );
 
-    return { ...toRefs(store.state), bar, router, switchPage, deleteHistory };
+    return { ...toRefs(store.state), bar, router, switchPage, toHistory, deleteHistory };
   },
 };
 </script>
