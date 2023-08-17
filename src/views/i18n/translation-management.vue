@@ -523,7 +523,7 @@ export default {
         let tags = [];
         let tagsStr = "";
         results.forEach((item, index) => {
-          item["key*"] = (item["key*"] as string).trim();
+          item["key*"] = (item["key*"] || "").trim();
           if (!item["key*"]) {
             noKeyErrors.push(index);
             return;
@@ -605,7 +605,7 @@ export default {
         let errMsg = "";
         if (noKeyErrors.length) {
           errMsg = `${noKeyErrors
-            .map((item) => `- <strong><i>第${item + 1}行</i></strong>`)
+            .map((item) => `- <strong><i>第${item + 2}行</i></strong>`)
             .join("、")} 数据导入失败，原因：key缺失。<br>`;
         }
         if (keyInvalidErrors.length) {
