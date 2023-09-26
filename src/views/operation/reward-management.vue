@@ -98,6 +98,7 @@ export default {
         { value: 1, label: "羽币" },
         { value: 2, label: "现金" },
         { value: 3, label: "邀请次数" },
+        { value: 4, label: "积分" },
       ],
     };
     const data = reactive({

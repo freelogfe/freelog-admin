@@ -150,7 +150,7 @@ export class UserService {
 export class ResourceService {
   /** 获取资源列表 */
   static getResourceList(params: ResourceListParams): Promise<HttpResponse> {
-    return Axios("/v2/resources/search", { method: "GET", params: { ...params, isLoadPolicyInfo: 1 } });
+    return Axios("/v2/resources/search", { method: "GET", params: { ...params } });
   }
 
   /** 查询资源是否为编辑精选 */
