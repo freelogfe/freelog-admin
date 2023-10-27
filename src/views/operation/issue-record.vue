@@ -90,12 +90,27 @@
       <el-table ref="tableRef" :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" :selectable="(row: any) => [1, 4].includes(row.tag)" />
         <el-table-column property="id" label="记录编号" min-width="250" />
-        <el-table-column label="关联信息" min-width="250">
+        <el-table-column label="关联信息" min-width="300">
           <template #default="scope">
             <div class="info">
-              <div>{{ scope.row.rewardConfigTitle }}</div>
-              <template v-for="item in scope.row.resources" :key="item.resourceId">
-                <subject-name :type="1" :name="item.resourceName" :id="item.resourceId" />
+              <div>{{ scope.row.rewardConfigDescription }}</div>
+              <template v-if="scope.row.extraInfoType.includes('resources')">
+                <template v-for="item in scope.row.extraInfo.resources" :key="item.resourceId">
+                  <subject-name :type="1" :name="item.resourceName" :id="item.resourceId" />
+                </template>
+              </template>
+              <template v-if="scope.row.extraInfoType.includes('presentableInfos')">
+                <template v-for="item in scope.row.extraInfo.presentableInfos" :key="item.presentableId">
+                  <subject-name :type="2" :name="item.presentableName" :id="item.presentableId" />
+                </template>
+              </template>
+              <template v-if="scope.row.extraInfoType.includes('nodes')">
+                <template v-for="item in scope.row.extraInfo.nodes" :key="item.nodeId">
+                  <subject-name :type="3" :name="item.nodeDomain" :id="item.nodeId" />
+                </template>
+              </template>
+              <template v-if="scope.row.extraInfoType.includes('linkUrl')">
+                <subject-name :type="4" :name="scope.row.extraInfo.linkUrl" />
               </template>
             </div>
           </template>
