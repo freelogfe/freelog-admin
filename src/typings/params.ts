@@ -95,7 +95,7 @@ export interface ResourceListParams extends ListParams {
   resourceType?: string;
   omitResourceType?: string;
   isSelf?: 0 | 1;
-  status?: 0 | 1 | 2;
+  status?: 0 | 1 | 2 | 4;
   isLoadPolicyInfo?: 0 | 1;
   isLoadLatestVersionInfo?: 0 | 1;
   projection?: string;
@@ -164,6 +164,9 @@ export interface CreateOrEditResourceTypeParams {
   formats?: string[];
   attrs?: string[];
   startTime?: string;
+  resourceConfig: {
+    supportCreateBatch: 1 | 2;
+  };
 }
 
 /** 资源属性列表参数 */

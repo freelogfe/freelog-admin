@@ -119,16 +119,6 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
-        path: "tag-management",
-        name: "resourceTagManagement",
-        component: () => import("../views/resource/tag-management.vue"),
-        meta: {
-          title: "资源标签管理",
-          sideBarItem: "resourceManagement",
-          hidden: true,
-        },
-      },
-      {
         path: "type-management",
         name: "resourceTypeManagement",
         component: () => import("../views/resource/type-management.vue"),
@@ -174,6 +164,15 @@ const routes: Array<RouteRecordRaw> = [
           title: "编辑资源属性",
           sideBarItem: "resourcePropertyManagement",
           hidden: true,
+        },
+      },
+      {
+        path: "tag-management",
+        name: "resourceTagManagement",
+        component: () => import("../views/resource/tag-management.vue"),
+        meta: {
+          title: "资源标签管理",
+          sideBarItem: "resourceTagManagement",
         },
       },
     ],

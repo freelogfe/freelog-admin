@@ -55,6 +55,11 @@
             <el-option v-for="item in sortTypeList" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </form-item>
+        <form-item label="状态">
+          <el-select v-model="searchData.status" placeholder="请选择状态" clearable>
+            <el-option v-for="item in statusMapping" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </form-item>
       </div>
       <div class="filter-btns">
         <el-button type="primary" @click="getData(true)">搜索</el-button>
@@ -394,7 +399,7 @@ export default {
         data.tableData = [];
         data.loading = true;
         if (init) data.searchData.currentPage = 1;
-        const { currentPage, limit, sort, selectedTags = [], createDate, type } = data.searchData;
+        const { currentPage, limit, sort, selectedTags = [], createDate, type, status } = data.searchData;
         data.searchData.skip = (currentPage - 1) * limit;
         if (!sort) delete data.searchData.sort;
         data.searchData.tags = selectedTags.join(",");
@@ -404,6 +409,7 @@ export default {
         } else {
           delete data.searchData.resourceType;
         }
+        if (!status) delete data.searchData.status;
 
         const result = await ResourceService.getResourceList(data.searchData);
         const { errcode } = result.data;
