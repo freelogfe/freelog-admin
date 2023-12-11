@@ -262,16 +262,18 @@ export default {
       const { status, persist, startTime = "", limitTime = "" } = data.formData;
       data.statusTip = assetsData.statusMappings[status as 1 | 2 | 3 | 4];
       if (status === 1) {
-        data.statusTip += persist ? "" : `（距离开始还有${differenceTime(startTime)}）`;
-        if (new Date(startTime).getTime() - now < 1000) {
+        if (!persist && new Date(startTime).getTime() - now < 1000) {
           data.formData.status = 2;
+          return;
         }
+        data.statusTip += persist ? "" : `（距离开始还有${differenceTime(startTime)}）`;
         getStatusOneSecond();
       } else if (status === 2) {
-        data.statusTip += persist ? "" : `（距离结束还有${differenceTime(limitTime)}）`;
-        if (new Date(limitTime).getTime() - now < 1000) {
+        if (!persist && new Date(limitTime).getTime() - now < 1000) {
           data.formData.status = 3;
+          return;
         }
+        data.statusTip += persist ? "" : `（距离结束还有${differenceTime(limitTime)}）`;
         getStatusOneSecond();
       }
     };
