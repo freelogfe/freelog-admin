@@ -112,7 +112,7 @@ export default {
         { value: 1, label: "正常" },
         { value: 2, label: "暂停" },
       ],
-      consoleUrl: (process.env.VUE_APP_BASE_API as string).replace("qi", "www"),
+      consoleUrl: (process.env.VUE_APP_BASE_API as string).replace("api", "www"),
     };
     const data = reactive({
       loading: false,

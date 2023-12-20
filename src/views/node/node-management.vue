@@ -57,7 +57,7 @@
         <el-table-column label="地址" min-width="300" show-overflow-tooltip>
           <template #default="scope">
             <span class="text-btn" @click="openNode(scope.row.nodeDomain)">
-              {{ domain.replace("qi", scope.row.nodeDomain) }}
+              {{ domain.replace("api", scope.row.nodeDomain) }}
             </span>
           </template>
         </el-table-column>
@@ -308,7 +308,7 @@ export default {
 
       /** 打开节点 */
       openNode(domain: string) {
-        const url = assetsData.domain.replace("qi", domain);
+        const url = assetsData.domain.replace("api", domain);
         openPage(url);
       },
 

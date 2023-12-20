@@ -481,7 +481,7 @@ export default {
 
       /** 打开资源详情 */
       openResourceDetail(resourceId: string) {
-        const domain = (process.env.VUE_APP_BASE_API as string).replace("qi", "console");
+        const domain = (process.env.VUE_APP_BASE_API as string).replace("api", "console");
         const url = `${domain}/resource/details/${resourceId}`;
         openPage(url);
       },

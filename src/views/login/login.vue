@@ -49,7 +49,7 @@ export default {
     const { query, replacePage, openPage } = useMyRouter();
     const ruleFormRef = ref<FormInstance>();
     const assetsData = {
-      userUrl: (process.env.VUE_APP_BASE_API as string).replace("qi", "user"),
+      userUrl: (process.env.VUE_APP_BASE_API as string).replace("api", "user"),
       rules: {
         loginName: [
           {

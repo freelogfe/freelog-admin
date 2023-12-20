@@ -138,7 +138,7 @@ export default {
         { value: 3, label: "已结束" },
         { value: 4, label: "已停用" },
       ],
-      consoleUrl: (process.env.VUE_APP_BASE_API as string).replace("qi", "www"),
+      consoleUrl: (process.env.VUE_APP_BASE_API as string).replace("api", "www"),
     };
     const data = reactive({
       loading: false,
