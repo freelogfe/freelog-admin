@@ -99,6 +99,7 @@ export default {
         { value: 2, label: "现金" },
         { value: 3, label: "邀请次数" },
         { value: 4, label: "积分" },
+        { value: 5, label: "瓜分资格" },
       ],
     };
     const data = reactive({
