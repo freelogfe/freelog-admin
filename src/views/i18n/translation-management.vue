@@ -573,11 +573,13 @@ export default {
               .forEach((tag) => {
                 if (tag) tagIds.push(tagMappings[tag]);
               });
+            const zh = item["zh-CN*"] !== undefined ? String(item["zh-CN*"]) : "";
+            const en = item["en-US"] !== undefined ? String(item["en-US"]) : "";
             const translation: CreateOrEditTranslationParams = {
               key: String(item["key*"]),
               value: {
-                zh: { isDefault: true, content: item["zh-CN*"] ? String(item["zh-CN*"]) : "" },
-                en: { isDefault: false, content: item["en-US"] ? String(item["en-US"]) : "" },
+                zh: { isDefault: true, content: zh },
+                en: { isDefault: false, content: en },
               },
               comment: String(description),
               tagIds: [...new Set(tagIds)],
@@ -590,6 +592,7 @@ export default {
           if (type && type.length) {
             flag = parseInt(String(type.reduce((a, b) => a + b)), 2);
           }
+
           const newTranslationResult = await InternationalizationService.batchCreateTranslation({
             flag,
             i18nConfigs: listData,
