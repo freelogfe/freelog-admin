@@ -556,6 +556,11 @@ export class ActivitiesService {
     return Axios("/v2/activities/reward/records/deductBatch", { method: "POST", data });
   }
 
+  /** 取消扣除活动奖励 */
+  static restoreDeductIssue(data: { ids: string[] }): Promise<HttpResponse> {
+    return Axios("/v2/activities/reward/records/cancelDeductBatch", { method: "POST", data });
+  }
+
   /** 获取广告列表 */
   static getAdsList(params: AdsListParams): Promise<HttpResponse> {
     return Axios("/v2/activities/ads/list", {
