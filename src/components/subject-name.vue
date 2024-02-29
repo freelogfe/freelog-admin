@@ -23,7 +23,7 @@ export default {
       if (type !== 3) return name;
 
       const domain = process.env.VUE_APP_BASE_API || "";
-      return domain.replace("qi", name);
+      return domain.replace("api", name);
     });
 
     const methods = {
@@ -36,7 +36,7 @@ export default {
           switchPage("/node/exhibit-management", { presentableId: id });
         } else if (type === 3) {
           const domain = process.env.VUE_APP_BASE_API || "";
-          const url = domain.replace("qi", name);
+          const url = domain.replace("api", name);
           openPage(url);
         } else if (type === 4) {
           openPage(name);

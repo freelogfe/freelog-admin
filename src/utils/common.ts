@@ -131,7 +131,15 @@ export const mappingMatching = (mapping: any, value: number | undefined) => {
   if (result) {
     return result.label;
   } else {
-    console.error("无法查询对应映射，请联系开发人员更新相关映射规则");
+    const errorMsg = `
+无法查询对应映射，请联系开发人员更新相关映射规则
+
+mappings: 
+${JSON.stringify(mapping)}
+
+value: ${value}
+    `;
+    console.error(errorMsg);
     return "";
   }
 };

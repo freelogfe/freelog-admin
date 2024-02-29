@@ -66,6 +66,9 @@
     <template v-slot:barLeft v-if="selectedData.length">
       <el-button type="primary" @click="audit()">批量审核</el-button>
       <el-button type="primary" @click="deduct()" v-if="![1, 3].includes(rewardData[0].rewardType)">批量扣除</el-button>
+      <el-button type="primary" @click="restoreDeduct()" v-if="![1, 3].includes(rewardData[0].rewardType)">
+        批量恢复积分
+      </el-button>
       <span class="selected-tip">已选中{{ selectedData.length }}条</span>
     </template>
 
@@ -88,7 +91,7 @@
 
     <template v-slot:table>
       <el-table ref="tableRef" :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
-        <el-table-column type="selection" :selectable="(row: any) => [1, 4].includes(row.tag)" />
+        <el-table-column type="selection" :selectable="(row: any) => [1, 4, 5].includes(row.tag)" />
         <el-table-column property="id" label="记录编号" min-width="250" />
         <el-table-column label="关联信息" min-width="300">
           <template #default="scope">
@@ -142,6 +145,12 @@
               title="扣除"
               @click="deduct(scope.row.id)"
               v-if="![1, 3].includes(rewardData[0].rewardType) && scope.row.tag === 4"
+            />
+            <i
+              class="icon-btn admin icon-restore"
+              title="恢复积分"
+              @click="restoreDeduct(scope.row)"
+              v-if="scope.row.tag === 5"
             />
           </template>
         </el-table-column>
@@ -219,6 +228,8 @@ export default {
         { value: 1, label: "羽币" },
         { value: 2, label: "现金" },
         { value: 3, label: "邀请次数" },
+        { value: 4, label: "积分" },
+        { value: 5, label: "瓜分资格" },
       ],
       recordTagMapping: [
         { value: 1, label: "待审核" },
@@ -359,6 +370,28 @@ export default {
       deduct(id?: string) {
         data.deductData.ids = id ? [id] : data.selectedData.map((item) => item.id);
         data.deductPopupShow = true;
+      },
+
+      /** 恢复 */
+      restoreDeduct(item?: RewardRecord) {
+        ElMessageBox.confirm("确定要恢复积分吗？", "恢复", {
+          confirmButtonText: "恢复",
+          cancelButtonText: "取消",
+        }).then(async () => {
+          const ids = item ? [item.id] : data.selectedData.map((item) => item.id);
+          const result = await ActivitiesService.restoreDeductIssue({ ids });
+          const { errcode, msg } = result.data;
+          if (errcode === 0) {
+            ids.forEach((id) => {
+              const record = data.tableData.find((item) => item.id === id);
+              if (record) record.tag = 4;
+            });
+            tableRef.value!.clearSelection();
+            ElMessage.success(`恢复积分成功`);
+          } else {
+            ElMessage.error(msg);
+          }
+        });
       },
 
       /** 操作审核 */

@@ -37,6 +37,28 @@
           </div>
         </div>
       </form-item>
+      <form-item label="展示序号">
+        <el-input-number
+          style="width: 200px"
+          v-model="formData.priority"
+          placeholder="请输入展示序号"
+          controls-position="right"
+          :min="1"
+        />
+        <span class="desc">序号越小，展示优先级越高</span>
+      </form-item>
+      <form-item label="是否启用">
+        <el-radio-group v-model="formData.status">
+          <el-radio :label="1">
+            启用<span class="desc">在用户端资源类型选择器中显示，用户在创建资源是可以直接选择此资源类型</span>
+          </el-radio>
+          <el-radio style="margin-top: 10px" :label="2">
+            停用<span class="desc">在用户端资源类型选择器中隐藏</span>
+          </el-radio>
+        </el-radio-group>
+      </form-item>
+      <div class="divider" />
+      <div class="title">版本发行配置</div>
       <form-item label="关联文件格式（选填）">
         <el-input
           style="width: 400px"
@@ -59,24 +81,12 @@
           </div>
         </div>
       </form-item>
-      <form-item label="展示序号">
-        <el-input-number
-          style="width: 200px"
-          v-model="formData.priority"
-          placeholder="请输入展示序号"
-          controls-position="right"
-          :min="1"
-        />
-        <span class="desc">序号越小，展示优先级越高</span>
-      </form-item>
-      <form-item label="是否启用">
-        <el-radio-group v-model="formData.status">
-          <el-radio :label="1">
-            启用<span class="desc">在用户端资源类型选择器中显示，用户在创建资源是可以直接选择此资源类型</span>
-          </el-radio>
-          <el-radio style="margin-top: 10px" :label="2">
-            停用<span class="desc">在用户端资源类型选择器中隐藏</span>
-          </el-radio>
+      <form-item label="支持批量发行" v-if="formData.resourceConfig">
+        <el-radio-group v-model="formData.resourceConfig.supportCreateBatch">
+          <div class="radio-line">
+            <el-radio :label="2">是</el-radio>
+            <el-radio style="margin-top: 10px" :label="1">否</el-radio>
+          </div>
         </el-radio-group>
       </form-item>
     </template>
@@ -205,15 +215,16 @@ export default {
           const { errcode } = result.data;
           if (errcode === 0) {
             const { formats, attrs } = result.data.data;
+            result.data.data.formatsStr = formats.join();
+            result.data.data.attrsArr = [...attrs];
             data.formData = result.data.data;
-            data.formData.formatsStr = formats.join();
-            data.formData.attrsArr = [...attrs];
           }
         } else {
           // 新建
           data.mode = "create";
           data.formData.formatsStr = "";
           data.formData.attrsArr = [];
+          data.formData.resourceConfig = { supportCreateBatch: 1 };
         }
 
         this.initParentList();
@@ -594,6 +605,29 @@ export default {
   margin-left: 20px;
   color: #bbb;
 }
+
+.divider {
+  width: 100%;
+  margin: 20px 0;
+  height: 1px;
+  background-color: #eee;
+}
+
+.title {
+  font-size: 18px;
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.radio-line {
+  display: flex;
+
+  .el-radio {
+    margin-top: 0 !important;
+  }
+}
+
 .filter-bar {
   display: flex;
   align-items: center;
