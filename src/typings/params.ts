@@ -165,7 +165,14 @@ export interface CreateOrEditResourceTypeParams {
   attrs?: string[];
   startTime?: string;
   resourceConfig: {
+    fileCommitMode: number[];
+    fileMaxSize: number;
+    fileMaxSizeUnit: 1 | 2;
+    supportDownload: 1 | 2;
+    supportEdit: 1 | 2;
+    autoGenerateCover: 1 | 2;
     supportCreateBatch: 1 | 2;
+    supportOptionalConfig: 1 | 2;
   };
 }
 

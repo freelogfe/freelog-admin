@@ -66,7 +66,7 @@
           style="width: 200px"
           v-model="formData.priority"
           placeholder="请输入展示序号"
-          controls-position="right"
+          :controls="false"
           :min="1"
         />
         <span class="desc">序号越小，展示优先级越高</span>
@@ -185,7 +185,10 @@
             @click="clickParentResourcesType(item, list.level)"
             v-if="item.category === popupSearchData.category"
           >
-            {{ item.name }}
+            <div>
+              <span>{{ item.name }}</span>
+              <span class="stop-mark" v-if="item.status === 2">（已停用）</span>
+            </div>
             <i
               class="admin icon-triangle-arrowright"
               v-if="item.children.length || (popupSearchData.category === 2 && item.code && list.level === 0)"
@@ -310,7 +313,10 @@ export default {
     const { query, switchPage } = useMyRouter();
     const tableRef = ref<InstanceType<typeof ElTable>>();
     const assetsData = {
-      insertModeMapping: [{ value: 1, label: "系统解析" }],
+      insertModeMapping: [
+        { value: 1, label: "系统解析" },
+        { value: 2, label: "手动录入" },
+      ],
       tagTypeMapping: [
         { value: 1, label: "分类标签" },
         { value: 2, label: "运营标签" },
@@ -893,7 +899,7 @@ export default {
       color: #606266;
       min-height: 34px;
       line-height: 34px;
-      padding: 0 20px;
+      padding: 5px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -914,6 +920,10 @@ export default {
 
       .admin {
         font-size: 12px;
+      }
+
+      .stop-mark {
+        color: red;
       }
     }
 

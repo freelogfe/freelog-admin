@@ -31,7 +31,10 @@
               :key="item.code"
               @click="selectParentType(item, list.level, true)"
             >
-              {{ item.name }}
+              <div>
+                <span>{{ item.name }}</span>
+                <span class="stop-mark" v-if="item.status === 2">（已停用）</span>
+              </div>
               <i class="admin icon-triangle-arrowright" v-if="item.children.length" />
             </div>
           </div>
@@ -42,7 +45,7 @@
           style="width: 200px"
           v-model="formData.priority"
           placeholder="请输入展示序号"
-          controls-position="right"
+          :controls="false"
           :min="1"
         />
         <span class="desc">序号越小，展示优先级越高</span>
@@ -57,19 +60,37 @@
           </el-radio>
         </el-radio-group>
       </form-item>
+
       <div class="divider" />
       <div class="title">版本发行配置</div>
-      <form-item label="关联文件格式（选填）">
+      <form-item label="文件提交方式" v-if="formData.resourceConfig">
+        <el-checkbox-group v-model="formData.resourceConfig.fileCommitMode">
+          <div class="selection-line">
+            <el-checkbox :label="1">本地上传</el-checkbox>
+            <el-checkbox :label="2">从存储空间导入</el-checkbox>
+            <el-checkbox :label="4">文档编辑器</el-checkbox>
+            <el-checkbox :label="8">漫画排版工具</el-checkbox>
+            <el-checkbox :label="16">集合单品管理工具</el-checkbox>
+          </div>
+        </el-checkbox-group>
+      </form-item>
+      <form-item label="推荐上传格式（选填）">
         <el-input
           style="width: 400px"
           v-model="formData.formatsStr"
-          placeholder="输入限制上传文件的扩展名，用英文逗号分隔"
+          placeholder="请输入推荐上传格式"
           clearable
           @input="formData.formatsStr = formData.formatsStr.replace('，', ',')"
         />
-        <span class="desc">格式“.扩展名”，用英文逗号（“,”）分隔</span>
+        <span class="desc">此设置用于筛选资源文件类型/格式, 输入“.扩展名”，用英文逗号（“,”）分隔</span>
       </form-item>
-      <form-item label="标准属性（选填）">
+      <form-item label="文件大小限制" v-if="formData.resourceConfig">
+        <el-input-number style="width: 100px" v-model="formData.resourceConfig.fileMaxSize" :controls="false" />
+        <el-select v-model="formData.resourceConfig.fileMaxSizeUnit" style="width: 100px">
+          <el-option v-for="item in fileMaxSizeUnitMapping" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+      </form-item>
+      <form-item label="标准属性模板（选填）">
         <div class="btn-box">
           <div class="text-btn" @click="importParentType()"><i class="admin icon-import" />导入父类属性</div>
           <div class="text-btn" @click="openResourceList()"><i class="admin icon-plus" />添加属性</div>
@@ -81,14 +102,48 @@
           </div>
         </div>
       </form-item>
-      <form-item label="支持批量发行" v-if="formData.resourceConfig">
-        <el-radio-group v-model="formData.resourceConfig.supportCreateBatch">
-          <div class="radio-line">
-            <el-radio :label="2">是</el-radio>
-            <el-radio style="margin-top: 10px" :label="1">否</el-radio>
-          </div>
-        </el-radio-group>
-      </form-item>
+      <template v-if="formData.resourceConfig">
+        <form-item label="支持下载">
+          <el-radio-group v-model="formData.resourceConfig.supportDownload">
+            <div class="selection-line">
+              <el-radio :label="2">是</el-radio>
+              <el-radio :label="1">否</el-radio>
+            </div>
+          </el-radio-group>
+        </form-item>
+        <form-item label="支持编辑">
+          <el-radio-group v-model="formData.resourceConfig.supportEdit">
+            <div class="selection-line">
+              <el-radio :label="2">是</el-radio>
+              <el-radio :label="1">否</el-radio>
+            </div>
+          </el-radio-group>
+        </form-item>
+        <form-item label="自动生成封面">
+          <el-radio-group v-model="formData.resourceConfig.autoGenerateCover">
+            <div class="selection-line">
+              <el-radio :label="2">是</el-radio>
+              <el-radio :label="1">否</el-radio>
+            </div>
+          </el-radio-group>
+        </form-item>
+        <form-item label="支持批量发行">
+          <el-radio-group v-model="formData.resourceConfig.supportCreateBatch">
+            <div class="selection-line">
+              <el-radio :label="2">是</el-radio>
+              <el-radio :label="1">否</el-radio>
+            </div>
+          </el-radio-group>
+        </form-item>
+        <form-item label="支持可选配置">
+          <el-radio-group v-model="formData.resourceConfig.supportOptionalConfig">
+            <div class="selection-line">
+              <el-radio :label="2">是</el-radio>
+              <el-radio :label="1">否</el-radio>
+            </div>
+          </el-radio-group>
+        </form-item>
+      </template>
     </template>
   </edit-template>
 
@@ -186,7 +241,14 @@ export default {
     const { query, switchPage } = useMyRouter();
     const tableRef = ref<InstanceType<typeof ElTable>>();
     const assetsData = {
-      insertModeMapping: [{ value: 1, label: "系统解析" }],
+      fileMaxSizeUnitMapping: [
+        { value: 1, label: "MB" },
+        { value: 2, label: "GB" },
+      ],
+      insertModeMapping: [
+        { value: 1, label: "系统解析" },
+        { value: 2, label: "手动录入" },
+      ],
     };
     const data = reactive({
       loading: false,
@@ -224,7 +286,16 @@ export default {
           data.mode = "create";
           data.formData.formatsStr = "";
           data.formData.attrsArr = [];
-          data.formData.resourceConfig = { supportCreateBatch: 1 };
+          data.formData.resourceConfig = {
+            fileCommitMode: [],
+            fileMaxSize: 200,
+            fileMaxSizeUnit: 1,
+            supportDownload: 1,
+            supportEdit: 1,
+            autoGenerateCover: 1,
+            supportCreateBatch: 1,
+            supportOptionalConfig: 1,
+          };
         }
 
         this.initParentList();
@@ -502,12 +573,12 @@ export default {
     .item {
       width: 180px;
       color: #606266;
-      height: 34px;
-      line-height: 34px;
-      padding: 0 20px;
+      min-height: 34px;
+      padding: 5px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      word-break: break-all;
       cursor: pointer;
 
       &:hover {
@@ -521,6 +592,10 @@ export default {
 
       .admin {
         font-size: 12px;
+      }
+
+      .stop-mark {
+        color: red;
       }
     }
 
@@ -620,7 +695,7 @@ export default {
   margin-bottom: 20px;
 }
 
-.radio-line {
+.selection-line {
   display: flex;
 
   .el-radio {

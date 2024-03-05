@@ -42,7 +42,7 @@
             <i
               class="icon-btn admin icon-detail"
               title="查看发放记录"
-              @click="switchPage('/operation/issue-record', { id: scope.row.id })"
+              @click="switchPage('/operation/issue-record', { id: scope.row.id, code: scope.row.code })"
             />
             <i
               class="icon-btn admin icon-stop"
@@ -56,7 +56,7 @@
               @click="operateReward(scope.row)"
               v-if="scope.row.status === 2"
             />
-            <i class="icon-btn admin icon-edit" title="编辑" @click="toEdit(scope.row.id)" />
+            <i class="icon-btn admin icon-edit" title="编辑" @click="toEdit(scope.row.code)" />
           </template>
         </el-table-column>
       </el-table>
@@ -181,13 +181,13 @@ export default {
 
       /** 操作活动奖励 */
       async operateConfirm(item: Reward) {
-        const { id, status } = item;
+        const { code, status } = item;
         const operate = status === 2 ? "恢复" : "暂停";
-        const result = await ActivitiesService.operateReward({ id });
+        const result = await ActivitiesService.operateReward({ code });
         const { errcode, msg } = result.data;
         if (errcode === 0) {
           ElMessage.success(`${operate}成功`);
-          const currentItem = data.tableData.find((item) => item.id === id);
+          const currentItem = data.tableData.find((item) => item.code === code);
           if (currentItem) currentItem.status = status === 1 ? 2 : 1;
         } else {
           ElMessage.error(msg);
@@ -195,8 +195,8 @@ export default {
       },
 
       /** 编辑奖励 */
-      toEdit(id: string) {
-        switchPage("/operation/edit-reward", { id });
+      toEdit(code: string) {
+        switchPage("/operation/edit-reward", { code });
       },
     };
 

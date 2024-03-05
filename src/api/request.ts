@@ -465,12 +465,7 @@ export class ActivitiesService {
   static getActivityList(params: ActivityListParams): Promise<HttpResponse> {
     return Axios("/v2/activities/list", {
       method: "GET",
-      params: {
-        skipSize: params.skip,
-        pageSize: params.limit,
-        flag: params.status || 0,
-        title: params.keywords || "",
-      },
+      params: { skipSize: params.skip, pageSize: params.limit, flag: params.status || 0, title: params.keywords || "" },
     });
   }
 
@@ -514,15 +509,12 @@ export class ActivitiesService {
   }
 
   /** 通过 id 获取活动奖励信息 */
-  static getRewardById(id: string): Promise<HttpResponse> {
-    return Axios("/v2/activities/reward/configs/find", {
-      method: "GET",
-      params: { id },
-    });
+  static getRewardById(code: string): Promise<HttpResponse> {
+    return Axios("/v2/activities/reward/configs/find", { method: "GET", params: { code } });
   }
 
   /** 暂停/恢复活动奖励 */
-  static operateReward(params: { id: string }): Promise<HttpResponse> {
+  static operateReward(params: { code: string }): Promise<HttpResponse> {
     return Axios("/v2/activities/reward/configs/pauseOrRecover", { method: "GET", params });
   }
 
@@ -536,12 +528,7 @@ export class ActivitiesService {
 
   /** 获取活动奖励发放记录列表 */
   static getRewardRecordList(params: RewardRecordListParams): Promise<HttpResponse> {
-    const data: any = {
-      rewardConfigCode: params.code,
-      skipSize: params.skip,
-      pageSize: params.limit,
-      tag: params.tag,
-    };
+    const data: any = { rewardConfigCode: params.code, skipSize: params.skip, pageSize: params.limit, tag: params.tag };
     if (params.keywords) data.username = params.keywords;
     return Axios("/v2/activities/reward/records/listDetails", { method: "POST", data });
   }
@@ -587,12 +574,7 @@ export class ActivitiesService {
 
   /** 获取活动列表（排除草稿与已结束活动） */
   static getValidActivityList(): Promise<HttpResponse> {
-    return Axios("/v2/activities/list2", {
-      method: "GET",
-      params: {
-        title: "",
-      },
-    });
+    return Axios("/v2/activities/list2", { method: "GET", params: { title: "" } });
   }
 
   /** 创建广告 */
@@ -657,11 +639,7 @@ export class InternationalizationService {
   static getTranslationTagList(params: ListParams): Promise<HttpResponse> {
     return Axios("/v2/i18n/tags/list", {
       method: "GET",
-      params: {
-        skipSize: params.skip,
-        pageSize: params.limit,
-        tagName: params.keywords || "",
-      },
+      params: { skipSize: params.skip, pageSize: params.limit, tagName: params.keywords || "" },
     });
   }
 

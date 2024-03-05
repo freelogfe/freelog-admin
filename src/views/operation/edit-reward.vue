@@ -3,7 +3,7 @@
   <edit-template>
     <template v-slot:title>编辑奖励配置</template>
 
-    <template v-slot:status v-if="query.id">{{ statusTip }}</template>
+    <template v-slot:status v-if="query.code">{{ statusTip }}</template>
 
     <template v-slot:barRight>
       <el-button type="primary" @click="save()">保存配置</el-button>
@@ -55,8 +55,8 @@ export default {
     const methods = {
       /** 获取活动奖励数据 */
       async getData() {
-        const { id } = query.value;
-        const result = await ActivitiesService.getRewardById(id);
+        const { code } = query.value;
+        const result = await ActivitiesService.getRewardById(code);
         const { data: rewardData } = result.data;
         if (!rewardData) return;
         rewardData.validDate = [rewardData.startTime, rewardData.limitTime];

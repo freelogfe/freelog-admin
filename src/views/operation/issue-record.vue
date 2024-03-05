@@ -242,6 +242,7 @@ export default {
     const tableRef = ref<InstanceType<typeof ElTable>>();
     const data = reactive({
       id: "",
+      code: "",
       rewardData: [] as Reward[],
       statisticData: {} as any,
       loading: false,
@@ -258,7 +259,7 @@ export default {
     const methods = {
       /** 获取活动奖励数据 */
       async getRewardInfo() {
-        const result = await ActivitiesService.getRewardById(data.id);
+        const result = await ActivitiesService.getRewardById(data.code);
         const { data: rewardData } = result.data;
         if (!rewardData) return;
         data.rewardData = [rewardData];
@@ -348,9 +349,9 @@ export default {
 
       /** 操作活动奖励 */
       async operateConfirm(item: Reward) {
-        const { id, status } = item;
+        const { code, status } = item;
         const operate = status === 2 ? "恢复" : "暂停";
-        const result = await ActivitiesService.operateReward({ id });
+        const result = await ActivitiesService.operateReward({ code });
         const { errcode, msg } = result.data;
         if (errcode === 0) {
           ElMessage.success(`${operate}成功`);
@@ -444,6 +445,7 @@ export default {
     };
 
     data.id = query.value.id;
+    data.code = query.value.code;
     methods.getRewardInfo();
 
     return {
