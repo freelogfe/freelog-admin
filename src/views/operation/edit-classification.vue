@@ -17,18 +17,20 @@
       </form-item>
       <form-item label="父类">
         <div class="cascader-panel">
-          <div class="list" v-for="list in parentOptions" :key="list.level">
-            <div
-              class="item"
-              :class="{ active: list.checked === item.code }"
-              v-for="item in list.list"
-              :key="item.code"
-              @click="selectParentType(item, list.level)"
-            >
-              {{ item.name }}
-              <i class="admin icon-triangle-arrowright" v-if="item.children.length" />
+          <template v-for="(list, index) in parentOptions" :key="list.level">
+            <div class="list" v-if="index < 4">
+              <div
+                class="item"
+                :class="{ active: list.checked === item.code }"
+                v-for="item in list.list"
+                :key="item.code"
+                @click="selectParentType(item, list.level)"
+              >
+                {{ item.name }}
+                <i class="admin icon-triangle-arrowright" v-if="index < 3 && item.children.length" />
+              </div>
             </div>
-          </div>
+          </template>
         </div>
       </form-item>
       <form-item label="映射来源">

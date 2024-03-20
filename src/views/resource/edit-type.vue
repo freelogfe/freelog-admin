@@ -23,21 +23,23 @@
       </form-item>
       <form-item label="父类">
         <div class="cascader-panel" :class="{ disabled: mode === 'update' }">
-          <div class="list" v-for="list in parentOptions" :key="list.level">
-            <div
-              class="item"
-              :class="{ active: list.checked === item.code }"
-              v-for="item in list.list"
-              :key="item.code"
-              @click="selectParentType(item, list.level, true)"
-            >
-              <div>
-                <span>{{ item.name }}</span>
-                <span class="stop-mark" v-if="item.status === 2">（已停用）</span>
+          <template v-for="(list, index) in parentOptions" :key="list.level">
+            <div class="list" v-if="index < 4">
+              <div
+                class="item"
+                :class="{ active: list.checked === item.code }"
+                v-for="item in list.list"
+                :key="item.code"
+                @click="selectParentType(item, list.level, true)"
+              >
+                <div>
+                  <span>{{ item.name }}</span>
+                  <span class="stop-mark" v-if="item.status === 2">（已停用）</span>
+                </div>
+                <i class="admin icon-triangle-arrowright" v-if="index < 3 && item.children.length" />
               </div>
-              <i class="admin icon-triangle-arrowright" v-if="item.children.length" />
             </div>
-          </div>
+          </template>
         </div>
       </form-item>
       <form-item label="展示序号">
@@ -287,7 +289,7 @@ export default {
           data.formData.formatsStr = "";
           data.formData.attrsArr = [];
           data.formData.resourceConfig = {
-            fileCommitMode: [],
+            fileCommitMode: [1, 2],
             fileMaxSize: 200,
             fileMaxSizeUnit: 1,
             supportDownload: 1,
@@ -524,7 +526,12 @@ export default {
 
     /** 表单验证 */
     const validate = () => {
-      const { name, priority, status } = data.formData;
+      const {
+        name,
+        priority,
+        status,
+        resourceConfig: { fileCommitMode },
+      } = data.formData;
       if (!name) {
         ElMessage("请输入名称");
         return false;
@@ -536,6 +543,9 @@ export default {
         return false;
       } else if (!status) {
         ElMessage("请选择是否启用");
+        return false;
+      } else if (fileCommitMode.length === 0) {
+        ElMessage("请选择文件提交方式");
         return false;
       }
       return true;

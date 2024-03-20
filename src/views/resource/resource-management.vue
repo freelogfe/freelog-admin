@@ -409,7 +409,7 @@ export default {
         } else {
           delete data.searchData.resourceType;
         }
-        if (!status) delete data.searchData.status;
+        if (!status && status !== 0) delete data.searchData.status;
 
         const result = await ResourceService.getResourceList(data.searchData);
         const { errcode } = result.data;
