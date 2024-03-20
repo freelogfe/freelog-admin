@@ -18,17 +18,19 @@
       <form-item label="父类">
         <div class="cascader-panel">
           <template v-for="(list, index) in parentOptions" :key="list.level">
-            <div class="list" v-if="index < 4">
-              <div
-                class="item"
-                :class="{ active: list.checked === item.code }"
-                v-for="item in list.list"
-                :key="item.code"
-                @click="selectParentType(item, list.level)"
-              >
-                {{ item.name }}
-                <i class="admin icon-triangle-arrowright" v-if="index < 3 && item.children.length" />
-              </div>
+            <div class="list" v-if="index < 3">
+              <el-scrollbar>
+                <div
+                  class="item"
+                  :class="{ active: list.checked === item.code }"
+                  v-for="item in list.list"
+                  :key="item.code"
+                  @click="selectParentType(item, list.level)"
+                >
+                  {{ item.name }}
+                  <i class="admin icon-triangle-arrowright" v-if="index < 2 && item.children.length" />
+                </div>
+              </el-scrollbar>
             </div>
           </template>
         </div>
@@ -892,16 +894,18 @@ export default {
   }
 
   .list {
+    flex: 1;
     height: 200px;
     overflow-y: auto;
     overflow-x: hidden;
 
     .item {
-      width: 180px;
+      width: 100%;
       color: #606266;
       min-height: 34px;
       line-height: 34px;
       padding: 5px 20px;
+      box-sizing: border-box;
       display: flex;
       align-items: center;
       justify-content: space-between;
