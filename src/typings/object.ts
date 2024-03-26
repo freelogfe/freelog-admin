@@ -86,6 +86,7 @@ export interface Resource {
   reason: string;
   remark: string;
   choiceness: boolean;
+  resourceInfo?: any;
 }
 
 /** 策略数据 */

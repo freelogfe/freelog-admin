@@ -427,14 +427,15 @@ export default {
             }),
             ResourceService.getResourcesCollectCount({ resourceIds: ids }),
           ]);
-          dataList.forEach((resource: Resource) => {
-            const { resourceId } = resource;
-            resource.resourceNameAbbreviation = resource.resourceName.split("/")[1];
-            resource.resourceVersions.reverse();
-            resource.signCount = results[0].data.data.find(
+          dataList.forEach((resource: Resource, index: number) => {
+            dataList[index] = { ...resource, ...resource.resourceInfo };
+            const { resourceId, resourceName } = dataList[index];
+            dataList[index].resourceNameAbbreviation = resourceName.split("/")[1];
+            dataList[index].resourceVersions.reverse();
+            dataList[index].signCount = results[0].data.data.find(
               (item: { subjectId: string; count: number }) => item.subjectId === resourceId
             ).count;
-            resource.collectCount = results[1].data.data.find(
+            dataList[index].collectCount = results[1].data.data.find(
               (item: { resourceId: string; count: number }) => item.resourceId === resourceId
             ).count;
           });
