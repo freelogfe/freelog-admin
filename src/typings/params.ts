@@ -223,6 +223,8 @@ export interface NodeListParams extends ListParams {
   startCreateDate?: string | null;
   endCreateDate?: string | null;
   projection?: string;
+  nodeType?: 0 | 1;
+  statusMode?: 2;
 }
 
 /** 节点封禁记录参数 */

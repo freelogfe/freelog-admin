@@ -92,6 +92,7 @@
                 v-for="item in scope.row.tags"
                 :key="item"
                 @close="removeTag(scope.row.resourceId, item)"
+                :title="item"
               >
                 {{ item }}
               </el-tag>
@@ -113,10 +114,13 @@
         <el-table-column label="类型" min-width="150" show-overflow-tooltip>
           <template #default="scope">{{ scope.row.resourceType.join("/") }}</template>
         </el-table-column>
-        <el-table-column class="choiceness-text" label="编辑精选" min-width="150" show-overflow-tooltip>
-          <template #default="scope"
-            ><span class="choiceness-text" v-if="scope.row.choiceness">☆ 编辑精选</span></template
-          >
+        <el-table-column label="编辑精选" min-width="150" show-overflow-tooltip>
+          <template #default="scope">
+            <div class="choiceness-text" v-if="scope.row.choiceness">
+              <i class="admin icon-star" />
+              <div>编辑精选</div>
+            </div>
+          </template>
         </el-table-column>
         <el-table-column label="需方合约数" min-width="120" align="right">
           <template #default="scope">
@@ -771,6 +775,12 @@ export default {
 
 .choiceness-text {
   color: #e3b30b;
+  display: flex;
+  align-items: center;
+
+  .admin {
+    margin-right: 5px;
+  }
 }
 
 .policy-box {

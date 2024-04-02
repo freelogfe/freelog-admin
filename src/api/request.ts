@@ -348,6 +348,11 @@ export class NodeService {
     return Axios(`/v2/nodes/${nodeId}/deArchive`, { method: "PUT" });
   }
 
+  /** 设置节点类型 */
+  static setNodeType(data: { nodeIds: number[]; nodeType: number }): Promise<HttpResponse> {
+    return Axios(`/v2/nodes/setNodeType`, { method: "POST", data });
+  }
+
   /** 查看节点禁用记录 */
   static getNodeRecordList(params: NodeRecordParams): Promise<HttpResponse> {
     return Axios("/v2/nodes/freeOrRecover/records", { method: "GET", params });

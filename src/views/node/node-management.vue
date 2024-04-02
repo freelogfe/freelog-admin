@@ -3,6 +3,10 @@
   <list-template>
     <template v-slot:barLeft v-if="selectedData.length">
       <el-button type="primary" @click="setTag()">添加标签</el-button>
+      <el-button type="primary" @click="setSampleNode(1)">添加示例节点</el-button>
+      <el-button type="primary" @click="setSampleNode(0)">移除示例节点</el-button>
+      <!-- <el-button type="primary" @click="setSampleNode()">封禁</el-button>
+      <el-button type="primary" @click="setSampleNode()">解封</el-button> -->
       <span class="selected-tip">已选中{{ selectedData.length }}条</span>
     </template>
 
@@ -14,8 +18,9 @@
       <div class="filter-controls">
         <form-item label="关键字搜索">
           <el-input
+            style="width: 300px"
             v-model="searchData.keywords"
-            placeholder="请输入节点名、地址"
+            placeholder="请输入节点标题、授权标识、地址"
             clearable
             @keyup.enter="getData(true)"
           />
@@ -47,11 +52,29 @@
     <template v-slot:table>
       <el-table :data="tableData" stripe @selection-change="selectTable" v-loading="loading">
         <el-table-column type="selection" />
-        <el-table-column label="节点" min-width="200" show-overflow-tooltip>
+        <el-table-column label="节点标题" min-width="200" show-overflow-tooltip>
+          <template #default="scope">
+            <span class="text-btn" @click="openNode(scope.row.nodeDomain)">
+              {{ scope.row.nodeTitle || scope.row.nodeName }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column label="授权标识" min-width="200" show-overflow-tooltip>
           <template #default="scope">
             <span class="text-btn" @click="openNode(scope.row.nodeDomain)">
               {{ scope.row.nodeName }}
             </span>
+          </template>
+        </el-table-column>
+        <el-table-column label="封面" min-width="120">
+          <template #default="scope">
+            <el-image
+              class="cover-image"
+              :src="scope.row.nodeLogo"
+              :preview-src-list="[scope.row.nodeLogo]"
+              preview-teleported
+              hide-on-click-modal
+            />
           </template>
         </el-table-column>
         <el-table-column label="地址" min-width="300" show-overflow-tooltip>
@@ -75,6 +98,14 @@
               </el-tag>
             </div>
             <i class="icon-btn admin icon-edit" title="管理标签" @click="setTag(scope.row)" />
+          </template>
+        </el-table-column>
+        <el-table-column label="示例节点" min-width="200">
+          <template #default="scope">
+            <div class="sample-mark" v-if="scope.row.nodeType === 1">
+              <i class="admin icon-star" />
+              <div>示例节点</div>
+            </div>
           </template>
         </el-table-column>
         <el-table-column label="用户" min-width="200" show-overflow-tooltip>
@@ -475,6 +506,29 @@ export default {
           item.tags = item.tags.filter((tag) => tag !== tagName);
         }
       },
+
+      /** 设置示例节点 */
+      setSampleNode(nodeType: 0 | 1, nodeId?: number) {
+        ElMessageBox.confirm(
+          `确认将选中的节点${nodeType === 1 ? "添加示例节点" : "移除示例节点"}吗？`,
+          `${nodeType === 1 ? "添加" : "移除"}示例节点`,
+          {
+            confirmButtonText: nodeType === 1 ? "添加" : "移除",
+            cancelButtonText: "取消",
+          }
+        ).then(async () => {
+          const nodeIds = nodeId ? [nodeId] : data.selectedData.map((item) => item.nodeId);
+          const params = { nodeIds, nodeType };
+          const result = await NodeService.setNodeType(params);
+          const { errcode, msg } = result.data;
+          if (errcode === 0) {
+            ElMessage.success(`${nodeType === 1 ? "添加" : "移除"}成功`);
+            this.getData(true);
+          } else {
+            ElMessage.error(msg);
+          }
+        });
+      },
     };
 
     /** 获取节点标签 */
@@ -513,6 +567,16 @@ export default {
   :deep .el-input__inner,
   :deep .el-select .el-input.is-focus .el-input__inner {
     box-shadow: none !important;
+  }
+}
+
+.sample-mark {
+  color: #e3b30b;
+  display: flex;
+  align-items: center;
+
+  .admin {
+    margin-right: 5px;
   }
 }
 </style>

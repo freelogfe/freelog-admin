@@ -308,6 +308,15 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
+        path: "sample-node-management",
+        name: "sampleNodeManagement",
+        component: () => import("../views/operation/sample-node-management.vue"),
+        meta: {
+          title: "示例节点",
+          sideBarItem: "sampleNodeManagement",
+        },
+      },
+      {
         path: "activity-management",
         name: "activityManagement",
         component: () => import("../views/operation/activity-management.vue"),

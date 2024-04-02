@@ -40,6 +40,17 @@ img {
   .tag {
     flex-shrink: 0;
     margin: 0 8px 5px 0;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+
+    .el-tag__content {
+      max-width: 152px;
+      line-height: 24px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
   }
 }
 

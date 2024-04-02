@@ -20,6 +20,7 @@
           <el-radio :label="2">首页，右侧浮窗</el-radio>
           <el-radio :label="3">概览页，右侧Banner</el-radio>
           <el-radio :label="4">发现页，顶部Banner</el-radio>
+          <el-radio :label="5">首页，轮播Banner</el-radio>
         </el-radio-group>
       </form-item>
       <form-item label="广告名称">

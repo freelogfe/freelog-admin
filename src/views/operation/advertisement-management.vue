@@ -131,6 +131,7 @@ export default {
         { value: 2, label: "首页，右侧浮窗" },
         { value: 3, label: "概览页，右侧Banner" },
         { value: 4, label: "发现页，顶部Banner" },
+        { value: 5, label: "首页，轮播Banner" },
       ],
       statusMapping: [
         { value: 1, label: "已排期" },

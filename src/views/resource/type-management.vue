@@ -149,7 +149,7 @@ import { reactive, toRefs, watch } from "vue";
 import { useMyRouter } from "@/utils/hooks";
 import { ResourceType } from "@/typings/object";
 import { ResourceTypeListParams } from "@/typings/params";
-import { ElMessageBox } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 
 export default {
   setup() {
@@ -249,9 +249,12 @@ export default {
           const codes = code ? [code] : data.selectedData.map((item) => item.code);
           const params = { codes, status };
           const result = await ResourceService.operateResourceType(params);
-          const { errcode } = result.data;
+          const { errcode, msg } = result.data;
           if (errcode === 0) {
+            ElMessage.success(`${status === 1 ? "启用" : "停用"}成功`);
             this.getData(true);
+          } else {
+            ElMessage.error(msg);
           }
         });
       },
