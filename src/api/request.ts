@@ -1,7 +1,7 @@
 /**
  * 服务器接口
  */
-import { OperateChoicenessParams, Reward } from "@/typings/object";
+import { Reward } from "@/typings/object";
 import {
   ListParams,
   ActivityListParams,
@@ -42,6 +42,7 @@ import {
   CreateOrEditResourcePropertyParams,
   ClassificationListParams,
   CreateOrEditClassificationParams,
+  setResourceGradeParams,
 } from "@/typings/params";
 import Axios from "./http";
 
@@ -461,9 +462,9 @@ export class ActivitiesService {
     });
   }
 
-  /** 操作编辑精选 */
-  static operateChoiceness(data: OperateChoicenessParams, method: "POST" | "PUT"): Promise<HttpResponse> {
-    return Axios("/v2/resources/operations", { method, data });
+  /** 资源评级 */
+  static setResourceGrade(data: setResourceGradeParams): Promise<HttpResponse> {
+    return Axios("/v2/resources/operations", { method: "POST", data });
   }
 
   /** 获取活动列表 */

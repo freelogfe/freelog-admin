@@ -3,8 +3,7 @@
   <list-template>
     <template v-slot:barLeft v-if="selectedData.length">
       <el-button type="primary" @click="setTag()">添加标签</el-button>
-      <el-button type="primary" @click="operateChoiceness('POST')">加入编辑精选</el-button>
-      <el-button type="primary" @click="operateChoiceness('PUT')">移出编辑精选</el-button>
+      <el-button type="primary" @click="openGradePopup()">评级</el-button>
       <el-button type="primary" @click="banResources()">封禁</el-button>
       <el-button type="primary" @click="restore()">解封</el-button>
       <span class="selected-tip">已选中{{ selectedData.length }}条</span>
@@ -73,7 +72,7 @@
         <el-table-column label="资源" min-width="250">
           <template #default="scope">
             <div class="resource-name">
-              <span class="text-btn" @click="switchPage('/user/user-management', { userId: scope.row.userId })">
+              <span class="text-btn" @click="openPage('/user/user-management', { userId: scope.row.userId })">
                 {{ scope.row.username }}
               </span>
               <span class="divider">/</span>
@@ -114,19 +113,18 @@
         <el-table-column label="类型" min-width="150" show-overflow-tooltip>
           <template #default="scope">{{ scope.row.resourceType.join("/") }}</template>
         </el-table-column>
-        <el-table-column label="编辑精选" min-width="150" show-overflow-tooltip>
+        <el-table-column label="评级" min-width="150" show-overflow-tooltip>
           <template #default="scope">
-            <div class="choiceness-text" v-if="scope.row.choiceness">
-              <i class="admin icon-star" />
-              <div>编辑精选</div>
-            </div>
+            <span v-if="scope.row.operationType">
+              {{ mappingMatching(operationTypeMapping, scope.row.operationType) }}
+            </span>
           </template>
         </el-table-column>
         <el-table-column label="需方合约数" min-width="120" align="right">
           <template #default="scope">
             <span
               class="text-btn"
-              @click="switchPage('/contract/contract-management', { licensorId: scope.row.resourceId })"
+              @click="openPage('/contract/contract-management', { licensorId: scope.row.resourceId })"
             >
               {{ scope.row.signCount }}
             </span>
@@ -260,6 +258,20 @@
     </template>
   </el-dialog>
 
+  <el-dialog v-model="gradePopupShow" title="资源评级" width="500px">
+    <el-radio-group class="grade-radio-group" v-model="operateData.grade">
+      <el-radio :label="1">1：违规</el-radio>
+      <el-radio :label="2">2：低质量</el-radio>
+      <el-radio :label="3">3：正常</el-radio>
+      <el-radio :label="4">4：优良</el-radio>
+      <el-radio :label="5">5：编辑精选</el-radio>
+    </el-radio-group>
+    <template #footer>
+      <el-button @click="gradePopupShow = false">取消</el-button>
+      <el-button type="primary" @click="setGrade()">确认</el-button>
+    </template>
+  </el-dialog>
+
   <el-dialog v-model="versionData.versionPopupShow" title="版本历史记录" width="840px" destroy-on-close>
     <div class="version-history">
       <el-scrollbar class="side-bar">
@@ -319,19 +331,13 @@ import { ElMessage, ElMessageBox, ElTable } from "element-plus";
 import { ResourceService, ContractsService, ActivitiesService } from "@/api/request";
 import { dateRangeShortcuts } from "@/assets/data";
 import { reactive, toRefs, computed, defineAsyncComponent, ref } from "vue";
-import {
-  OperateChoicenessParams,
-  Policy,
-  Resource,
-  ResourceTag,
-  ResourceType,
-  ResourceVersion,
-} from "@/typings/object";
+import { Policy, Resource, ResourceTag, ResourceType, ResourceVersion } from "@/typings/object";
 import {
   ResourceListParams,
   OperateResourceParams,
   ResourceTagListParams,
   SetResourceTagParams,
+  setResourceGradeParams,
 } from "@/typings/params";
 
 /** 资源列表参数 */
@@ -363,6 +369,13 @@ export default {
         { value: 2, label: "冻结" },
         { value: 4, label: "下架" },
       ],
+      operationTypeMapping: [
+        { value: 1, label: "1：违规" },
+        { value: 2, label: "2：低质量" },
+        { value: 3, label: "3：正常" },
+        { value: 4, label: "4：优良" },
+        { value: 5, label: "5：编辑精选" },
+      ],
       sortTypeList: [
         { value: "updateDate:1", label: "更新时间升序" },
         { value: "updateDate:-1", label: "更新时间降序" },
@@ -391,6 +404,7 @@ export default {
       setTagPopupShow: false,
       policyPopupShow: false,
       banPopupShow: false,
+      gradePopupShow: false,
     });
     const currentVersionData = computed(() => {
       const { versionList, activeIndex } = data.versionData;
@@ -498,32 +512,30 @@ export default {
         openPage(url);
       },
 
-      /** 操作编辑精选 */
-      operateChoiceness(method: "POST" | "PUT") {
-        ElMessageBox.confirm(
-          `确认要将选中资源${method === "POST" ? "添加" : "移除"}编辑精选吗？`,
-          method === "POST" ? "添加编辑精选" : "移除编辑精选",
-          {
-            confirmButtonText: method === "POST" ? "添加" : "移除",
-            cancelButtonText: "取消",
-          }
-        ).then(async () => {
-          const params: OperateChoicenessParams = {
-            type: 1,
-            resourceIds: data.selectedData.map((item) => item.resourceId),
-          };
-          const result = await ActivitiesService.operateChoiceness(params, method);
-          const { errcode, msg } = result.data;
-          if (errcode === 0) {
-            ElMessage.success(`${method === "POST" ? "添加" : "移除"}成功`);
-            data.selectedData.forEach((item) => {
-              item.choiceness = method === "POST";
-            });
-            tableRef.value!.clearSelection();
-          } else {
-            ElMessage.error(msg);
-          }
-        });
+      /** 打开资源评级弹窗 */
+      openGradePopup() {
+        data.operateData.grade = null;
+        data.gradePopupShow = true;
+      },
+
+      /** 资源评级 */
+      async setGrade() {
+        const { grade: type } = data.operateData;
+        if (!type) return ElMessage("请选择评级");
+
+        const params: setResourceGradeParams = { type, resourceIds: data.selectedData.map((item) => item.resourceId) };
+        const result = await ActivitiesService.setResourceGrade(params);
+        const { errcode, msg } = result.data;
+        if (errcode === 0) {
+          data.gradePopupShow = false;
+          ElMessage.success(`设置成功`);
+          data.selectedData.forEach((item) => {
+            item.operationType = type;
+          });
+          tableRef.value!.clearSelection();
+        } else {
+          ElMessage.error(msg);
+        }
       },
 
       /** 封禁操作 */
@@ -747,6 +759,7 @@ export default {
       ...methods,
       formatDate,
       switchPage,
+      openPage,
       relativeTime,
     };
   },
@@ -912,6 +925,18 @@ export default {
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+  }
+}
+
+.grade-radio-group {
+  display: block;
+
+  .el-radio {
+    display: block;
+
+    & + .el-radio {
+      margin-top: 10px;
     }
   }
 }

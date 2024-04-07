@@ -88,7 +88,7 @@
             />
             <span
               class="text-btn"
-              @click="switchPage('/node/node-management', { nodeId: scope.row.licensorId })"
+              @click="openPage('/node/node-management', { nodeId: scope.row.licensorId })"
               v-else-if="scope.row.subjectType === 2"
             >
               {{ scope.row.licensorName }}
@@ -105,14 +105,14 @@
             />
             <span
               class="text-btn"
-              @click="switchPage('/node/node-management', { nodeId: scope.row.licenseeId })"
+              @click="openPage('/node/node-management', { nodeId: scope.row.licenseeId })"
               v-else-if="scope.row.licenseeIdentityType === 2"
             >
               {{ scope.row.licenseeName }}
             </span>
             <span
               class="text-btn"
-              @click="switchPage('/user/user-management', { userId: scope.row.licenseeId })"
+              @click="openPage('/user/user-management', { userId: scope.row.licenseeId })"
               v-else-if="scope.row.licenseeIdentityType === 3"
             >
               {{ scope.row.licenseeName }}
@@ -210,7 +210,7 @@ export default {
   },
 
   setup() {
-    const { query, switchPage } = useMyRouter();
+    const { query, openPage } = useMyRouter();
     const assetsData = {
       keywordsTypeList: [
         { value: 1, label: "合约ID" },
@@ -377,7 +377,7 @@ export default {
       detailData,
       ...methods,
       formatDate,
-      switchPage,
+      openPage,
     };
   },
 };

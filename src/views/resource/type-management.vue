@@ -71,7 +71,7 @@
             <span
               class="text-btn"
               @click="
-                switchPage('/resource/resource-management', {
+                openPage('/resource/resource-management', {
                   type: scope.row.parentName ? `${scope.row.parentName},${scope.row.name}` : scope.row.name,
                 })
               "
@@ -116,9 +116,7 @@
           <template #default="scope">
             <span
               class="text-btn"
-              @click="
-                switchPage('/resource/resource-management', { type: `${scope.row.parentName},${scope.row.name}` })
-              "
+              @click="openPage('/resource/resource-management', { type: `${scope.row.parentName},${scope.row.name}` })"
             >
               {{ scope.row.resourceCount || "-" }}
             </span>
@@ -278,11 +276,11 @@ export default {
 
     return {
       mappingMatching,
-      openPage,
       ...assetsData,
       ...toRefs(data),
       ...methods,
       switchPage,
+      openPage,
       formatDate,
     };
   },

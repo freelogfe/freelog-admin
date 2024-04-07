@@ -67,7 +67,7 @@
           <template #default="scope">
             <span
               class="text-btn"
-              @click="switchPage('/user/user-management', { keywords: scope.row.username })"
+              @click="openPage('/user/user-management', { keywords: scope.row.username })"
               v-if="scope.row.username"
             >
               {{ scope.row.username }}
@@ -213,11 +213,7 @@
         <template #default="scope">
           <span
             class="text-btn"
-            @click="
-              switchPage('/user/user-management', {
-                keywords: scope.row.username,
-              })
-            "
+            @click="openPage('/user/user-management', { keywords: scope.row.username })"
             v-if="scope.row.username"
           >
             {{ scope.row.username }}
@@ -262,7 +258,7 @@ interface MyCreateCodeParams extends CreateCodeParams {
 
 export default {
   setup() {
-    const { switchPage } = useMyRouter();
+    const { openPage } = useMyRouter();
     const assetsData = {
       statusMapping: [
         { value: 0, label: "正常" },
@@ -443,7 +439,7 @@ export default {
       ...toRefs(data),
       ...methods,
       formatDate,
-      switchPage,
+      openPage,
       relativeTime,
     };
   },

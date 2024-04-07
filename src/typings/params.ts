@@ -124,6 +124,7 @@ export interface OperateResourceParams {
   reason?: string;
   remark?: string;
   operationType: 1 | 2;
+  grade?: 1 | 2 | 3 | 4 | 5 | null;
 }
 
 /** 资源标签列表参数 */
@@ -322,6 +323,12 @@ export interface ChoicenessListParams extends ListParams {
   isLoadPolicyInfo?: 0 | 1;
   isLoadLatestVersionInfo?: 0 | 1;
   sort?: string;
+}
+
+/** 设置资源评级参数 */
+export interface setResourceGradeParams {
+  type: 1 | 2 | 3 | 4 | 5 | null;
+  resourceIds: string[];
 }
 
 /** 活动列表参数 */

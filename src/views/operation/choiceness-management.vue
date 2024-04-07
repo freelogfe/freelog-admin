@@ -2,7 +2,7 @@
 <template>
   <list-template>
     <template v-slot:barLeft v-if="selectedData.length">
-      <el-button type="primary" @click="operateChoiceness('PUT')">移出编辑精选</el-button>
+      <el-button type="primary" @click="openGradePopup()">移出编辑精选</el-button>
     </template>
 
     <template v-slot:barRight>
@@ -54,7 +54,7 @@
         <el-table-column label="资源" min-width="250">
           <template #default="scope">
             <div class="resource-name">
-              <span class="text-btn" @click="switchPage('/user/user-management', { userId: scope.row.userId })">
+              <span class="text-btn" @click="openPage('/user/user-management', { userId: scope.row.userId })">
                 {{ scope.row.username }}
               </span>
               <span class="divider">/</span>
@@ -82,7 +82,7 @@
           <template #default="scope">
             <span
               class="text-btn"
-              @click="switchPage('/contract/contract-management', { licensorId: scope.row.resourceId })"
+              @click="openPage('/contract/contract-management', { licensorId: scope.row.resourceId })"
             >
               {{ scope.row.signCount }}
             </span>
@@ -129,13 +129,9 @@
             <i
               class="icon-btn admin icon-detail"
               title="查看更多信息"
-              @click="switchPage('/resource/resource-management', { resourceId: scope.row.resourceId })"
+              @click="openPage('/resource/resource-management', { resourceId: scope.row.resourceId })"
             />
-            <i
-              class="icon-btn admin icon-delete"
-              title="移除"
-              @click="operateChoiceness('PUT', scope.row.resourceId)"
-            />
+            <i class="icon-btn admin icon-delete" title="移除" @click="openGradePopup(scope.row.resourceId)" />
           </template>
         </el-table-column>
       </el-table>
@@ -169,6 +165,19 @@
     </div>
   </el-dialog>
 
+  <el-dialog v-model="gradePopupShow" title="资源评级" width="500px">
+    <el-radio-group class="grade-radio-group" v-model="operateData.type">
+      <el-radio :label="1">1：违规</el-radio>
+      <el-radio :label="2">2：低质量</el-radio>
+      <el-radio :label="3">3：正常</el-radio>
+      <el-radio :label="4">4：优良</el-radio>
+    </el-radio-group>
+    <template #footer>
+      <el-button @click="gradePopupShow = false">取消</el-button>
+      <el-button type="primary" @click="setGrade('delete')">确认</el-button>
+    </template>
+  </el-dialog>
+
   <el-dialog v-model="resourcePopupShow" title="添加资源进入编辑精选" width="1000px" @close="closeResourcePopup()">
     <div class="filter-bar" v-if="!resourceData.showSelected">
       <form-item label="关键字搜索">
@@ -197,7 +206,7 @@
       <el-table-column label="资源" min-width="250">
         <template #default="scope">
           <div class="resource-name">
-            <span class="text-btn" @click="switchPage('/user/user-management', { userId: scope.row.userId })">
+            <span class="text-btn" @click="openPage('/user/user-management', { userId: scope.row.userId })">
               {{ scope.row.username }}
             </span>
             <span class="divider">/</span>
@@ -272,7 +281,7 @@
     </div>
     <div class="btns-area">
       <el-button @click="closeResourcePopup()">取消</el-button>
-      <el-button type="primary" @click="operateChoiceness('POST')">保存</el-button>
+      <el-button type="primary" @click="setGrade('add')">保存</el-button>
     </div>
   </el-dialog>
 
@@ -333,9 +342,9 @@ import { formatDate, mappingMatching, relativeTime } from "../../utils/common";
 import { useMyRouter } from "@/utils/hooks";
 import { ResourceService, ContractsService, ActivitiesService } from "@/api/request";
 import { reactive, toRefs, computed, defineAsyncComponent, ref, nextTick } from "vue";
-import { OperateChoicenessParams, Policy, Resource, ResourceType, ResourceVersion } from "@/typings/object";
-import { ChoicenessListParams, ResourceListParams } from "@/typings/params";
-import { ElMessageBox, ElTable } from "element-plus";
+import { Policy, Resource, ResourceType, ResourceVersion } from "@/typings/object";
+import { ChoicenessListParams, ResourceListParams, setResourceGradeParams } from "@/typings/params";
+import { ElTable } from "element-plus";
 import { ElMessage } from "element-plus/lib/components";
 
 /** 资源列表参数 */
@@ -349,7 +358,7 @@ export default {
   },
 
   setup() {
-    const { switchPage, openPage } = useMyRouter();
+    const { openPage } = useMyRouter();
     const tableRef = ref<InstanceType<typeof ElTable>>();
     const assetsData = {
       statusMapping: [
@@ -374,7 +383,7 @@ export default {
         loading: false,
       },
       policyData: [] as Policy[],
-      operateData: { type: 1, resourceIds: [] } as OperateChoicenessParams,
+      operateData: {} as setResourceGradeParams,
       resourceSearchData: { currentPage: 1, limit: 20 } as ResourceListParams,
       resourceData: {
         keywords: "",
@@ -385,6 +394,7 @@ export default {
       selectedResourceData: [] as Resource[],
       policyPopupShow: false,
       resourcePopupShow: false,
+      gradePopupShow: false,
     });
     const currentVersionData = computed(() => {
       const { versionList, activeIndex } = data.versionData;
@@ -467,10 +477,7 @@ export default {
 
       /** 重置 */
       clearSearch() {
-        data.searchData = {
-          currentPage: 1,
-          limit: 20,
-        };
+        data.searchData = { currentPage: 1, limit: 20 };
         this.getData(true);
       },
 
@@ -599,29 +606,30 @@ export default {
         data.policyData = resource.policies;
       },
 
-      /** 添加/移除编辑精选 */
-      operateChoiceness(method: "POST" | "PUT", resourceId?: string) {
-        ElMessageBox.confirm(
-          `确定要将${resourceId ? "此" : "选中"}资源${method === "POST" ? "添加" : "移除"}编辑精选吗？`,
-          method === "POST" ? "添加" : "移除",
-          {
-            confirmButtonText: method === "POST" ? "添加" : "移除",
-            cancelButtonText: "取消",
-          }
-        ).then(() => {
-          const selectedList = method === "POST" ? data.selectedResourceData : data.selectedData;
-          data.operateData.resourceIds = resourceId ? [resourceId] : selectedList.map((item) => item.resourceId);
-          this.operateConfirm(method);
-        });
+      /** 打开资源评级弹窗 */
+      openGradePopup(resourceId?: string) {
+        data.operateData.type = null;
+        data.operateData.resourceIds = resourceId ? [resourceId] : data.selectedData.map((item) => item.resourceId);
+        data.gradePopupShow = true;
       },
 
-      /** 操作编辑精选 */
-      async operateConfirm(method: "POST" | "PUT") {
-        const result = await ActivitiesService.operateChoiceness(data.operateData, method);
+      /** 资源评级 */
+      async setGrade(operation: "add" | "delete") {
+        const resourceIds =
+          operation === "add" ? data.selectedResourceData.map((item) => item.resourceId) : data.operateData.resourceIds;
+        const type = operation === "add" ? 5 : data.operateData.type;
+        if (!type) return ElMessage("请选择评级");
+
+        const params: setResourceGradeParams = { type, resourceIds };
+        const result = await ActivitiesService.setResourceGrade(params);
         const { errcode, msg } = result.data;
         if (errcode === 0) {
-          ElMessage.success(`${method === "POST" ? "添加" : "移除"}成功`);
-          this.closeResourcePopup();
+          if (operation === "add") {
+            this.closeResourcePopup();
+          } else if (operation === "delete") {
+            data.gradePopupShow = false;
+          }
+          ElMessage.success(`${operation === "add" ? "添加" : "移除"}成功`);
           this.getData();
         } else {
           ElMessage.error(msg);
@@ -683,7 +691,7 @@ export default {
       currentVersionData,
       ...methods,
       formatDate,
-      switchPage,
+      openPage,
       relativeTime,
     };
   },
@@ -857,5 +865,17 @@ export default {
   display: flex;
   justify-content: center;
   margin-top: 20px;
+}
+
+.grade-radio-group {
+  display: block;
+
+  .el-radio {
+    display: block;
+
+    & + .el-radio {
+      margin-top: 10px;
+    }
+  }
 }
 </style>

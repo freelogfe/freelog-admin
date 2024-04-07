@@ -33,7 +33,7 @@
         <el-table-column type="selection" />
         <el-table-column label="标签" min-width="100">
           <template #default="scope">
-            <span class="text-btn" @click="switchPage('/user/user-management', { tag: scope.row.tagId })">
+            <span class="text-btn" @click="openPage('/user/user-management', { tag: scope.row.tagId })">
               {{ scope.row.tag }}
             </span>
           </template>
@@ -77,7 +77,7 @@ interface EditTag {
 
 export default {
   setup() {
-    const { switchPage } = useMyRouter();
+    const { openPage } = useMyRouter();
     const assetsData = {
       typeMapping: [
         { value: 1, label: "手动" },
@@ -179,7 +179,7 @@ export default {
       ...toRefs(data),
       ...methods,
       formatDate,
-      switchPage,
+      openPage,
       relativeTime,
     };
   },

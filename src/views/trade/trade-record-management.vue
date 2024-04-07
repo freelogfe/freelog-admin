@@ -86,7 +86,7 @@
               class="text-btn"
               v-if="scope.row.transactionType === 2"
               @click="
-                switchPage('/contract/contract-management', {
+                openPage('/contract/contract-management', {
                   keywordsType: 1,
                   keywords: scope.row.attachInfo.contractId,
                 })
@@ -167,7 +167,7 @@ interface MyTradeListParams extends TradeListParams {
 
 export default {
   setup() {
-    const { query, switchPage } = useMyRouter();
+    const { query, openPage } = useMyRouter();
     const assetsData = {
       transactionTypeList: [
         { value: 1, label: "转账" },
@@ -259,7 +259,7 @@ export default {
     return {
       dateRangeShortcuts,
       mappingMatching,
-      switchPage,
+      openPage,
       ...assetsData,
       ...toRefs(data),
       tradeDetailData,

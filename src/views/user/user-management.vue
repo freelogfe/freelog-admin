@@ -77,14 +77,14 @@
         </el-table-column>
         <el-table-column label="发布资源数" min-width="120" align="right">
           <template #default="scope">
-            <span class="text-btn" @click="switchPage('/resource/resource-management', { userId: scope.row.userId })">
+            <span class="text-btn" @click="openPage('/resource/resource-management', { userId: scope.row.userId })">
               {{ scope.row.createdResourceCount }}
             </span>
           </template>
         </el-table-column>
         <el-table-column label="运营节点数" min-width="120" align="right">
           <template #default="scope">
-            <span class="text-btn" @click="switchPage('/node/node-management', { userId: scope.row.userId })">
+            <span class="text-btn" @click="openPage('/node/node-management', { userId: scope.row.userId })">
               {{ scope.row.createdNodeCount }}
             </span>
           </template>
@@ -93,7 +93,7 @@
           <template #default="scope">
             <span
               class="text-btn"
-              @click="switchPage('/contract/contract-management', { licenseeId: scope.row.userId })"
+              @click="openPage('/contract/contract-management', { licenseeId: scope.row.userId })"
             >
               {{ scope.row.signedContractCount }}
             </span>
@@ -103,7 +103,7 @@
           <template #default="scope">
             <span
               class="text-btn"
-              @click="switchPage('/trade/trade-record-management', { relatedAccountName: scope.row.username })"
+              @click="openPage('/trade/trade-record-management', { relatedAccountName: scope.row.username })"
             >
               {{ scope.row.tradeCount }}
             </span>
@@ -254,7 +254,7 @@ interface SetTagData {
 
 export default {
   setup() {
-    const { query, switchPage } = useMyRouter();
+    const { query, switchPage, openPage } = useMyRouter();
     const assetsData = {
       statusMapping: [
         { value: 0, label: "正常" },
@@ -382,7 +382,7 @@ export default {
 
       /** 审核 */
       audit(username: string) {
-        switchPage("/user/qualification-audit", { username });
+        openPage("/user/qualification-audit", { username });
       },
 
       /** 操作（冻结/恢复） */
@@ -529,6 +529,7 @@ export default {
       ...methods,
       formatDate,
       switchPage,
+      openPage,
       relativeTime,
     };
   },

@@ -128,7 +128,7 @@ import { ElMessageBox } from "element-plus";
 
 export default {
   setup() {
-    const { switchPage, openPage } = useMyRouter();
+    const { switchPage } = useMyRouter();
     const assetsData = {
       statusMapping: [
         { value: 1, label: "已启用" },
@@ -259,7 +259,6 @@ export default {
 
     return {
       mappingMatching,
-      openPage,
       ...assetsData,
       ...toRefs(data),
       ...methods,

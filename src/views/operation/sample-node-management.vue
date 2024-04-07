@@ -68,15 +68,15 @@
         </el-table-column>
         <el-table-column label="用户" min-width="200" show-overflow-tooltip>
           <template #default="scope">
-            <span class="text-btn" @click="switchPage('/user/user-management', { userId: scope.row.ownerUserId })">
+            <span class="text-btn" @click="openPage('/user/user-management', { userId: scope.row.ownerUserId })">
               {{ scope.row.ownerUserName }}
             </span>
           </template>
         </el-table-column>
         <el-table-column label="运营展品数" min-width="120" align="right">
           <template #default="scope">
-            <span class="text-btn" @click="switchPage('/node/exhibit-management', { nodeId: scope.row.nodeId })">
-              {{ scope.row.exhibitCount }}
+            <span class="text-btn" @click="openPage('/node/exhibit-management', { nodeId: scope.row.nodeId })">
+              {{ scope.row.onlineExhibitCount }}/{{ scope.row.exhibitCount }}
             </span>
           </template>
         </el-table-column>
@@ -101,7 +101,7 @@
             <i
               class="icon-btn admin icon-detail"
               title="查看更多信息"
-              @click="switchPage('/node/node-management', { nodeId: scope.row.nodeId })"
+              @click="openPage('/node/node-management', { nodeId: scope.row.nodeId })"
             />
             <i class="icon-btn admin icon-delete" title="移除" @click="removeSampleNode(scope.row.nodeId)" />
           </template>
@@ -173,7 +173,7 @@
       </el-table-column>
       <el-table-column label="用户" min-width="200" show-overflow-tooltip>
         <template #default="scope">
-          <span class="text-btn" @click="switchPage('/user/user-management', { userId: scope.row.ownerUserId })">
+          <span class="text-btn" @click="openPage('/user/user-management', { userId: scope.row.ownerUserId })">
             {{ scope.row.ownerUserName }}
           </span>
         </template>
@@ -246,7 +246,7 @@ export interface MySetNodeTagParams extends SetNodeTagParams {
 
 export default {
   setup() {
-    const { switchPage, openPage } = useMyRouter();
+    const { openPage } = useMyRouter();
     const tableRef = ref<InstanceType<typeof ElTable>>();
     const assetsData = {
       statusOptions: [
@@ -316,9 +316,11 @@ export default {
           ]);
           dataList.forEach((node: Node) => {
             const { nodeId } = node;
-            node.exhibitCount = results[0].data.data.find(
+            const exhibitData = results[0].data.data.find(
               (item: { nodeId: number; count: number }) => item.nodeId === nodeId
-            ).count;
+            );
+            node.onlineExhibitCount = exhibitData.onlineCount;
+            node.exhibitCount = exhibitData.count;
             node.signCount = results[1].data.data.find(
               (item: { licensorId: string; count: number }) => item.licensorId === String(nodeId)
             ).count;
@@ -476,7 +478,7 @@ export default {
 
       /** 关闭节点列表弹窗 */
       closeNodePopup() {
-        tableRef.value!.clearSelection();
+        if (tableRef.value) tableRef.value.clearSelection();
         data.nodePopupShow = false;
         data.selectedpopupData = [];
       },
@@ -498,7 +500,7 @@ export default {
       ...toRefs(data),
       ...methods,
       formatDate,
-      switchPage,
+      openPage,
       relativeTime,
     };
   },

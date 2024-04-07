@@ -130,7 +130,7 @@ interface MyAuditQualificationsParams extends AuditQualificationsParams {
 
 export default {
   setup() {
-    const { query, switchPage } = useMyRouter();
+    const { query } = useMyRouter();
     const assetsData = {
       statusMapping: [
         { value: 0, label: "未审核" },
@@ -267,7 +267,6 @@ export default {
       ...toRefs(data),
       ...methods,
       formatDate,
-      switchPage,
       relativeTime,
     };
   },

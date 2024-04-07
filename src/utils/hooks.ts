@@ -33,7 +33,14 @@ export const useMyRouter = () => {
   };
 
   // 打开新页面
-  const openPage = (url: string) => {
+  const openPage = (url: string, params: any = {}) => {
+    if (params) {
+      Object.keys(params).forEach((key: string, index: number) => {
+        const prefix = index ? "&" : "?";
+        const param = `${key}=${params[key]}`;
+        url += `${prefix}${param}`;
+      });
+    }
     window.open(url);
   };
 

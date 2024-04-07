@@ -299,12 +299,12 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
-        path: "edit-choiceness",
-        name: "editChoiceness",
-        component: () => import("../views/operation/edit-choiceness.vue"),
+        path: "choiceness-management",
+        name: "choicenessManagement",
+        component: () => import("../views/operation/choiceness-management.vue"),
         meta: {
           title: "编辑精选",
-          sideBarItem: "editChoiceness",
+          sideBarItem: "choicenessManagement",
         },
       },
       {

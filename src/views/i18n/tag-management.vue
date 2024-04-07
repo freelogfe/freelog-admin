@@ -27,7 +27,7 @@
         <el-table-column type="selection" />
         <el-table-column label="标签" min-width="100" show-overflow-tooltip>
           <template #default="scope">
-            <span class="text-btn" @click="switchPage('/i18n/translation-management', { tag: scope.row._id })">
+            <span class="text-btn" @click="openPage('/i18n/translation-management', { tag: scope.row._id })">
               {{ scope.row.tagName }}
             </span>
           </template>
@@ -75,7 +75,7 @@ import { ListParams } from "@/typings/params";
 
 export default {
   setup() {
-    const { switchPage } = useMyRouter();
+    const { openPage } = useMyRouter();
     const data = reactive({
       loading: false,
       tableData: [] as TranslationTag[],
@@ -185,7 +185,7 @@ export default {
       ...toRefs(data),
       ...methods,
       formatDate,
-      switchPage,
+      openPage,
       relativeTime,
     };
   },

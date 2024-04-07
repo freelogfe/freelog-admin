@@ -110,24 +110,21 @@
         </el-table-column>
         <el-table-column label="用户" min-width="200" show-overflow-tooltip>
           <template #default="scope">
-            <span class="text-btn" @click="switchPage('/user/user-management', { userId: scope.row.ownerUserId })">
+            <span class="text-btn" @click="openPage('/user/user-management', { userId: scope.row.ownerUserId })">
               {{ scope.row.ownerUserName }}
             </span>
           </template>
         </el-table-column>
         <el-table-column label="运营展品数" min-width="120" align="right">
           <template #default="scope">
-            <span class="text-btn" @click="switchPage('/node/exhibit-management', { nodeId: scope.row.nodeId })">
-              {{ scope.row.exhibitCount }}
+            <span class="text-btn" @click="openPage('/node/exhibit-management', { nodeId: scope.row.nodeId })">
+              {{ scope.row.onlineExhibitCount }}/{{ scope.row.exhibitCount }}
             </span>
           </template>
         </el-table-column>
         <el-table-column label="需方合约数" min-width="120" align="right">
           <template #default="scope">
-            <span
-              class="text-btn"
-              @click="switchPage('/contract/contract-management', { licensorId: scope.row.nodeId })"
-            >
+            <span class="text-btn" @click="openPage('/contract/contract-management', { licensorId: scope.row.nodeId })">
               {{ scope.row.signCount }}
             </span>
           </template>
@@ -306,9 +303,11 @@ export default {
           ]);
           dataList.forEach((node: Node) => {
             const { nodeId } = node;
-            node.exhibitCount = results[0].data.data.find(
+            const exhibitData = results[0].data.data.find(
               (item: { nodeId: number; count: number }) => item.nodeId === nodeId
-            ).count;
+            );
+            node.onlineExhibitCount = exhibitData.onlineCount;
+            node.exhibitCount = exhibitData.count;
             node.signCount = results[1].data.data.find(
               (item: { licensorId: string; count: number }) => item.licensorId === String(nodeId)
             ).count;
@@ -552,6 +551,7 @@ export default {
       ...methods,
       formatDate,
       switchPage,
+      openPage,
       relativeTime,
     };
   },

@@ -70,7 +70,7 @@
         </el-table-column>
         <el-table-column label="所属节点" min-width="150" show-overflow-tooltip>
           <template #default="scope">
-            <span class="text-btn" @click="switchPage('/node/node-management', { nodeId: scope.row.nodeId })">
+            <span class="text-btn" @click="openPage('/node/node-management', { nodeId: scope.row.nodeId })">
               {{ scope.row.nodeName }}
             </span>
           </template>
@@ -91,7 +91,7 @@
           <template #default="scope">
             <span
               class="text-btn"
-              @click="switchPage('/contract/contract-management', { subjectIds: scope.row.presentableId })"
+              @click="openPage('/contract/contract-management', { subjectIds: scope.row.presentableId })"
             >
               {{ scope.row.signCount }}
             </span>
@@ -166,7 +166,7 @@ export default {
   },
 
   setup() {
-    const { query, switchPage } = useMyRouter();
+    const { query, openPage } = useMyRouter();
     const assetsData = {
       statusMapping: [
         { value: 0, label: "下线" },
@@ -288,7 +288,7 @@ export default {
       ...toRefs(data),
       ...methods,
       formatDate,
-      switchPage,
+      openPage,
       relativeTime,
     };
   },

@@ -27,7 +27,7 @@
         <el-table-column type="selection" />
         <el-table-column label="标签" min-width="100" show-overflow-tooltip>
           <template #default="scope">
-            <span class="text-btn" @click="switchPage('/node/node-management', { tag: scope.row.tagName })">
+            <span class="text-btn" @click="openPage('/node/node-management', { tag: scope.row.tagName })">
               {{ scope.row.tagName }}
             </span>
           </template>
@@ -62,7 +62,7 @@ import { NodeTag } from "@/typings/object";
 
 export default {
   setup() {
-    const { switchPage } = useMyRouter();
+    const { openPage } = useMyRouter();
     const data = reactive({
       loading: false,
       tableData: [] as NodeTag[],
@@ -176,7 +176,7 @@ export default {
       ...toRefs(data),
       ...methods,
       formatDate,
-      switchPage,
+      openPage,
       relativeTime,
     };
   },

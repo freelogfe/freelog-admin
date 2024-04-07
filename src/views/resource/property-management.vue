@@ -178,7 +178,6 @@ export default {
 
     return {
       mappingMatching,
-      switchPage,
       ...assetsData,
       ...toRefs(data),
       ...methods,

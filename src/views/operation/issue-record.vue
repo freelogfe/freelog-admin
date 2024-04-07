@@ -120,7 +120,7 @@
         </el-table-column>
         <el-table-column label="用户" min-width="200" show-overflow-tooltip>
           <template #default="scope">
-            <span class="text-btn" @click="switchPage('/user/user-management', { userId: scope.row.userId })">
+            <span class="text-btn" @click="openPage('/user/user-management', { userId: scope.row.userId })">
               {{ scope.row.username }}
             </span>
           </template>
@@ -215,7 +215,7 @@ export default {
   },
 
   setup() {
-    const { query, switchPage } = useMyRouter();
+    const { query, openPage } = useMyRouter();
     const assetsData = {
       tagMapping: [
         { value: 1, label: "未生效" },
@@ -455,7 +455,7 @@ export default {
       ...toRefs(data),
       ...methods,
       formatDate,
-      switchPage,
+      openPage,
     };
   },
 };

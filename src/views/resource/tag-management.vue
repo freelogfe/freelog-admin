@@ -46,7 +46,7 @@
         <el-table-column type="selection" />
         <el-table-column label="标签" min-width="100" show-overflow-tooltip>
           <template #default="scope">
-            <span class="text-btn" @click="switchPage('/resource/resource-management', { tag: scope.row.tagName })">
+            <span class="text-btn" @click="openPage('/resource/resource-management', { tag: scope.row.tagName })">
               {{ scope.row.tagName }}
             </span>
           </template>
@@ -167,7 +167,7 @@ export interface MyOperateResourceTagParams extends OperateResourceTagParams {
 
 export default {
   setup() {
-    const { switchPage } = useMyRouter();
+    const { openPage } = useMyRouter();
     const assetsData = {
       tagTypeMapping: [
         { value: 1, label: "分类标签" },
@@ -347,7 +347,7 @@ export default {
       resourceTypeTree,
       ...methods,
       formatDate,
-      switchPage,
+      openPage,
       relativeTime,
     };
   },

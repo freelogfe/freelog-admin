@@ -87,6 +87,7 @@ export interface Resource {
   remark: string;
   choiceness: boolean;
   resourceInfo?: any;
+  operationType: 1 | 2 | 3 | 4 | 5;
 }
 
 /** 策略数据 */
@@ -130,6 +131,7 @@ export interface Node {
   status: number;
   createDate: string;
   tags: string[];
+  onlineExhibitCount: number;
   exhibitCount: number;
   signCount: number;
   reason: string;
@@ -254,12 +256,6 @@ export interface Classification {
   priority: number;
   status: number;
   startTime: string;
-}
-
-/** 操作编辑精选参数 */
-export interface OperateChoicenessParams {
-  type: 1;
-  resourceIds: string[];
 }
 
 /** 活动数据 */

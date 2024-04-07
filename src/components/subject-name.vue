@@ -12,7 +12,7 @@ export default {
   props: ["type", "name", "id"],
 
   setup(props: { type: 1 | 2 | 3 | 4; name: string; id?: string }) {
-    const { switchPage, openPage } = useMyRouter();
+    const { openPage } = useMyRouter();
     const data = reactive({
       userName: "",
       subjectName: "",
@@ -31,9 +31,9 @@ export default {
       toOtherPage() {
         const { type, id, name } = props;
         if (type === 1) {
-          switchPage("/resource/resource-management", { resourceId: id });
+          openPage("/resource/resource-management", { resourceId: id });
         } else if (type === 2) {
-          switchPage("/node/exhibit-management", { presentableId: id });
+          openPage("/node/exhibit-management", { presentableId: id });
         } else if (type === 3) {
           const domain = process.env.VUE_APP_BASE_API || "";
           const url = domain.replace("api", name);
