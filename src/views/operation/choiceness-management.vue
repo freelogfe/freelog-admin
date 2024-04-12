@@ -414,6 +414,7 @@ export default {
         } else {
           delete data.searchData.resourceType;
         }
+        data.searchData.sort = "typeUpdateDate:-1";
         const result = await ActivitiesService.getChoicenessList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {
@@ -608,7 +609,7 @@ export default {
 
       /** 打开资源评级弹窗 */
       openGradePopup(resourceId?: string) {
-        data.operateData.type = null;
+        data.operateData.type = 4;
         data.operateData.resourceIds = resourceId ? [resourceId] : data.selectedData.map((item) => item.resourceId);
         data.gradePopupShow = true;
       },

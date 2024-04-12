@@ -80,8 +80,8 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column property="createDate" label="创建时间" min-width="160">
-          <template #default="scope">{{ formatDate(scope.row.createDate) }}</template>
+        <el-table-column property="nodeTypeUpdateDate" label="创建时间" min-width="160">
+          <template #default="scope">{{ formatDate(scope.row.nodeTypeUpdateDate) }}</template>
         </el-table-column>
         <el-table-column label="状态">
           <template #default="scope">
@@ -294,6 +294,7 @@ export default {
         data.searchData.skip = (currentPage - 1) * limit;
         data.searchData.nodeType = 1;
         data.searchData.statusMode = 2;
+        data.searchData.sort = "nodeTypeUpdateDate:-1";
         const result = await NodeService.getNodeList(data.searchData);
         const { errcode } = result.data;
         if (errcode === 0) {

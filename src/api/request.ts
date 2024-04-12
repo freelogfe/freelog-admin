@@ -291,7 +291,7 @@ export class ResourceService {
 export class NodeService {
   /** 获取节点列表 */
   static getNodeList(params: NodeListParams): Promise<HttpResponse> {
-    return Axios("/v2/nodes/search", { method: "GET", params: { ...params, sort: "createDate:-1" } });
+    return Axios("/v2/nodes/search", { method: "GET", params: { sort: "createDate:-1", ...params } });
   }
 
   /** 获取用户运营节点数 */
@@ -458,7 +458,7 @@ export class ActivitiesService {
   static getChoicenessList(params: ChoicenessListParams): Promise<HttpResponse> {
     return Axios("/v2/resources/operations", {
       method: "GET",
-      params: { ...params, sort: "createDate:-1", isLoadPolicyInfo: 1 },
+      params: { sort: "createDate:-1", isLoadPolicyInfo: 1, ...params },
     });
   }
 
