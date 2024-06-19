@@ -166,6 +166,7 @@ export interface CreateOrEditResourceTypeParams {
   attrs?: string[];
   startTime?: string;
   resourceConfig: {
+    resouceMainType: 1 | 2;
     fileCommitMode: number[];
     fileMaxSize: number;
     fileMaxSizeUnit: 1 | 2;
@@ -174,6 +175,9 @@ export interface CreateOrEditResourceTypeParams {
     autoGenerateCover: 1 | 2;
     supportCreateBatch: 1 | 2;
     supportOptionalConfig: 1 | 2;
+    exhibitViewConfig: {
+      versionShow: 1 | 2;
+    }
   };
 }
 

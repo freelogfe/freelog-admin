@@ -67,6 +67,14 @@
 
       <div class="divider" />
       <div class="title">版本发行配置</div>
+      <form-item label="标的物类型">
+        <el-radio-group v-model="formData.resourceConfig.resouceMainType">
+          <div class="selection-line">
+            <el-radio :label="1">独立资源</el-radio>
+            <el-radio :label="2">集合资源</el-radio>
+          </div>
+        </el-radio-group>
+      </form-item>
       <form-item label="文件提交方式" v-if="formData.resourceConfig">
         <el-checkbox-group v-model="formData.resourceConfig.fileCommitMode">
           <div class="selection-line">
@@ -148,6 +156,16 @@
           </el-radio-group>
         </form-item>
       </template>
+      <div class="divider" />
+      <div class="title">展品展示设置</div>
+      <form-item label="展示版本">
+        <el-radio-group v-model="formData.resourceConfig.exhibitViewConfig.versionShow">
+          <div class="selection-line">
+            <el-radio :label="1">默认自动更新到最新版本</el-radio>
+            <el-radio :label="2">默认手动更新到最新版本</el-radio>
+          </div>
+        </el-radio-group>
+      </form-item>
     </template>
   </edit-template>
 
@@ -291,6 +309,7 @@ export default {
           data.formData.formatsStr = "";
           data.formData.attrsArr = [];
           data.formData.resourceConfig = {
+            resouceMainType: 1,
             fileCommitMode: [1, 2],
             fileMaxSize: 200,
             fileMaxSizeUnit: 1,
@@ -299,6 +318,9 @@ export default {
             autoGenerateCover: 1,
             supportCreateBatch: 1,
             supportOptionalConfig: 1,
+            exhibitViewConfig: {
+              versionShow: 1
+            }
           };
         }
 
