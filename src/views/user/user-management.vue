@@ -7,6 +7,8 @@
 
     <template v-slot:barLeft v-if="selectedData.length">
       <el-button type="primary" @click="setTag()">添加标签</el-button>
+      <el-button type="primary" @click="setFreezeUser()">冻结账号</el-button>
+      <el-button type="primary" @click="setRestoreUser()">恢复账号</el-button>
       <span class="selected-tip">已选中{{ selectedData.length }}条</span>
     </template>
 
@@ -203,7 +205,7 @@
     </template>
   </el-dialog>
 
-  <el-dialog v-model="freezePopupShow" title="冻结账户" width="800px">
+  <el-dialog v-model="freezePopupShow" title="冻结账户" width="800px" @close="handleCloseFreezePopup">
     <form-item label="冻结原因">
       <el-radio-group v-model="operateData.reason">
         <el-radio label="抄袭、侵权"></el-radio>
@@ -275,6 +277,7 @@ export default {
       copyValue: "",
       setTagPopupShow: false,
       freezePopupShow: false,
+      isActionClicked: false, // 是否点击了“冻结账号”,“恢复账号”按钮
     });
 
     const methods = {
@@ -334,6 +337,7 @@ export default {
           data.tableData = dataList;
           data.total = totalItem;
           data.loading = false;
+          data.isActionClicked = false;
         }
       },
 
@@ -377,6 +381,10 @@ export default {
         }).then(() => {
           data.operateData.userId = userId;
           this.operateConfirm(0);
+        }).catch(() => {
+          if(!userId){
+            data.isActionClicked = false;
+          }
         });
       },
 
@@ -393,11 +401,32 @@ export default {
         }
 
         data.operateData.status = type;
-        const result = await UserService.freeOrRecoverUser(data.operateData);
-        const { errcode } = result.data;
-        if (errcode === 0) {
-          data.freezePopupShow = false;
-          this.getData();
+        if (!data.isActionClicked) {
+          // 非批量操作
+          const result = await UserService.freeOrRecoverUser(data.operateData);
+          if (result.data.errcode === 0) {
+            data.freezePopupShow = false;
+            this.getData();
+          }
+        } else {
+          // 批量操作
+          const {status, reason, remark}= data.operateData
+          const userIds = data.selectedData.map((item: User) => item.userId);
+          const promises = userIds.map((userId) =>
+            UserService.freeOrRecoverUser({
+              status,
+              reason,
+              remark,
+              userId: userId as unknown as string,
+            })
+          );
+
+          const results = await Promise.all(promises);
+          const allSuccess = results.every(result => result.data.errcode === 0);
+          if (allSuccess) {
+            data.freezePopupShow = false;
+            this.getData();
+          }
         }
       },
 
@@ -418,6 +447,24 @@ export default {
         data.setTagData.newTag = "";
         data.setTagPopupShow = true;
       },
+
+      /** 关闭冻结弹窗 */
+      handleCloseFreezePopup(){
+        data.isActionClicked = false;
+      },
+
+      /** 批量冻结用户 */
+      setFreezeUser(){
+        data.freezePopupShow = true;
+        data.isActionClicked = true;
+      },
+
+      /** 批量恢复用户 */
+      setRestoreUser(){
+        data.isActionClicked = true;
+        this.restore("");
+      },
+    
 
       /** 添加新标签 */
       async newTag() {

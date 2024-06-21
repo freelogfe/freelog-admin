@@ -5,6 +5,8 @@
       <el-button type="primary" @click="setTag()">添加标签</el-button>
       <el-button type="primary" @click="setSampleNode(1)">添加示例节点</el-button>
       <el-button type="primary" @click="setSampleNode(0)">移除示例节点</el-button>
+      <el-button type="primary" @click="setBanNode()">封禁节点</el-button>
+      <el-button type="primary" @click="setRestoreNode()">解封节点</el-button>
       <!-- <el-button type="primary" @click="setSampleNode()">封禁</el-button>
       <el-button type="primary" @click="setSampleNode()">解封</el-button> -->
       <span class="selected-tip">已选中{{ selectedData.length }}条</span>
@@ -193,7 +195,7 @@
     </template>
   </el-dialog>
 
-  <el-dialog v-model="banPopupShow" title="封禁节点" width="800px">
+  <el-dialog v-model="banPopupShow" title="封禁节点" width="800px" @close="handleCloseBanPopup">
     <form-item label="封禁原因">
       <el-radio-group v-model="operateData.reason">
         <el-radio label="抄袭、侵权"></el-radio>
@@ -269,6 +271,7 @@ export default {
       operateData: {} as OperateNodeParams,
       setTagPopupShow: false,
       banPopupShow: false,
+      isActionClicked: false, // 是否点击了“封禁节点”,“解封节点”按钮
     });
 
     const methods = {
@@ -333,6 +336,7 @@ export default {
           data.tableData = dataList;
           data.total = totalItem;
           data.loading = false;
+          data.isActionClicked = false;
         }
       },
 
@@ -371,25 +375,46 @@ export default {
         }).then(() => {
           data.operateData.nodeId = nodeId;
           this.operateConfirm(2);
+        }).catch(() => {
+          if(!nodeId){
+            data.isActionClicked = false;
+          }
         });
       },
 
       /** 操作（封禁/解封） */
       async operateConfirm(type: 1 | 2) {
-        let result = null;
-        if (type === 1) {
-          if (!data.operateData.reason) {
-            ElMessage("请选择封停原因");
-            return;
-          }
-          result = await NodeService.banNode(data.operateData);
-        } else {
-          result = await NodeService.restoreNode(data.operateData.nodeId);
+        // 检查封禁操作时是否选择了原因
+        if (type === 1 && !data.operateData.reason) {
+          ElMessage("请选择封停原因");
+          return;
         }
-        const { errcode } = result.data;
-        if (errcode === 0) {
-          data.banPopupShow = false;
-          this.getData();
+
+        // 获取节点ID数组
+        const nodeIDs = data.isActionClicked ? data.selectedData.map((item: Node) => item.nodeId) : [data.operateData.nodeId];
+
+        try {
+          const promises = nodeIDs.map((nodeId) => {
+            if (type === 1) {
+              return NodeService.banNode({ ...data.operateData, nodeId });
+            } else {
+              return NodeService.restoreNode(nodeId);
+            }
+          });
+
+          const results = await Promise.all(promises);
+          const allSuccess = results.every(result => result.data.errcode === 0);
+
+          if (allSuccess) {
+            data.banPopupShow = false;
+            this.getData();
+          } else {
+            ElMessage("部分操作失败");
+            this.getData();
+          }
+        } catch (error) {
+          ElMessage("操作失败，请重试");
+          console.error(error);
         }
       },
 
@@ -528,6 +553,24 @@ export default {
           }
         });
       },
+
+      /** 关闭封禁弹窗 */
+      handleCloseBanPopup(){
+        data.isActionClicked = false;
+      },
+
+      /** 设置封禁节点 */
+      setBanNode() {
+        data.banPopupShow = true;
+        data.isActionClicked= true;
+      },
+
+      /** 设置解封节点 */
+      setRestoreNode() {
+        data.isActionClicked= true;
+        this.restore(0);
+      },
+
     };
 
     /** 获取节点标签 */
