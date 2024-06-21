@@ -165,8 +165,8 @@ export interface CreateOrEditResourceTypeParams {
   formats?: string[];
   attrs?: string[];
   startTime?: string;
+  subjectType: 1 | 2;
   resourceConfig: {
-    resouceMainType: 1 | 2;
     fileCommitMode: number[];
     fileMaxSize: number;
     fileMaxSizeUnit: 1 | 2;
@@ -175,10 +175,10 @@ export interface CreateOrEditResourceTypeParams {
     autoGenerateCover: 1 | 2;
     supportCreateBatch: 1 | 2;
     supportOptionalConfig: 1 | 2;
-    exhibitViewConfig: {
-      versionShow: 1 | 2;
-    }
   };
+  presentableConfig: {
+    versionShowMode: 1 | 2;
+  }
 }
 
 /** 资源属性列表参数 */

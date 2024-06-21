@@ -68,7 +68,7 @@
       <div class="divider" />
       <div class="title">版本发行配置</div>
       <form-item label="标的物类型">
-        <el-radio-group v-model="formData.resourceConfig.resouceMainType">
+        <el-radio-group v-model="formData.subjectType" :disabled="!(mode === 'create')">
           <div class="selection-line">
             <el-radio :label="1">独立资源</el-radio>
             <el-radio :label="2">集合资源</el-radio>
@@ -158,14 +158,16 @@
       </template>
       <div class="divider" />
       <div class="title">展品展示设置</div>
-      <form-item label="展示版本">
-        <el-radio-group v-model="formData.resourceConfig.exhibitViewConfig.versionShow">
-          <div class="selection-line">
-            <el-radio :label="1">默认自动更新到最新版本</el-radio>
-            <el-radio :label="2">默认手动更新到最新版本</el-radio>
-          </div>
-        </el-radio-group>
-      </form-item>
+      <template v-if="formData.presentableConfig">
+        <form-item label="展示版本">
+          <el-radio-group v-model="formData.presentableConfig.versionShowMode">
+            <div class="selection-line">
+              <el-radio :label="1">默认自动更新到最新版本</el-radio>
+              <el-radio :label="2">默认手动更新到最新版本</el-radio>
+            </div>
+          </el-radio-group>
+        </form-item>
+      </template>
     </template>
   </edit-template>
 
@@ -302,14 +304,18 @@ export default {
             result.data.data.formatsStr = formats.join();
             result.data.data.attrsArr = [...attrs];
             data.formData = result.data.data;
+            console.log(result.data.data)
           }
         } else {
           // 新建
           data.mode = "create";
           data.formData.formatsStr = "";
           data.formData.attrsArr = [];
+          data.formData.subjectType = 1;
+          data.formData.presentableConfig = {
+            versionShowMode: 1
+          }
           data.formData.resourceConfig = {
-            resouceMainType: 1,
             fileCommitMode: [1, 2],
             fileMaxSize: 200,
             fileMaxSizeUnit: 1,
@@ -317,10 +323,7 @@ export default {
             supportEdit: 1,
             autoGenerateCover: 1,
             supportCreateBatch: 1,
-            supportOptionalConfig: 1,
-            exhibitViewConfig: {
-              versionShow: 1
-            }
+            supportOptionalConfig: 1
           };
         }
 
