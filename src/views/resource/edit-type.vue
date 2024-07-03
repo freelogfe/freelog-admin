@@ -68,12 +68,12 @@
       <div class="divider" />
       <div class="title">版本发行配置</div>
       <form-item label="标的物类型">
-        <el-radio-group v-model="formData.subjectType" :disabled="!(mode === 'create')">
+        <el-checkbox-group v-model="formData.subjectType">
           <div class="selection-line">
-            <el-radio :label="1">独立资源</el-radio>
-            <el-radio :label="2">集合资源</el-radio>
+            <el-checkbox :label="1">独立资源</el-checkbox>
+            <el-checkbox :label="2">集合资源</el-checkbox>
           </div>
-        </el-radio-group>
+        </el-checkbox-group>
       </form-item>
       <form-item label="文件提交方式" v-if="formData.resourceConfig">
         <el-checkbox-group v-model="formData.resourceConfig.fileCommitMode">
@@ -311,7 +311,7 @@ export default {
           data.mode = "create";
           data.formData.formatsStr = "";
           data.formData.attrsArr = [];
-          data.formData.subjectType = 1;
+          data.formData.subjectType = [];
           data.formData.presentableConfig = {
             versionShowMode: 1
           }
@@ -558,6 +558,7 @@ export default {
         priority,
         status,
         resourceConfig: { fileCommitMode },
+        subjectType
       } = data.formData;
       if (!name) {
         ElMessage("请输入名称");
@@ -574,6 +575,9 @@ export default {
       } else if (fileCommitMode.length === 0) {
         ElMessage("请选择文件提交方式");
         return false;
+      } else if (subjectType.length === 0) {
+        ElMessage("请选择标的物类型");
+        return false
       }
       return true;
     };

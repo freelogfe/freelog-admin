@@ -165,7 +165,7 @@ export interface CreateOrEditResourceTypeParams {
   formats?: string[];
   attrs?: string[];
   startTime?: string;
-  subjectType: 1 | 2;
+  subjectType: number[];
   resourceConfig: {
     fileCommitMode: number[];
     fileMaxSize: number;
