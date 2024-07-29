@@ -71,7 +71,7 @@
         <el-checkbox-group v-model="formData.subjectType">
           <div class="selection-line">
             <el-checkbox :label="1">独立资源</el-checkbox>
-            <el-checkbox :label="2">集合资源</el-checkbox>
+            <el-checkbox :label="4">集合资源</el-checkbox>
           </div>
         </el-checkbox-group>
       </form-item>
