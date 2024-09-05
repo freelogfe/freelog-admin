@@ -163,7 +163,7 @@
           <el-radio-group v-model="formData.presentableConfig.versionShowMode">
             <div class="selection-line">
               <el-radio :label="1">默认自动更新到最新版本</el-radio>
-              <el-radio :label="2">默认手动更新到最新版本</el-radio>
+              <el-radio :label="0">默认手动更新到最新版本</el-radio>
             </div>
           </el-radio-group>
         </form-item>

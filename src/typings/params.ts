@@ -177,7 +177,7 @@ export interface CreateOrEditResourceTypeParams {
     supportOptionalConfig: 1 | 2;
   };
   presentableConfig: {
-    versionShowMode: 1 | 2;
+    versionShowMode: 1 | 0;
   }
 }
 
